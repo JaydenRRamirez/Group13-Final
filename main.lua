@@ -1,39 +1,27 @@
---load 3DreamEngine
-local dream = require("3DreamEngine")
+-- written by groverbuger for g3d
+-- may 2021
+-- MIT license
 
---optionally set settings
-dream:setBloom(3)
+local g3d = require "g3d"
+local earth = g3d.newModel("g3dAssets/sphere.obj", "g3dAssets/earth.png", {0,0,4})
+local moon = g3d.newModel("g3dAssets/sphere.obj", "g3dAssets/moon.png", {5,0,4}, nil, {0.5,0.5,0.5})
+local background = g3d.newModel("g3dAssets/sphere.obj", "g3dAssets/starfield.png", {0,0,0}, nil, {500,500,500})
+local timer = 0
 
---init (applies settings)
-dream:init()
-
---loads a object
-local yourObject = dream:loadObject("3DreamExampleAssets/monkey/object")
-
---creates a light
-local light = dream:newLight("point", dream.vec3(3, 2, 1), dream.vec3(1.0, 0.75, 0.2), 50.0)
-
---add shadow to light source
-light:addNewShadow()
-
-function love.draw()
-	--prepare for rendering
-	dream:prepare()
-	
-	--add light
-	dream:addLight(light)
-	
-	--rotate, offset and draw
-	yourObject:resetTransform()
-	yourObject:rotateY(love.timer.getTime())
-	yourObject:translate(0, 0, -3)
-	dream:draw(yourObject)
-	
-	--render
-	dream:present()
+function love.mousemoved(x,y, dx,dy)
+    g3d.camera.firstPersonLook(dx,dy)
 end
 
-function love.update()
-	--update resource loader
-	dream:update()
+function love.update(dt)
+    timer = timer + dt
+    moon:setTranslation(math.cos(timer)*5, 0, math.sin(timer)*5 +4)
+    moon:setRotation(0, math.pi - timer, 0)
+    g3d.camera.firstPersonMovement(dt)
+    if love.keyboard.isDown("escape") then love.event.push("quit") end
+end
+
+function love.draw()
+    earth:draw()
+    moon:draw()
+    background:draw()
 end
