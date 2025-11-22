@@ -62,3 +62,13 @@ What do you anticipate being the hardest or riskiest part of the project?
 What are you hoping to learn by approaching the project with the tools and materials you selected above?
 
 The hardest part of this project will definitely come in the form of each of us getting acquainted and learning the ins and outs of  LOVE. As stated above, it’ll not only be the first time for all of us to tackle this engine, but we also need to learn Lua and that particular scripting language in order to build our game. Even though outside opinion describes Lua as an easy to learn language, each of us may have a different experience or ease in trying to learn. Although, it is this opportunity to quickly learn and adapt to a new engine that is the most exciting prospect of the final project, especially in seeing what we will be able to accomplish in bringing our game to life.
+
+# Devlog Entry - 11/21/2025
+
+## How we satisfied the software requirements
+1. It is built using a platform (i.e. engine, framework, language) that does not already provide support for 3D rendering and physics simulation
+2. It uses a third-party 3D rendering library.
+- As we talked about in the planning stages, the team ultimately went on utilizing Love2d as the basis of the game engine, given the ease of understanding when it comes to Lua, as well as the documentation and additions that can be found for the engine. When it comes to the 3D rendering library, our initial attempt was to implement 3DreamEngine, but finding it more complex than necessary for the project, we switched to g3d.
+7.  The codebase for the prototype must include some before-commit automation that helps developers.
+8.  The codebase for the prototype must include some post-push automation that helps developers.
+- In terms of testing and automation, the main implementation has been in bootstrap. Bootstrap features: professional IDE integration, automated builds, and everything you need to go from prototype to published game. Alongside that, it allows automation to a wide range of paths, from Itch.io, to Android, to Windows and MacOS, etc.
