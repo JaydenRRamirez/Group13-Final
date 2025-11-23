@@ -442,6 +442,360 @@ local function findAny(self, verts, func, ...)
 end
 
 ----------------------------------------------------------------------------------------------------
+-- Andrew's collision functions     Source: https://winter.dev/
+----------------------------------------------------------------------------------------------------
+-- My definitions include: 
+    -- GJK collision detection which can detect a collision but nothing else
+    -- EPA collision detection which works like GJK but also returns penetration depth and contact normal
+-- These functions only work between two convex shapes
+-- Both of these functions will be extended to be usable with the collisions library
+----------------------------------------------------------------------------------------------------
+
+-- Method you call for GJK collision detection between two convex shapes
+function GJK(vertsA, vertsB)
+    -- initial direction
+    local dir_x, dir_y, dir_z = 1, 0, 0
+
+    -- initial point on the minkowski difference
+    local point_x, point_y, point_z = minkowskiDiff(vertsA, vertsB, dir_x, dir_y, dir_z)
+
+    -- simplex points
+    local simplex = {
+        {point_x, point_y, point_z}
+    }
+
+    -- new direction towards the origin
+    dir_x, dir_y, dir_z = vectorNormalize(-point_x, -point_y, -point_z)
+
+    while true do
+        -- get a new point on the minkowski difference
+        local newPoint_x, newPoint_y, newPoint_z = minkowskiDiff(vertsA, vertsB, dir_x, dir_y, dir_z)
+
+        -- if the new point isn't past the origin in the direction of dir, no collision
+        if vectorDotProduct(newPoint_x, newPoint_y, newPoint_z, dir_x, dir_y, dir_z) <= 0 then
+            return false
+        end
+
+        -- add the new point to the simplex
+        table.insert(simplex, 1, {newPoint_x, newPoint_y, newPoint_z})
+
+        -- check if the simplex contains the origin
+        if nextSimplex(simplex, dir_x, dir_y, dir_z) then
+            return true
+        end
+    end
+end
+
+function findFurthestPoint(verts, dir_x, dir_y, dir_z)
+    local max_x, max_y, max_z
+    local maxDist = -math.huge
+
+    for v=1, #verts do
+        local dist = vectorDotProduct(verts[v][1], verts[v][2], verts[v][3], dir_x, dir_y, dir_z)
+        if dist > maxDist then
+            maxDist = dist
+            max_x = verts[v][1]
+            max_y = verts[v][2]
+            max_z = verts[v][3]
+        end
+    end
+
+    return max_x, max_y, max_z
+end
+
+function minkowskiDiff(vertsA, vertsB, dir_x, dir_y, dir_z)
+    local a_x, a_y, a_z = findFurthestPoint(vertsA, dir_x, dir_y, dir_z)
+    local b_x, b_y, b_z = findFurthestPoint(vertsB, -dir_x, -dir_y, -dir_z)
+
+    return fastSubtract(a_x, a_y, a_z, b_x, b_y, b_z)
+end
+
+function nextSimplex(simplex, dir_x, dir_y, dir_z)
+    -- handle simplex based on its size
+    if #simplex == 2 then
+        return handleLine(simplex, dir_x, dir_y, dir_z)
+    elseif #simplex == 3 then
+        return handleTriangle(simplex, dir_x, dir_y, dir_z)
+    elseif #simplex == 4 then
+        return handleTetrahedron(simplex, dir_x, dir_y, dir_z)
+    end
+
+    -- should not reach here
+    return false
+end
+
+function sameDirection(a_x, a_y, a_z, b_x, b_y, b_z)
+    return vectorDotProduct(a_x, a_y, a_z, b_x, b_y, b_z) > 0
+end
+
+function handleLine(simplex, dir_x, dir_y, dir_z)
+    local a_x, a_y, a_z = simplex[1][1], simplex[1][2], simplex[1][3]
+    local b_x, b_y, b_z = simplex[2][1], simplex[2][2], simplex[2][3]
+
+    local ab_x, ab_y, ab_z = fastSubtract(b_x, b_y, b_z, a_x, a_y, a_z)
+    local ao_x, ao_y, ao_z = fastSubtract(0, 0, 0, a_x, a_y, a_z)
+
+    if sameDirection(ab_x, ab_y, ab_z, ao_x, ao_y, ao_z) then
+        dir_x, dir_y, dir_z = 
+        vectorCrossProduct(
+            vectorCrossProduct(
+                ab_x, ab_y, ab_z, 
+                ao_x, ao_y, ao_z),
+            ab_x, ab_y, ab_z
+        )
+    else
+        simplex = {simplex[1]}
+        dir_x, dir_y, dir_z = ao_x, ao_y, ao_z
+    end
+
+    return false
+end
+
+function handleTriangle(simplex, dir_x, dir_y, dir_z)
+    local a_x, a_y, a_z = simplex[1][1], simplex[1][2], simplex[1][3]
+    local b_x, b_y, b_z = simplex[2][1], simplex[2][2], simplex[2][3]
+    local c_x, c_y, c_z = simplex[3][1], simplex[3][2], simplex[3][3]
+
+    local ab_x, ab_y, ab_z = fastSubtract(b_x, b_y, b_z, a_x, a_y, a_z)
+    local ac_x, ac_y, ac_z = fastSubtract(c_x, c_y, c_z, a_x, a_y, a_z)
+    local ao_x, ao_y, ao_z = fastSubtract(0, 0, 0, a_x, a_y, a_z)
+
+    local abc_x, abc_y, abc_z = vectorCrossProduct(ab_x, ab_y, ab_z, ac_x, ac_y, ac_z)
+
+    if (sameDirection(vectorCrossProduct(abc_x, abc_y, abc_z, ac_x, ac_y, ac_z), ao_x, ao_y, ao_z)) then
+        if sameDirection(ac_x, ac_y, ac_z, ao_x, ao_y, ao_z) then
+            simplex = {simplex[1], simplex[3]}
+            dir_x, dir_y, dir_z = vectorCrossProduct(
+                vectorCrossProduct(
+                    ac_x, ac_y, ac_z,
+                    ao_x, ao_y, ao_z),
+                ac_x, ac_y, ac_z
+            )
+        else
+            return handleLine({simplex[1], simplex[2]}, dir_x, dir_y, dir_z)
+        end
+    else
+        if sameDirection(vectorCrossProduct(ab_x, ab_y, ab_z, abc_x, abc_y, abc_z), ao_x, ao_y, ao_z) then
+            return handleLine({simplex[1], simplex[2]}, dir_x, dir_y, dir_z)
+        else
+            if sameDirection(abc_x, abc_y, abc_z, ao_x, ao_y, ao_z) then
+                dir_x, dir_y, dir_z = abc_x, abc_y, abc_z
+            else
+                simplex = {simplex[1], simplex[3], simplex[2]}
+                dir_x, dir_y, dir_z = -abc_x, -abc_y, -abc_z
+            end
+        end
+    end
+
+    return false
+end
+
+function handleTetrahedron(simplex, dir_x, dir_y, dir_z)
+    local a_x, a_y, a_z = simplex[1][1], simplex[1][2], simplex[1][3]
+    local b_x, b_y, b_z = simplex[2][1], simplex[2][2], simplex[2][3]
+    local c_x, c_y, c_z = simplex[3][1], simplex[3][2], simplex[3][3]
+    local d_x, d_y, d_z = simplex[4][1], simplex[4][2], simplex[4][3]
+
+    local ab_x, ab_y, ab_z = fastSubtract(b_x, b_y, b_z, a_x, a_y, a_z)
+    local ac_x, ac_y, ac_z = fastSubtract(c_x, c_y, c_z, a_x, a_y, a_z)
+    local ad_x, ad_y, ad_z = fastSubtract(d_x, d_y, d_z, a_x, a_y, a_z)
+    local ao_x, ao_y, ao_z = fastSubtract(0, 0, 0, a_x, a_y, a_z)
+
+    local abc_x, abc_y, abc_z = vectorCrossProduct(ab_x, ab_y, ab_z, ac_x, ac_y, ac_z)
+    local acd_x, acd_y, acd_z = vectorCrossProduct(ac_x, ac_y, ac_z, ad_x, ad_y, ad_z)
+    local adb_x, adb_y, adb_z = vectorCrossProduct(ad_x, ad_y, ad_z, ab_x, ab_y, ab_z)
+
+    if sameDirection(abc_x, abc_y, abc_z, ao_x, ao_y, ao_z) then
+        return handleTriangle({simplex[1], simplex[2], simplex[3]}, dir_x, dir_y, dir_z)
+    end
+
+    if sameDirection(acd_x, acd_y, acd_z, ao_x, ao_y, ao_z) then
+        return handleTriangle({simplex[1], simplex[3], simplex[4]}, dir_x, dir_y, dir_z)
+    end
+
+    if sameDirection(adb_x, adb_y, adb_z, ao_x, ao_y, ao_z) then
+        return handleTriangle({simplex[1], simplex[4], simplex[2]}, dir_x, dir_y, dir_z)
+    end
+
+    return true
+end
+
+-- Deep copy lua table
+function deepCopy(origTable, copies)
+    -- Handle non-table types (numbers, strings, booleans, etc.)
+    if type(origTable) ~= "table" then
+        return origTable
+    end
+
+    -- Use a weak map to track tables that have already been copied,
+    -- which prevents infinite loops for circular references.
+    copies = copies or setmetatable({}, {__mode = "k"}) 
+
+    -- If the table has already been copied, return the existing copy
+    if copies[origTable] then
+        return copies[origTable]
+    end
+
+    -- Create a new table and store a reference to it in the 'copies' map
+    local copy = {}
+    copies[origTable] = copy
+
+    -- Recursively copy key-value pairs
+    for key, value in pairs(origTable) do
+        copy[deepCopy(key, copies)] = deepCopy(value, copies)
+    end
+
+    -- Recursively copy the metatable, if it exists
+    local meta = getmetatable(origTable)
+    if meta then
+        setmetatable(copy, deepCopy(meta, copies))
+    end
+
+    return copy
+end
+
+-- Method you call for EPA collision detection between two convex shapes
+-- returns contact normal, penetration depth, and a boolean indicating a successful result
+function EPA(simplex, vertsA, vertsB)
+    local polytope = deepCopy(simplex)
+    local faces = {
+        0, 1, 2,
+        0, 3, 1,
+        0, 2, 3,
+        1, 3, 2
+    }
+
+    local normals, minFace = getFaceNormals(polytope, faces)
+
+    local minNorm_x, minNorm_y, minNorm_z
+    local minDistance = math.huge
+
+    while minDistance == math.huge do
+        minNorm_x, minNorm_y, minNorm_z = normals[minFace], normals[minFace + 1], normals[minFace + 2]
+        minDistance = normals[minFace + 3]
+
+        local minkVec_x, minkVec_y, minkVec_z = minkowskiDiff(vertsA, vertsB, minNorm_x, minNorm_y, minNorm_z)
+        local sDistance = vectorDotProduct(minkVec_x, minkVec_y, minkVec_z, minNorm_x, minNorm_y, minNorm_z)
+        if math.abs(sDistance - minDistance) < 0.001 then
+            minDistance = math.huge
+            local uniqueEdges = {}
+            
+            for i = 1, #normals do
+                if sameDirection(
+                    normals[i], normals[i + 1], normals[i + 2],
+                    minkVec_x, minkVec_y, minkVec_z
+                ) then
+                    local f = i * 3
+
+                    addIfUniqueEdge(uniqueEdges, faces, f, f + 1)
+                    addIfUniqueEdge(uniqueEdges, faces, f + 1, f + 2)
+                    addIfUniqueEdge(uniqueEdges, faces, f + 2, f)
+
+                    faces[f + 2] = faces[#faces]
+                    table.remove(faces)
+                    faces[f + 1] = faces[#faces]
+                    table.remove(faces)
+                    faces[f] = faces[#faces]
+                    table.remove(faces)
+
+                    i = i - 1
+                end
+            end
+
+            local newFaces = {};
+            for i = 1, #uniqueEdges, 2 do
+                table.insert(newFaces, uniqueEdges[i])
+                table.insert(newFaces, uniqueEdges[i + 1])
+                table.insert(newFaces, #polytope)
+            end
+
+            table.insert(polytope, {minkVec_x, minkVec_y, minkVec_z})
+
+            local newNormals, newMinFace = getFaceNormals(polytope, newFaces)
+
+            local oldMinDistance = math.huge
+            for i = 1, #normals do
+                if normals[i + 3] < oldMinDistance then
+                    oldMinDistance = normals[i + 3]
+                    minFace = i
+                end
+            end
+
+            if newNormals[newMinFace + 3] < oldMinDistance then
+                minFace = #normals + newMinFace
+            end
+
+            for i = 1, #newFaces do
+                table.insert(faces, newFaces[i])
+            end
+            for i = 1, #newNormals do
+                table.insert(normals, newNormals[i])
+            end
+        end
+    end
+
+    return minNorm_x, minNorm_y, minNorm_z, (minDistance + 0.001), true
+end 
+
+function getFaceNormals(polytope, faces) {
+    local normals = {}
+    local minFace = 1
+    local minDistance = math.huge
+
+    for i = 1, #faces, 3 do
+        local a_x, a_y, a_z = polytope[faces[i]][1], polytope[faces[i]][2], polytope[faces[i]][3]
+        local b_x, b_y, b_z = polytope[faces[i + 1]][1], polytope[faces[i + 1]][2], polytope[faces[i + 1]][3]
+        local c_x, c_y, c_z = polytope[faces[i + 2]][1], polytope[faces[i + 2]][2], polytope[faces[i + 2]][3]
+
+        local norm_x, norm_y, norm_z = vectorNormalize(
+            vectorCrossProduct(
+                fastSubtract(b_x, b_y, b_z, a_x, a_y, a_z),
+                fastSubtract(c_x, c_y, c_z, a_x, a_y, a_z)
+            )
+        )
+        local distance = vectorDotProduct(norm_x, norm_y, norm_z, a_x, a_y, a_z)
+
+        if distance < 0 then
+            norm_x, norm_y, norm_z = -norm_x, -norm_y, -norm_z
+            distance = -distance
+        end
+
+        table.insert(normals, norm_x)
+        table.insert(normals, norm_y)
+        table.insert(normals, norm_z)
+        table.insert(normals, distance)
+
+        if distance < minDistance then
+            minDistance = distance
+            minFace = i / 3
+        end
+    end
+
+    return normals, minFace
+end
+
+function findInTable(table, val1, val2)
+    for i = 1, #table, 2 do
+        if table[i] == val1 and table[i + 1] == val2 then
+            return i
+        end
+    end
+    return nil
+end
+
+function addIfUniqueEdge(edges, faces, a, b)
+    local reverseIndex = findInTable(edges, faces[b], faces[a])
+
+    if (reverseIndex + 1) ~= #edges then
+        table.remove(edges, reverseIndex)
+        table.remove(edges, reverseIndex)
+    else
+        table.insert(edges, faces[a])
+        table.insert(edges, faces[b])
+    end
+end
+
+----------------------------------------------------------------------------------------------------
 -- collision functions that apply on lists of vertices
 ----------------------------------------------------------------------------------------------------
 
@@ -482,5 +836,11 @@ function collisions.capsuleIntersection(verts, transform, tip_x, tip_y, tip_z, b
         radius
     )
 end
+
+function collisions.GJKIntersection(vertsA, vertsB)
+    return GJK(vertsA, vertsB)
+end
+
+
 
 return collisions
