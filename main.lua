@@ -1,6 +1,9 @@
 -- Imports
 local g3d = require "g3d"
 
+-- Constants
+local gravity = -9.81
+
 -- Object Creation
 -- local earth = g3d.newModel("g3dAssets/sphere.obj", "g3dAssets/earth.png", {0,0,4})
 -- local moon = g3d.newModel("g3dAssets/sphere.obj", "g3dAssets/moon.png", {-5,0,4}, nil, {0.5,0.5,0.5})
@@ -8,6 +11,15 @@ local background = g3d.newModel("g3dAssets/sphere.obj", "g3dAssets/starfield.png
 local grabableBall = g3d.newModel("g3dAssets/sphere.obj", "kenney_prototype_textures/red/texture_08.png", {10,0,4}, nil, {0.5,0.5,0.5})
 local bounds = g3d.newModel("custom_assets/plinkoBounds.obj", "kenney_prototype_textures/dark/texture_03.png", {10,0,4}, {math.pi/2,0,0}, {1,10,10})
 local timer = 0
+
+function gravityEffect(object, dt)
+    local posX, posY, posZ = object:getTranslation()
+    local newY = posY + gravity * dt
+    if newY < 0 then
+        newY = 0
+    end
+    object:setTranslation(posX, newY, posZ)
+end
 
 function love.mousemoved(x,y, dx,dy)
     -- g3d.camera.firstPersonLook(dx,dy)

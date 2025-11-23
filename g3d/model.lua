@@ -95,6 +95,11 @@ function model:setTranslation(tx,ty,tz)
     self:updateMatrix()
 end
 
+-- Get vector translation(position) of the model as three separate values
+function model:getTranslation()
+    return self.translation[1], self.translation[2], self.translation[3]
+end
+
 -- rotate given one 3d vector
 -- using euler angles
 function model:setRotation(rx,ry,rz)
