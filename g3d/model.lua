@@ -140,6 +140,15 @@ function model:setScale(sx,sy,sz)
     self:updateMatrix()
 end
 
+-- set current mesh texture
+function model:setTexture(texture)
+    if type(texture) == "string" then
+        texture = love.graphics.newImage(texture)
+    end
+    self.texture = texture
+    self.mesh:setTexture(self.texture)
+end
+
 -- update the model's transformation matrix
 function model:updateMatrix()
     self.matrix:setTransformationMatrix(self.translation, self.rotation, self.scale)

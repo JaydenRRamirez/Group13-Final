@@ -536,13 +536,8 @@ function handleLine(simplex, dir_x, dir_y, dir_z)
     local ao_x, ao_y, ao_z = fastSubtract(0, 0, 0, a_x, a_y, a_z)
 
     if sameDirection(ab_x, ab_y, ab_z, ao_x, ao_y, ao_z) then
-        dir_x, dir_y, dir_z = 
-        vectorCrossProduct(
-            vectorCrossProduct(
-                ab_x, ab_y, ab_z, 
-                ao_x, ao_y, ao_z),
-            ab_x, ab_y, ab_z
-        )
+        local cross1_x, cross1_y, cross1_z = vectorCrossProduct(ab_x, ab_y, ab_z, ao_x, ao_y, ao_z)
+        dir_x, dir_y, dir_z = vectorCrossProduct(cross1_x, cross1_y, cross1_z, ab_x, ab_y, ab_z)
     else
         simplex = {simplex[1]}
         dir_x, dir_y, dir_z = ao_x, ao_y, ao_z
@@ -562,20 +557,18 @@ function handleTriangle(simplex, dir_x, dir_y, dir_z)
 
     local abc_x, abc_y, abc_z = vectorCrossProduct(ab_x, ab_y, ab_z, ac_x, ac_y, ac_z)
 
-    if (sameDirection(vectorCrossProduct(abc_x, abc_y, abc_z, ac_x, ac_y, ac_z), ao_x, ao_y, ao_z)) then
+    local temp1_x, temp1_y, temp1_z = vectorCrossProduct(abc_x, abc_y, abc_z, ac_x, ac_y, ac_z)
+    if (sameDirection(temp1_x, temp1_y, temp1_z, ao_x, ao_y, ao_z)) then
         if sameDirection(ac_x, ac_y, ac_z, ao_x, ao_y, ao_z) then
             simplex = {simplex[1], simplex[3]}
-            dir_x, dir_y, dir_z = vectorCrossProduct(
-                vectorCrossProduct(
-                    ac_x, ac_y, ac_z,
-                    ao_x, ao_y, ao_z),
-                ac_x, ac_y, ac_z
-            )
+            local cross1_x, cross1_y, cross1_z = vectorCrossProduct(ac_x, ac_y, ac_z, ao_x, ao_y, ao_z)
+            dir_x, dir_y, dir_z = vectorCrossProduct(cross1_x, cross1_y, cross1_z, ac_x, ac_y, ac_z)
         else
             return handleLine({simplex[1], simplex[2]}, dir_x, dir_y, dir_z)
         end
     else
-        if sameDirection(vectorCrossProduct(ab_x, ab_y, ab_z, abc_x, abc_y, abc_z), ao_x, ao_y, ao_z) then
+        local temp2_x, temp2_y, temp2_z = vectorCrossProduct(ab_x, ab_y, ab_z, abc_x, abc_y, abc_z)
+        if sameDirection(temp2_x, temp2_y, temp2_z, ao_x, ao_y, ao_z) then
             return handleLine({simplex[1], simplex[2]}, dir_x, dir_y, dir_z)
         else
             if sameDirection(abc_x, abc_y, abc_z, ao_x, ao_y, ao_z) then
