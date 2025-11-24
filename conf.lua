@@ -1,4 +1,6 @@
 function love.conf(t)
     t.window.depth = 16
-    t.window.title = "g3d demo"
+    t.window.title = "CMPM 121 - Group 13 Final Project"
+    t.window.width = 800
+    t.window.height = 600
 end

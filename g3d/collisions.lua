@@ -737,7 +737,7 @@ function EPA(simplex, vertsA, vertsB)
     return minNorm_x, minNorm_y, minNorm_z, (minDistance + 0.001), true
 end 
 
-function getFaceNormals(polytope, faces) {
+function getFaceNormals(polytope, faces)
     local normals = {}
     local minFace = 1
     local minDistance = math.huge
