@@ -77,11 +77,13 @@ function love.update(dt)
     if love.keyboard.isDown("escape") then love.event.push("quit") end
 
     -- check collisions between grabableBall and bounds
-    for i = 1, #bounds do
+    for i = 1, 1 do
         if g3d.collisions.GJKIntersection(grabableBall.verts, bounds[i].verts) then
+            -- print("Collided with bound "..i)
             grabableBall:setTexture("kenney_prototype_textures/green/texture_08.png") -- Change color on collision
             bounds[i]:setTexture("kenney_prototype_textures/green/texture_03.png") -- Change color on collision
         else
+            -- print("No collision")
             grabableBall:setTexture("kenney_prototype_textures/red/texture_08.png") -- Reset color if no collision
             bounds[i]:setTexture("kenney_prototype_textures/dark/texture_03.png") -- Reset color if no collision
         end

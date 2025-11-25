@@ -442,6 +442,31 @@ local function findAny(self, verts, func, ...)
 end
 
 ----------------------------------------------------------------------------------------------------
+-- handle simplex functions
+----------------------------------------------------------------------------------------------------
+
+-- trim simplex down to four points if it's above
+function trimSimplex(simplex)
+    for i=#simplex,5,-1 do
+        table.remove(simplex)
+    end
+end
+
+-- push element in at the front and trim to four points
+function pushFrontSimplex(simplex, point_x, point_y, point_z)
+    table.insert(simplex, 1, {point_x, point_y, point_z})
+    trimSimplex(simplex)
+end
+
+-- print simplex for debugging
+function printSimplex(simplex)
+    print("Simplex:")
+    for i=1,#simplex do
+        print(string.format("  Point %d: (%.2f, %.2f, %.2f)", i, simplex[i][1], simplex[i][2], simplex[i][3]))
+    end
+end
+
+----------------------------------------------------------------------------------------------------
 -- Andrew's collision functions     Source: https://winter.dev/
 ----------------------------------------------------------------------------------------------------
 -- My definitions include: 
@@ -459,13 +484,13 @@ function GJK(vertsA, vertsB)
     -- initial point on the minkowski difference
     local point_x, point_y, point_z = minkowskiDiff(vertsA, vertsB, dir_x, dir_y, dir_z)
 
-    -- simplex points
+    -- simplex points (max count is 4 since we're in 3D)
     local simplex = {
         {point_x, point_y, point_z}
     }
 
     -- new direction towards the origin
-    dir_x, dir_y, dir_z = vectorNormalize(-point_x, -point_y, -point_z)
+    dir_x, dir_y, dir_z = -point_x, -point_y, -point_z
 
     while true do
         -- get a new point on the minkowski difference
@@ -473,14 +498,17 @@ function GJK(vertsA, vertsB)
 
         -- if the new point isn't past the origin in the direction of dir, no collision
         if vectorDotProduct(newPoint_x, newPoint_y, newPoint_z, dir_x, dir_y, dir_z) <= 0 then
-            return false
+            return false -- no collision
         end
 
         -- add the new point to the simplex
-        table.insert(simplex, 1, {newPoint_x, newPoint_y, newPoint_z})
+        pushFrontSimplex(simplex, newPoint_x, newPoint_y, newPoint_z)
 
         -- check if the simplex contains the origin
-        if nextSimplex(simplex, dir_x, dir_y, dir_z) then
+        local containsOrigin, dir_x, dir_y, dir_z = nextSimplex(simplex, dir_x, dir_y, dir_z)
+        if containsOrigin then
+            print("GJK: Collision detected")
+            printSimplex(simplex)
             return true
         end
     end
@@ -539,11 +567,11 @@ function handleLine(simplex, dir_x, dir_y, dir_z)
         local cross1_x, cross1_y, cross1_z = vectorCrossProduct(ab_x, ab_y, ab_z, ao_x, ao_y, ao_z)
         dir_x, dir_y, dir_z = vectorCrossProduct(cross1_x, cross1_y, cross1_z, ab_x, ab_y, ab_z)
     else
-        simplex = {simplex[1]}
+        simplex = {{a_x, a_y, a_z}}
         dir_x, dir_y, dir_z = ao_x, ao_y, ao_z
     end
 
-    return false
+    return false, dir_x, dir_y, dir_z
 end
 
 function handleTriangle(simplex, dir_x, dir_y, dir_z)
@@ -557,30 +585,36 @@ function handleTriangle(simplex, dir_x, dir_y, dir_z)
 
     local abc_x, abc_y, abc_z = vectorCrossProduct(ab_x, ab_y, ab_z, ac_x, ac_y, ac_z)
 
-    local temp1_x, temp1_y, temp1_z = vectorCrossProduct(abc_x, abc_y, abc_z, ac_x, ac_y, ac_z)
-    if (sameDirection(temp1_x, temp1_y, temp1_z, ao_x, ao_y, ao_z)) then
+    local crossOut1_x, crossOut1_y, crossOut1_z = vectorCrossProduct(abc_x, abc_y, abc_z, ac_x, ac_y, ac_z)
+    if (sameDirection(crossOut1_x, crossOut1_y, crossOut1_z, ao_x, ao_y, ao_z)) then
         if sameDirection(ac_x, ac_y, ac_z, ao_x, ao_y, ao_z) then
-            simplex = {simplex[1], simplex[3]}
+
+            simplex = {{a_x, a_y, a_z}, {c_x, c_y, c_z}}
             local cross1_x, cross1_y, cross1_z = vectorCrossProduct(ac_x, ac_y, ac_z, ao_x, ao_y, ao_z)
             dir_x, dir_y, dir_z = vectorCrossProduct(cross1_x, cross1_y, cross1_z, ac_x, ac_y, ac_z)
+
         else
-            return handleLine({simplex[1], simplex[2]}, dir_x, dir_y, dir_z)
+            simplex = {{a_x, a_y, a_z}, {b_x, b_y, b_z}}
+            return handleLine(simplex, dir_x, dir_y, dir_z)
         end
     else
-        local temp2_x, temp2_y, temp2_z = vectorCrossProduct(ab_x, ab_y, ab_z, abc_x, abc_y, abc_z)
-        if sameDirection(temp2_x, temp2_y, temp2_z, ao_x, ao_y, ao_z) then
-            return handleLine({simplex[1], simplex[2]}, dir_x, dir_y, dir_z)
+        local crossOut2_x, crossOut2_y, crossOut2_z = vectorCrossProduct(ab_x, ab_y, ab_z, abc_x, abc_y, abc_z)
+        if sameDirection(crossOut2_x, crossOut2_y, crossOut2_z, ao_x, ao_y, ao_z) then
+            simplex = {{a_x, a_y, a_z}, {b_x, b_y, b_z}}
+            return handleLine(simplex, dir_x, dir_y, dir_z)
         else
+
             if sameDirection(abc_x, abc_y, abc_z, ao_x, ao_y, ao_z) then
                 dir_x, dir_y, dir_z = abc_x, abc_y, abc_z
             else
-                simplex = {simplex[1], simplex[3], simplex[2]}
+                simplex = {{a_x, a_y, a_z}, {c_x, c_y, c_z}, {b_x, b_y, b_z}}
                 dir_x, dir_y, dir_z = -abc_x, -abc_y, -abc_z
             end
+
         end
     end
 
-    return false
+    return false, dir_x, dir_y, dir_z
 end
 
 function handleTetrahedron(simplex, dir_x, dir_y, dir_z)
@@ -599,18 +633,21 @@ function handleTetrahedron(simplex, dir_x, dir_y, dir_z)
     local adb_x, adb_y, adb_z = vectorCrossProduct(ad_x, ad_y, ad_z, ab_x, ab_y, ab_z)
 
     if sameDirection(abc_x, abc_y, abc_z, ao_x, ao_y, ao_z) then
-        return handleTriangle({simplex[1], simplex[2], simplex[3]}, dir_x, dir_y, dir_z)
+        simplex = {{a_x, a_y, a_z}, {b_x, b_y, b_z}, {c_x, c_y, c_z}}
+        return handleTriangle(simplex, dir_x, dir_y, dir_z)
     end
 
     if sameDirection(acd_x, acd_y, acd_z, ao_x, ao_y, ao_z) then
-        return handleTriangle({simplex[1], simplex[3], simplex[4]}, dir_x, dir_y, dir_z)
+        simplex = {{a_x, a_y, a_z}, {c_x, c_y, c_z}, {d_x, d_y, d_z}}
+        return handleTriangle(simplex, dir_x, dir_y, dir_z)
     end
 
     if sameDirection(adb_x, adb_y, adb_z, ao_x, ao_y, ao_z) then
-        return handleTriangle({simplex[1], simplex[4], simplex[2]}, dir_x, dir_y, dir_z)
+        simplex = {{a_x, a_y, a_z}, {d_x, d_y, d_z}, {b_x, b_y, b_z}}
+        return handleTriangle(simplex, dir_x, dir_y, dir_z)
     end
 
-    return true
+    return true, dir_x, dir_y, dir_z
 end
 
 -- Deep copy lua table
@@ -650,7 +687,7 @@ end
 -- Method you call for EPA collision detection between two convex shapes
 -- returns contact normal, penetration depth, and a boolean indicating a successful result
 function EPA(simplex, vertsA, vertsB)
-    local polytope = deepCopy(simplex)
+    local polytope = simplex
     local faces = {
         0, 1, 2,
         0, 3, 1,
@@ -740,10 +777,13 @@ function getFaceNormals(polytope, faces)
         local b_x, b_y, b_z = polytope[faces[i + 1]][1], polytope[faces[i + 1]][2], polytope[faces[i + 1]][3]
         local c_x, c_y, c_z = polytope[faces[i + 2]][1], polytope[faces[i + 2]][2], polytope[faces[i + 2]][3]
 
+        local bminusa_x, bminusa_y, bminusa_z = fastSubtract(b_x, b_y, b_z, a_x, a_y, a_z)
+        local cminusa_x, cminusa_y, cminusa_z = fastSubtract(c_x, c_y, c_z, a_x, a_y, a_z)
+
         local norm_x, norm_y, norm_z = vectorNormalize(
             vectorCrossProduct(
-                fastSubtract(b_x, b_y, b_z, a_x, a_y, a_z),
-                fastSubtract(c_x, c_y, c_z, a_x, a_y, a_z)
+                bminusa_x, bminusa_y, bminusa_z,
+                cminusa_x, cminusa_y, cminusa_z
             )
         )
         local distance = vectorDotProduct(norm_x, norm_y, norm_z, a_x, a_y, a_z)
