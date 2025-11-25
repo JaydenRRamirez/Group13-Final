@@ -165,9 +165,6 @@ function model:lookAt(target, up)
     self.matrix:lookAtFrom(self.translation, target, up or {0,0,1}, self.scale)
 end
 
-
-
-
 -- draw the model
 function model:draw(shader)
     local shader = shader or self.shader

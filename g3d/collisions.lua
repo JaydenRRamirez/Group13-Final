@@ -466,6 +466,13 @@ function printSimplex(simplex)
     end
 end
 
+function printVerts(verts)
+    print("Verts:")
+    for i=1,#verts do
+        print(string.format("  Vert %d: (%.2f, %.2f, %.2f)", i, verts[i][1], verts[i][2], verts[i][3]))
+    end
+end
+
 ----------------------------------------------------------------------------------------------------
 -- Andrew's collision functions     Source: https://winter.dev/
 ----------------------------------------------------------------------------------------------------
@@ -477,12 +484,12 @@ end
 ----------------------------------------------------------------------------------------------------
 
 -- Method you call for GJK collision detection between two convex shapes
-function GJK(vertsA, vertsB)
+function GJK(modelA, modelB)
     -- initial direction
     local dir_x, dir_y, dir_z = 1, 0, 0
 
     -- initial point on the minkowski difference
-    local point_x, point_y, point_z = minkowskiDiff(vertsA, vertsB, dir_x, dir_y, dir_z)
+    local point_x, point_y, point_z = minkowskiDiff(modelA, modelB, dir_x, dir_y, dir_z)
 
     -- simplex points (max count is 4 since we're in 3D)
     local simplex = {
@@ -494,7 +501,7 @@ function GJK(vertsA, vertsB)
 
     while true do
         -- get a new point on the minkowski difference
-        local newPoint_x, newPoint_y, newPoint_z = minkowskiDiff(vertsA, vertsB, dir_x, dir_y, dir_z)
+        local newPoint_x, newPoint_y, newPoint_z = minkowskiDiff(modelA, modelB, dir_x, dir_y, dir_z)
 
         -- if the new point isn't past the origin in the direction of dir, no collision
         if vectorDotProduct(newPoint_x, newPoint_y, newPoint_z, dir_x, dir_y, dir_z) <= 0 then
@@ -507,33 +514,50 @@ function GJK(vertsA, vertsB)
         -- check if the simplex contains the origin
         local containsOrigin, dir_x, dir_y, dir_z = nextSimplex(simplex, dir_x, dir_y, dir_z)
         if containsOrigin then
-            print("GJK: Collision detected")
-            printSimplex(simplex)
+            -- print("GJK: Collision detected")
+            -- printSimplex(simplex)
             return true
         end
     end
 end
 
-function findFurthestPoint(verts, dir_x, dir_y, dir_z)
+function findFurthestPoint(model, dir_x, dir_y, dir_z)
     local max_x, max_y, max_z
     local maxDist = -math.huge
 
-    for v=1, #verts do
-        local dist = vectorDotProduct(verts[v][1], verts[v][2], verts[v][3], dir_x, dir_y, dir_z)
+    local translation_x, translation_y, translation_z, scale_x, scale_y, scale_z = 0, 0, 0, 1, 1, 1
+    if model then
+        if model.translation then
+            translation_x = model.translation[1]
+            translation_y = model.translation[2]
+            translation_z = model.translation[3]
+        end
+        if model.scale then
+            scale_x = model.scale[1]
+            scale_y = model.scale[2]
+            scale_z = model.scale[3]
+        end
+    end
+
+    for v=1, #model.verts do
+        x = model.verts[v][1]*scale_x + translation_x
+        y = model.verts[v][2]*scale_y + translation_y
+        z = model.verts[v][3]*scale_z + translation_z
+        local dist = vectorDotProduct(x, y, z, dir_x, dir_y, dir_z)
         if dist > maxDist then
             maxDist = dist
-            max_x = verts[v][1]
-            max_y = verts[v][2]
-            max_z = verts[v][3]
+            max_x = x
+            max_y = y
+            max_z = z
         end
     end
 
     return max_x, max_y, max_z
 end
 
-function minkowskiDiff(vertsA, vertsB, dir_x, dir_y, dir_z)
-    local a_x, a_y, a_z = findFurthestPoint(vertsA, dir_x, dir_y, dir_z)
-    local b_x, b_y, b_z = findFurthestPoint(vertsB, -dir_x, -dir_y, -dir_z)
+function minkowskiDiff(modelA, modelB, dir_x, dir_y, dir_z)
+    local a_x, a_y, a_z = findFurthestPoint(modelA, dir_x, dir_y, dir_z)
+    local b_x, b_y, b_z = findFurthestPoint(modelB, -dir_x, -dir_y, -dir_z)
 
     return fastSubtract(a_x, a_y, a_z, b_x, b_y, b_z)
 end
@@ -870,8 +894,8 @@ function collisions.capsuleIntersection(verts, transform, tip_x, tip_y, tip_z, b
     )
 end
 
-function collisions.GJKIntersection(vertsA, vertsB)
-    return GJK(vertsA, vertsB)
+function collisions.GJKIntersection(modelA, modelB)
+    return GJK(modelA, modelB)
 end
 
 
