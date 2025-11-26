@@ -74,6 +74,9 @@ defaultBallTexture = love.graphics.newImage("kenney_prototype_textures/red/textu
 defaultBoundTexture = love.graphics.newImage("kenney_prototype_textures/dark/texture_03.png")
 
 local collidedThisFrame = false
+local distance, it_x, it_y, it_z, n_x, n_y, n_z
+local bcenter_x, bcenter_y, bcenter_z
+local bradius = 0.5
 function love.update(dt)
     -- Make camera orthographic
     -- g3d.camera.updateOrthographicMatrix()
@@ -87,14 +90,15 @@ function love.update(dt)
     -- check collisions between grabableBall and bounds
     collidedThisFrame = false
     for i = 1, #bounds do
-        local overrideBound = i
-        if g3d.collisions.GJKIntersection(grabableBall, bounds[overrideBound]) then
+        bcenter_x, bcenter_y, bcenter_z = grabableBall:getTranslation()
+        distance, it_x, it_y, it_z, n_x, n_y, n_z = bounds[i]:sphereIntersection(bcenter_x, bcenter_y, bcenter_z, bradius)
+        if distance then
             -- print("Collided with bound "..i)
             collidedThisFrame = true
-            bounds[overrideBound]:setTexture(collidingTexture) -- Change color on collision
+            bounds[i]:setTexture(collidingTexture) -- Change color on collision
         else
             -- print("No collision")
-            bounds[overrideBound]:setTexture(defaultBoundTexture) -- Reset color if no collision
+            bounds[i]:setTexture(defaultBoundTexture) -- Reset color if no collision
         end
     end
 
