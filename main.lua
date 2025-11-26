@@ -19,7 +19,7 @@ local bounds = {
 }
 local timer = 0
 
-local transformPerScreenPixel
+local transformPerScreenPixel = 0
 -- Function that gets the transform height and width per screen pixel based on how far gameCenter is from the camera
 function calculateTransformPerScreenPixel()
     local distance
@@ -60,11 +60,17 @@ function love.load()
     calculateTransformPerScreenPixel()
 end
 
+local rayDirX, rayDirY = 0,0
 function love.mousemoved(x,y, dx,dy)
     -- g3d.camera.firstPersonLook(dx,dy)
-    local rayDirX, rayDirY = getMouseLookVector(x,y)
+    rayDirX, rayDirY = getMouseLookVector(x,y)
     grabableBall:setTranslation(10, -rayDirX * transformPerScreenPixel, -rayDirY * transformPerScreenPixel)
 end
+
+-- setup image assets to be switched out
+collidingTexture = love.graphics.newImage("kenney_prototype_textures/green/texture_08.png")
+defaultBallTexture = love.graphics.newImage("kenney_prototype_textures/red/texture_08.png")
+defaultBoundTexture = love.graphics.newImage("kenney_prototype_textures/dark/texture_03.png")
 
 function love.update(dt)
     -- Make camera orthographic
@@ -81,12 +87,12 @@ function love.update(dt)
         local overrideBound = i
         if g3d.collisions.GJKIntersection(grabableBall, bounds[overrideBound]) then
             -- print("Collided with bound "..i)
-            grabableBall:setTexture("kenney_prototype_textures/green/texture_08.png") -- Change color on collision
-            bounds[overrideBound]:setTexture("kenney_prototype_textures/green/texture_03.png") -- Change color on collision
+            grabableBall:setTexture(collidingTexture) -- Change color on collision
+            bounds[overrideBound]:setTexture(collidingTexture) -- Change color on collision
         else
             -- print("No collision")
-            grabableBall:setTexture("kenney_prototype_textures/red/texture_08.png") -- Reset color if no collision
-            bounds[overrideBound]:setTexture("kenney_prototype_textures/dark/texture_03.png") -- Reset color if no collision
+            grabableBall:setTexture(defaultBallTexture) -- Reset color if no collision
+            bounds[overrideBound]:setTexture(defaultBoundTexture) -- Reset color if no collision
         end
     end
 end

@@ -142,9 +142,6 @@ end
 
 -- set current mesh texture
 function model:setTexture(texture)
-    if type(texture) == "string" then
-        texture = love.graphics.newImage(texture)
-    end
     self.texture = texture
     self.mesh:setTexture(self.texture)
 end

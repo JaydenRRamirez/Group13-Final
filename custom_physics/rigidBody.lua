@@ -49,3 +49,5 @@ end
 function rigidBody:checkCollision(otherBody)
     -- Collision detection logic would go here
 end
+
+return rigidBody
