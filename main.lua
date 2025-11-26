@@ -5,6 +5,7 @@ local g3d = require "g3d"
 local gravity = -9.81
 local gameCenter = {10,0,4}
 local lookDirection = "x"
+
 -- Object Creation
 -- local earth = g3d.newModel("g3dAssets/sphere.obj", "g3dAssets/earth.png", {0,0,4})
 -- local moon = g3d.newModel("g3dAssets/sphere.obj", "g3dAssets/moon.png", {-5,0,4}, nil, {0.5,0.5,0.5})
@@ -72,6 +73,7 @@ collidingTexture = love.graphics.newImage("kenney_prototype_textures/green/textu
 defaultBallTexture = love.graphics.newImage("kenney_prototype_textures/red/texture_08.png")
 defaultBoundTexture = love.graphics.newImage("kenney_prototype_textures/dark/texture_03.png")
 
+local collidedThisFrame = false
 function love.update(dt)
     -- Make camera orthographic
     -- g3d.camera.updateOrthographicMatrix()
@@ -83,17 +85,23 @@ function love.update(dt)
     if love.keyboard.isDown("escape") then love.event.push("quit") end
 
     -- check collisions between grabableBall and bounds
+    collidedThisFrame = false
     for i = 1, #bounds do
         local overrideBound = i
         if g3d.collisions.GJKIntersection(grabableBall, bounds[overrideBound]) then
             -- print("Collided with bound "..i)
-            grabableBall:setTexture(collidingTexture) -- Change color on collision
+            collidedThisFrame = true
             bounds[overrideBound]:setTexture(collidingTexture) -- Change color on collision
         else
             -- print("No collision")
-            grabableBall:setTexture(defaultBallTexture) -- Reset color if no collision
             bounds[overrideBound]:setTexture(defaultBoundTexture) -- Reset color if no collision
         end
+    end
+
+    if collidedThisFrame then
+        grabableBall:setTexture(collidingTexture)
+    else
+        grabableBall:setTexture(defaultBallTexture)
     end
 end
 
