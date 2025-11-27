@@ -165,6 +165,19 @@ function love.update(dt)
             bounds[overrideBound]:setTexture(defaultBoundTexture) -- Reset color if no collision
         end
     end
+    
+    for i = 1, #slots do
+        local overrideBound = i
+        if g3d.collisions.GJKIntersection(grabableBall, slots[overrideBound]) then
+            -- print("Collided with bound "..i)
+            grabableBall:setTexture(collidingTexture) -- Change color on collision
+            slots[overrideBound]:setTexture(collidingTexture) -- Change color on collision
+        else
+            -- print("No collision")
+            grabableBall:setTexture(defaultBallTexture) -- Reset color if no collision
+            slots[overrideBound]:setTexture(defaultBoundTexture) -- Reset color if no collision
+        end
+    end
 end
 
 function love.draw()
