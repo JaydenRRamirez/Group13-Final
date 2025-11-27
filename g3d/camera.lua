@@ -1,3 +1,4 @@
+---@diagnostic disable: deprecated
 -- written by groverbuger for g3d
 -- september 2021
 -- MIT license

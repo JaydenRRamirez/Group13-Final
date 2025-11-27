@@ -38,6 +38,7 @@ end
 -- automatically converts a matrix to a string
 -- for printing to console and debugging
 function matrix:__tostring()
+---@diagnostic disable-next-line: deprecated
     return ("%f\t%f\t%f\t%f\n%f\t%f\t%f\t%f\n%f\t%f\t%f\t%f\n%f\t%f\t%f\t%f"):format(unpack(self))
 end
 
@@ -98,6 +99,8 @@ function matrix:lookAtFrom(pos, target, up, orig_scale)
 
     local sx, sy, sz
     if orig_scale then
+    
+---@diagnostic disable-next-line: deprecated
         sx, sy, sz = unpack(orig_scale)
     else
         sx, sy, sz = self:getScale()

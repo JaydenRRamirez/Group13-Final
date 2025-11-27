@@ -24,7 +24,7 @@ local simulatedObjects = {}
 
 local transformPerScreenPixel = 0
 -- Function that gets the transform height and width per screen pixel based on how far gameCenter is from the camera
-function calculateTransformPerScreenPixel()
+local function calculateTransformPerScreenPixel()
     local distance
     if lookDirection == "x" then
         distance = math.abs(gameCenter[1] - g3d.camera.position[1])
@@ -41,7 +41,7 @@ end
 
 -- Returns a normalized direction vector from screen center to mouse position
 -- Returns: dx, dy (2D vector components)
-function getMouseLookVector(mouseX, mouseY)
+local function getMouseLookVector(mouseX, mouseY)
     local screenWidth = love.graphics.getWidth()
     local screenHeight = love.graphics.getHeight()
     
@@ -61,7 +61,7 @@ function getMouseLookVector(mouseX, mouseY)
 end
 
 
-function getClickWorldPosition(mouseX, mouseY)
+local function getClickWorldPosition(mouseX, mouseY)
     local worldX, worldY, worldZ
     if mouseX == nil or mouseY == nil then
         mouseX, mouseY = love.mouse.getPosition()
@@ -99,7 +99,7 @@ end
 function love.mousepressed(x, y, button, istouch, presses)
     if button == 1 then
         local mWorldPosX, mWorldPosY, mWorldPosZ = getClickWorldPosition(x, y)
-        grabableBall = physSim:newRigidBody("g3dAssets/sphere.obj", "kenney_prototype_textures/orange/texture_08.png", 
+        local physBall = physSim:newRigidBody("g3dAssets/sphere.obj", "kenney_prototype_textures/orange/texture_08.png", 
             {mWorldPosX, mWorldPosY, mWorldPosZ}, 
             nil, 
             {0.5,0.5,0.5}, 
@@ -107,7 +107,7 @@ function love.mousepressed(x, y, button, istouch, presses)
             "sphere", 
             {radius=0.5}
         )
-        table.insert(simulatedObjects, grabableBall)
+        table.insert(simulatedObjects, physBall)
     end
 end
 
