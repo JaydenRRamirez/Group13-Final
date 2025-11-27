@@ -40,6 +40,41 @@ for i = 0, numSlots do
     )
     table.insert(slots, divider);
 end
+
+-- Level Constants
+local platformWidth = 6.0;
+local platformHeight = 12.0;
+local thickness = 0.5;
+local pegZlocation = 4.0;
+
+-- Object Lists
+local slots = {};
+
+-- Positions
+local topZ = pegZlocation + platformHeight / 2;
+local bottomZ = pegZlocation - platformHeight / 2;
+
+local numSlots = 5
+local dividerWidth = 0.05
+local totalWidth = platformWidth
+local slotWidth = totalWidth / numSlots -- Width of each slot
+local dividerZ = bottomZ - thickness * 2 -- Positioned just below the floor
+local dividerHeight = 0.5
+
+-- We need numSlots + 1 dividers
+local firstDividerY = -(totalWidth / 2)
+
+for i = 0, numSlots do
+    local dividerY = firstDividerY + (i * slotWidth)
+    local divider = g3d.newModel(
+        "g3dAssets/cube.obj",
+        "kenney_prototype_textures/red/texture_03.png",
+        {10, dividerY, dividerZ},
+        nil,
+        {thickness, dividerWidth, dividerHeight} -- X, Y, Z scale
+    )
+    table.insert(slots, divider);
+end
 -- Object Creation
 -- local earth = g3d.newModel("g3dAssets/sphere.obj", "g3dAssets/earth.png", {0,0,4})
 -- local moon = g3d.newModel("g3dAssets/sphere.obj", "g3dAssets/moon.png", {-5,0,4}, nil, {0.5,0.5,0.5})
