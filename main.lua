@@ -15,7 +15,7 @@ local bounds = {
     rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,5,4}, nil, {2,0.5,7}, "static", "verts"),
     rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-5,4}, nil, {2,0.5,7}, "static", "verts"),
     rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,0,-3.5}, nil, {2,5.5,0.5}, "static", "verts"),
-    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-3,-2}, {-math.pi/4,0,0}, {2,2,0.5}, "static", "verts"),
+    rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/orange/texture_03.png", {10,-3,-2}, nil, {2,1,-1}, "static", "verts"),
 }
 local timer = 0
 
