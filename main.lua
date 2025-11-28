@@ -1,6 +1,6 @@
 -- Imports
 local g3d = require "g3d"
-local physSim = require(".rigidBody")
+local rigidBody = require(".rigidBody")
 
 -- Constants
 local gravity = -9.81
@@ -12,9 +12,10 @@ local background = g3d.newModel("g3dAssets/sphere.obj", "g3dAssets/starfield.png
 local ballCursor = g3d.newModel("g3dAssets/sphere.obj", "kenney_prototype_textures/red/texture_08.png", {10,0,4}, nil, {0.5,0.5,0.5})
 
 local bounds = {
-    physSim:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,5,4}, nil, {2,0.5,7}, "static", "verts"),
-    physSim:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-5,4}, nil, {2,0.5,7}, "static", "verts"),
-    physSim:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,0,-4}, nil, {2,5.5,0.5}, "static", "verts")
+    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,5,4}, nil, {2,0.5,7}, "static", "verts"),
+    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-5,4}, nil, {2,0.5,7}, "static", "verts"),
+    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,0,-3.5}, nil, {2,5.5,0.5}, "static", "verts"),
+    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-3,-2}, {-math.pi/4,0,0}, {2,2,0.5}, "static", "verts"),
 }
 local timer = 0
 
@@ -99,7 +100,7 @@ end
 function love.mousepressed(x, y, button, istouch, presses)
     if button == 1 then
         local mWorldPosX, mWorldPosY, mWorldPosZ = getClickWorldPosition(x, y)
-        local physBall = physSim:newRigidBody("g3dAssets/sphere.obj", "kenney_prototype_textures/orange/texture_08.png", 
+        local physBall = rigidBody:newRigidBody("g3dAssets/sphere.obj", "kenney_prototype_textures/orange/texture_08.png", 
             {mWorldPosX, mWorldPosY, mWorldPosZ}, 
             nil, 
             {0.5,0.5,0.5}, 
@@ -116,11 +117,6 @@ function love.mousemoved(x,y, dx,dy)
     local mWorldPosX, mWorldPosY, mWorldPosZ = getClickWorldPosition(x, y)
     ballCursor:setTranslation(mWorldPosX, mWorldPosY, mWorldPosZ)
 end
-
--- setup image assets to be switched out
--- collidingTexture = love.graphics.newImage("kenney_prototype_textures/green/texture_08.png")
--- defaultBallTexture = love.graphics.newImage("kenney_prototype_textures/red/texture_08.png")
--- defaultBoundTexture = love.graphics.newImage("kenney_prototype_textures/dark/texture_03.png")
 
 local collidedThisFrame = false
 function love.update(dt)
