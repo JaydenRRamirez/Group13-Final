@@ -119,6 +119,7 @@ function love.mousemoved(x,y, dx,dy)
 end
 
 local collidedThisFrame = false
+local isPaused = false
 function love.update(dt)
     -- Make camera orthographic
     -- g3d.camera.updateOrthographicMatrix()
@@ -126,15 +127,17 @@ function love.update(dt)
     timer = timer + dt
     -- g3d.camera.firstPersonMovement(dt)
     if love.keyboard.isDown("escape") then love.event.push("quit") end
+    if love.keyboard.isDown("p") then isPaused = not isPaused end
 
-    -- check collisions between grabableBall and bounds
-    for i = 1, #simulatedObjects do
-        for j = 1, #bounds do
-            collidedThisFrame = simulatedObjects[i]:resolveCollision(bounds[j])
-            bounds[j]:update(dt)
+    if not isPaused then
+        -- check collisions between grabableBall and bounds
+        for i = 1, #simulatedObjects do
+            for j = 1, #bounds do
+                collidedThisFrame = simulatedObjects[i]:resolveCollision(bounds[j])
+                bounds[j]:update(dt)
+            end
+            simulatedObjects[i]:update(dt)
         end
-
-        simulatedObjects[i]:update(dt)
     end
 end
 

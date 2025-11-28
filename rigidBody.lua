@@ -11,6 +11,7 @@ local vectorMagnitude = vectors.magnitude
 -- Physics World Constants
 local DRAG_COEFFICIENT = 0.1
 local WORLD_GRAVITY = {0, 0, -9.81}
+local DEFAULT_ELASTICITY = 0.66
 
 ----------------------------------------------------------------------------------------------------
 -- define a rigidBody class
@@ -62,7 +63,7 @@ function rigidBody:newRigidBody(verts, texture, translation, rotation, scale, ty
         self.elasticity = extraParams.elasticity
     end
     if self.elasticity == nil then
-        self.elasticity = 0.66
+        self.elasticity = DEFAULT_ELASTICITY
     end
 
     self.position = self.model.translation
@@ -89,10 +90,6 @@ end
 
 function rigidBody:applyLinearImpulse(impulseX, impulseY, impulseZ)
     if self.mass then
-        if math.abs(impulseX) <= self.gravity[1] then impulseX = 0 end
-        if math.abs(impulseY) <= self.gravity[2] then impulseY = 0 end
-        if math.abs(impulseZ) <= self.gravity[3] then impulseZ = 0 end
-
         self.velocity[1] = self.velocity[1] + (impulseX / self.mass)
         self.velocity[2] = self.velocity[2] + (impulseY / self.mass)
         self.velocity[3] = self.velocity[3] + (impulseZ / self.mass)
@@ -261,7 +258,8 @@ function rigidBody:processCollision(otherBody, distance, intersect_X, intersect_
         normal_Z
     )
 
-    local j = (-(1 + cOfE) * impulseForce) / (inverseMassSum + angularEffect)
+    -- Formula if it had angular effect: j = (-(1 + cOfE) * impulseForce) / (inverseMassSum + angularEffect)
+    local j = (-(1 + cOfE) * impulseForce) / inverseMassSum
 
     local fullImpulseX, fullImpulseY, fullImpulseZ = normal_X * j, normal_Y * j, normal_Z * j
 
