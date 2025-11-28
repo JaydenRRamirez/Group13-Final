@@ -12,9 +12,9 @@ local background = g3d.newModel("g3dAssets/sphere.obj", "g3dAssets/starfield.png
 local ballCursor = g3d.newModel("g3dAssets/sphere.obj", "kenney_prototype_textures/red/texture_08.png", {10,0,4}, nil, {0.5,0.5,0.5})
 
 local bounds = {
-    physSim:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,5,4}, nil, {2,0.5,7}, "static", {type = "verts"}),
-    physSim:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-5,4}, nil, {2,0.5,7}, "static", {type = "verts"}),
-    physSim:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,0,-4}, nil, {2,5.5,0.5}, "static", {type = "verts"})
+    physSim:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,5,4}, nil, {2,0.5,7}, "static", "verts"),
+    physSim:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-5,4}, nil, {2,0.5,7}, "static", "verts"),
+    physSim:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,0,-4}, nil, {2,5.5,0.5}, "static", "verts")
 }
 local timer = 0
 
@@ -135,6 +135,7 @@ function love.update(dt)
     for i = 1, #simulatedObjects do
         for j = 1, #bounds do
             collidedThisFrame = simulatedObjects[i]:resolveCollision(bounds[j])
+            bounds[j]:update(dt)
         end
 
         simulatedObjects[i]:update(dt)
