@@ -7,15 +7,96 @@ local gravity = -9.81
 local gameCenter = {10,0,4}
 local lookDirection = "x"
 
+-- Level Constants
+local platformWidth = 6.0;
+local platformHeight = 12.0;
+local thickness = 0.5;
+local pegZlocation = 4.0;
+
+-- Object Lists
+local slots = {};
+
+-- Positions
+local topZ = pegZlocation + platformHeight / 2;
+local bottomZ = pegZlocation - platformHeight / 2;
+
+local numSlots = 5
+local dividerWidth = 0.05
+local totalWidth = platformWidth
+local slotWidth = totalWidth / numSlots
+local dividerZ = bottomZ - thickness * 2
+local dividerHeight = 0.5
+
+-- We need numSlots + 1 dividers
+local firstDividerY = -(totalWidth / 2)
+
+for i = 0, numSlots do
+    local dividerY = firstDividerY + (i * slotWidth)
+    local divider = g3d.newModel(
+        "g3dAssets/cube.obj",
+        "kenney_prototype_textures/red/texture_03.png",
+        {10, dividerY, dividerZ},
+        nil,
+        {thickness, dividerWidth, dividerHeight} -- X, Y, Z scale
+    )
+    table.insert(slots, divider);
+end
+
 -- Object Creation
 local background = g3d.newModel("g3dAssets/sphere.obj", "g3dAssets/starfield.png", {0,0,0}, nil, {500,500,500})
 local ballCursor = g3d.newModel("g3dAssets/sphere.obj", "kenney_prototype_textures/red/texture_08.png", {10,0,4}, nil, {0.5,0.5,0.5})
 
+-- Base Bounds (Walls and Floor/Back)
 local bounds = {
+    -- Right Wall
     physSim:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,5,4}, nil, {2,0.5,7}, "static", "verts"),
+    -- Left Wall
     physSim:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-5,4}, nil, {2,0.5,7}, "static", "verts"),
+    -- Floor (or Back wall if Z is depth)
     physSim:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,0,-4}, nil, {2,5.5,0.5}, "static", "verts")
 }
+
+-- Plinko Pegs Grid
+local pegRadius = 0.15
+local pegSpacingY = 2.0 -- Horizontal spacing
+local pegSpacingZ = 2.0 -- Vertical spacing
+local pegStartRowZ = topZ - 1.0
+local pegEndRowZ = dividerZ + 1.0
+local pegTexture = "kenney_prototype_textures/purple/texture_08.png"
+
+local yCenter = gameCenter[2]
+local yLimit = platformWidth / 2 - pegRadius
+
+local rowCount = 0
+for z = pegStartRowZ, pegEndRowZ, -pegSpacingZ do
+    rowCount = rowCount + 1
+    local yOffset = 0
+    -- Staggering: shift every other row by half the spacing
+    if rowCount % 2 == 0 then
+        yOffset = pegSpacingY / 2
+    end
+    
+    -- Loop from -Y limit to +Y limit
+    local y = -yLimit + yOffset
+    while y <= yLimit do
+        -- Only place pegs within the Y bounds
+        if y >= -yLimit and y <= yLimit then
+            local peg = physSim:newRigidBody(
+                "g3dAssets/sphere.obj",
+                pegTexture,
+                {gameCenter[1], y, z},
+                nil,
+                {pegRadius, pegRadius, pegRadius},
+                "static",
+                "sphere",
+                {radius = pegRadius}
+            )
+            table.insert(bounds, peg)
+        end
+        y = y + pegSpacingY
+    end
+end
+
 local timer = 0
 
 -- keep track of all rigid bodies that need to be physics simulated aren't static
@@ -76,7 +157,7 @@ local function getClickWorldPosition(mouseX, mouseY)
     end
 
     local sign = -1
-    if lookDirection.sub(1,1) == "-" then sign = 1 end 
+    if lookDirection.sub(1,1) == "-" then sign = 1 end
     
     if worldX then
         worldY = sign * rayDirX * transformPerScreenPixel
@@ -145,14 +226,18 @@ end
 function love.draw()
     -- earth:draw()
     -- moon:draw()
-	
+    
     background:draw()
-	ballCursor:draw()
+    ballCursor:draw()
 
     for i = 1, #simulatedObjects do
         simulatedObjects[i]:draw()
     end
-	for i = 1, #bounds do
+    for i = 1, #bounds do
         bounds[i]:draw()
+    end
+
+    for i = 1, #slots do
+        slots[i]:draw();
     end
 end
