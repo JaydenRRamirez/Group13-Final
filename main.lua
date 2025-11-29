@@ -154,7 +154,7 @@ end
 
 function love.mousepressed(x, y, button, istouch, presses)
     if button == 1 then
-        if #simulatedObjects >= 1 then 
+        if #simulatedObjects >= 5 then 
             table.remove(simulatedObjects, 1)
         end
         local physBall = rigidBody:newRigidBody("g3dAssets/sphere.obj", "kenney_prototype_textures/orange/texture_08.png", 
@@ -178,6 +178,9 @@ end
 local collidedThisFrame, wonThisFrame, lostThisFrame = false, false, false
 local isPaused = false
 function love.update(dt)
+    if wonGame or lostGame then
+        return
+    end
     -- Make camera orthographic
     -- g3d.camera.updateOrthographicMatrix()
 
@@ -189,7 +192,9 @@ function love.update(dt)
         -- check collisions between simulated balls and bounds
         for i = 1, #simulatedObjects do
             for j = 1, #bounds do
-                collidedThisFrame = simulatedObjects[i]:resolveCollision(bounds[j])
+                if simulatedObjects[i].model:AABBIntersection(bounds[j].model.aabb.minPoint, bounds[j].model.aabb.maxPoint) then
+                    collidedThisFrame = simulatedObjects[i]:resolveCollision(bounds[j])
+                end
                 bounds[j]:update(dt)
             end
             simulatedObjects[i]:update(dt)
@@ -197,26 +202,22 @@ function love.update(dt)
 
         -- check collision between ball and win/lose boxes
         for i = 1, #simulatedObjects do
-            if not lostGame then
-                for winBoxInd = 1, #winBoxes do
-                    wonThisFrame = simulatedObjects[i]:checkCollision(winBoxes[winBoxInd])
-                    if wonThisFrame then
-                        wonGame = true
-                        -- remove ball from simulation
-                        table.remove(simulatedObjects, i)
-                        break
-                    end
+            for winBoxInd = 1, #winBoxes do
+                wonThisFrame = winBoxes[winBoxInd].model:isPointInAABB(simulatedObjects[i].position)
+                if wonThisFrame then
+                    wonGame = true
+                    -- remove ball from simulation
+                    table.remove(simulatedObjects, i)
+                    return
                 end
             end
-            if not wonGame then
-                for loseBoxInd = 1, #loseBoxes do
-                    lostThisFrame = simulatedObjects[i]:checkCollision(loseBoxes[loseBoxInd])
-                    if lostThisFrame then
-                        lostGame = true
-                        -- remove ball from simulation
-                        table.remove(simulatedObjects, i)
-                        break
-                    end
+            for loseBoxInd = 1, #loseBoxes do
+                lostThisFrame = loseBoxes[loseBoxInd].model:isPointInAABB(simulatedObjects[i].position)
+                if lostThisFrame then
+                    lostGame = true
+                    -- remove ball from simulation
+                    table.remove(simulatedObjects, i)
+                    return
                 end
             end
         end

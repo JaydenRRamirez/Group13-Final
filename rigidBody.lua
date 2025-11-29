@@ -61,9 +61,13 @@ function rigidBody:newRigidBody(verts, texture, translation, rotation, scale, ty
 
     if extraParams then
         self.elasticity = extraParams.elasticity
+        self.lockedAxes = extraParams.lockedAxes
     end
     if self.elasticity == nil then
         self.elasticity = DEFAULT_ELASTICITY
+    end
+    if self.lockedAxes == nil then
+        self.lockedAxes = {false, false, false}
     end
 
     self.position = self.model.translation

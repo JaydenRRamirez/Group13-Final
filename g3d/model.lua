@@ -54,6 +54,9 @@ local function newModel(verts, texture, translation, rotation, scale)
     if type(scale) == "number" then scale = {scale, scale, scale} end
     self:setTransform(translation or {0,0,0}, rotation or {0,0,0}, scale or {1,1,1})
 
+    -- setup aabb bounding boxes
+    self.aabb = self:findAABBPoints()
+
     return self
 end
 
@@ -87,8 +90,43 @@ function model:setTransform(translation, rotation, scale)
     self:updateMatrix()
 end
 
+function model:findAABBPoints()
+    local minX, minY, minZ = math.huge, math.huge, math.huge
+    local maxX, maxY, maxZ = -math.huge, -math.huge, -math.huge
+
+    for i = 1, #self.verts do
+        local x = self.verts[i][1] * self.scale[1] + self.translation[1]
+        local y = self.verts[i][2] * self.scale[2] + self.translation[2]
+        local z = self.verts[i][3] * self.scale[3] + self.translation[3]
+        if x < minX then minX = x end
+        if y < minY then minY = y end
+        if z < minZ then minZ = z end
+        if x > maxX then maxX = x end
+        if y > maxY then maxY = y end
+        if z > maxZ then maxZ = z end
+    end
+
+    return {minPoint = {minX, minY, minZ}, maxPoint = {maxX, maxY, maxZ}}
+end
+
+function model:setAABBPoints(minPoint, maxPoint)
+    self.aabb = {minPoint = minPoint, maxPoint = maxPoint}
+end
+
 -- move given one 3d vector
 function model:setTranslation(tx,ty,tz)
+    local xDiff = tx - self.translation[1]
+    local yDiff = ty - self.translation[2]
+    local zDiff = tz - self.translation[3]
+
+    self.aabb.minPoint[1] = self.aabb.minPoint[1] + xDiff
+    self.aabb.minPoint[2] = self.aabb.minPoint[2] + yDiff
+    self.aabb.minPoint[3] = self.aabb.minPoint[3] + zDiff
+
+    self.aabb.maxPoint[1] = self.aabb.maxPoint[1] + xDiff
+    self.aabb.maxPoint[2] = self.aabb.maxPoint[2] + yDiff
+    self.aabb.maxPoint[3] = self.aabb.maxPoint[3] + zDiff
+
     self.translation[1] = tx
     self.translation[2] = ty
     self.translation[3] = tz
@@ -227,6 +265,21 @@ if success then
         self.mesh:setTexture(self.texture)
         self.verts = nil
     end
+end
+
+function model:isPointInAABB(point)
+    local px, py, pz = point[1], point[2], point[3]
+    if px < self.aabb.minPoint[1] or px > self.aabb.maxPoint[1] then return false end
+    if py < self.aabb.minPoint[2] or py > self.aabb.maxPoint[2] then return false end
+    if pz < self.aabb.minPoint[3] or pz > self.aabb.maxPoint[3] then return false end
+    return true
+end
+
+function model:AABBIntersection(minPoint, maxPoint)
+    if self.aabb.maxPoint[1] < minPoint[1] or self.aabb.minPoint[1] > maxPoint[1] then return false end
+    if self.aabb.maxPoint[2] < minPoint[2] or self.aabb.minPoint[2] > maxPoint[2] then return false end
+    if self.aabb.maxPoint[3] < minPoint[3] or self.aabb.minPoint[3] > maxPoint[3] then return false end
+    return true
 end
 
 function model:rayIntersection(...)
