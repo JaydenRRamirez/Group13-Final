@@ -1,6 +1,6 @@
 -- Imports
 local g3d = require "g3d"
-local physSim = require(".rigidBody")
+local rigidBody = require(".rigidBody")
 
 -- Constants
 local gravity = -9.81
@@ -42,18 +42,25 @@ for i = 0, numSlots do
     table.insert(slots, divider);
 end
 
+-- Base Bounds (Walls and Floor/Back)
+local bounds = {
+    -- Right Wall
+    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,5,4}, nil, {2,0.5,7}, "static", "verts"),
+    -- Left Wall
+    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-5,4}, nil, {2,0.5,7}, "static", "verts"),
+    -- Floor (or Back wall if Z is depth)
+    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,0,-4}, nil, {2,5.5,0.5}, "static", "verts")
+}
+
 -- Object Creation
 local background = g3d.newModel("g3dAssets/sphere.obj", "g3dAssets/starfield.png", {0,0,0}, nil, {500,500,500})
 local ballCursor = g3d.newModel("g3dAssets/sphere.obj", "kenney_prototype_textures/red/texture_08.png", {10,0,4}, nil, {0.5,0.5,0.5})
 
--- Base Bounds (Walls and Floor/Back)
 local bounds = {
-    -- Right Wall
-    physSim:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,5,4}, nil, {2,0.5,7}, "static", "verts"),
-    -- Left Wall
-    physSim:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-5,4}, nil, {2,0.5,7}, "static", "verts"),
-    -- Floor (or Back wall if Z is depth)
-    physSim:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,0,-4}, nil, {2,5.5,0.5}, "static", "verts")
+    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,5,4}, nil, {2,0.5,7}, "static", "verts"),
+    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-5,4}, nil, {2,0.5,7}, "static", "verts"),
+    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,0,-3.5}, nil, {2,5.5,0.5}, "static", "verts"),
+    rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/orange/texture_03.png", {10,-3,-2}, nil, {2,1,-1}, "static", "verts"),
 }
 
 -- Plinko Pegs Grid
@@ -81,7 +88,7 @@ for z = pegStartRowZ, pegEndRowZ, -pegSpacingZ do
     while y <= yLimit do
         -- Only place pegs within the Y bounds
         if y >= -yLimit and y <= yLimit then
-            local peg = physSim:newRigidBody(
+            local peg = rigidBody:newRigidBody(
                 "g3dAssets/sphere.obj",
                 pegTexture,
                 {gameCenter[1], y, z},
@@ -157,7 +164,7 @@ local function getClickWorldPosition(mouseX, mouseY)
     end
 
     local sign = -1
-    if lookDirection.sub(1,1) == "-" then sign = 1 end
+    if lookDirection.sub(1,1) == "-" then sign = 1 end 
     
     if worldX then
         worldY = sign * rayDirX * transformPerScreenPixel
@@ -180,7 +187,7 @@ end
 function love.mousepressed(x, y, button, istouch, presses)
     if button == 1 then
         local mWorldPosX, mWorldPosY, mWorldPosZ = getClickWorldPosition(x, y)
-        local physBall = physSim:newRigidBody("g3dAssets/sphere.obj", "kenney_prototype_textures/orange/texture_08.png", 
+        local physBall = rigidBody:newRigidBody("g3dAssets/sphere.obj", "kenney_prototype_textures/orange/texture_08.png", 
             {mWorldPosX, mWorldPosY, mWorldPosZ}, 
             nil, 
             {0.5,0.5,0.5}, 
@@ -198,12 +205,8 @@ function love.mousemoved(x,y, dx,dy)
     ballCursor:setTranslation(mWorldPosX, mWorldPosY, mWorldPosZ)
 end
 
--- setup image assets to be switched out
--- collidingTexture = love.graphics.newImage("kenney_prototype_textures/green/texture_08.png")
--- defaultBallTexture = love.graphics.newImage("kenney_prototype_textures/red/texture_08.png")
--- defaultBoundTexture = love.graphics.newImage("kenney_prototype_textures/dark/texture_03.png")
-
 local collidedThisFrame = false
+local isPaused = false
 function love.update(dt)
     -- Make camera orthographic
     -- g3d.camera.updateOrthographicMatrix()
@@ -211,29 +214,31 @@ function love.update(dt)
     timer = timer + dt
     -- g3d.camera.firstPersonMovement(dt)
     if love.keyboard.isDown("escape") then love.event.push("quit") end
+    if love.keyboard.isDown("p") then isPaused = not isPaused end
 
-    -- check collisions between grabableBall and bounds
-    for i = 1, #simulatedObjects do
-        for j = 1, #bounds do
-            collidedThisFrame = simulatedObjects[i]:resolveCollision(bounds[j])
-            bounds[j]:update(dt)
+    if not isPaused then
+        -- check collisions between grabableBall and bounds
+        for i = 1, #simulatedObjects do
+            for j = 1, #bounds do
+                collidedThisFrame = simulatedObjects[i]:resolveCollision(bounds[j])
+                bounds[j]:update(dt)
+            end
+            simulatedObjects[i]:update(dt)
         end
-
-        simulatedObjects[i]:update(dt)
     end
 end
 
 function love.draw()
     -- earth:draw()
     -- moon:draw()
-    
+	
     background:draw()
-    ballCursor:draw()
+	ballCursor:draw()
 
     for i = 1, #simulatedObjects do
         simulatedObjects[i]:draw()
     end
-    for i = 1, #bounds do
+	for i = 1, #bounds do
         bounds[i]:draw()
     end
 

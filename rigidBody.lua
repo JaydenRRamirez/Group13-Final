@@ -10,7 +10,8 @@ local vectorMagnitude = vectors.magnitude
 
 -- Physics World Constants
 local DRAG_COEFFICIENT = 0.1
-local SPEED_SCALAR = 10.0
+local WORLD_GRAVITY = {0, 0, -9.81}
+local DEFAULT_ELASTICITY = 0.66
 
 ----------------------------------------------------------------------------------------------------
 -- define a rigidBody class
@@ -27,7 +28,7 @@ function rigidBody:newRigidBody(verts, texture, translation, rotation, scale, ty
     self.model = g3d.newModel(verts, texture, translation, rotation, scale)
     self.type = type or "dynamic"
     self.mass = mass or 1
-    self.gravity = gravity or {0, 0, -4.81}
+    self.gravity = gravity or WORLD_GRAVITY
 
     if self.type == "static" then
         self.mass = nil
@@ -62,7 +63,7 @@ function rigidBody:newRigidBody(verts, texture, translation, rotation, scale, ty
         self.elasticity = extraParams.elasticity
     end
     if self.elasticity == nil then
-        self.elasticity = 0.66
+        self.elasticity = DEFAULT_ELASTICITY
     end
 
     self.position = self.model.translation
@@ -89,10 +90,6 @@ end
 
 function rigidBody:applyLinearImpulse(impulseX, impulseY, impulseZ)
     if self.mass then
-        if math.abs(impulseX) <= self.gravity[1] then impulseX = 0 end
-        if math.abs(impulseY) <= self.gravity[2] then impulseY = 0 end
-        if math.abs(impulseZ) <= self.gravity[3] then impulseZ = 0 end
-
         self.velocity[1] = self.velocity[1] + (impulseX / self.mass)
         self.velocity[2] = self.velocity[2] + (impulseY / self.mass)
         self.velocity[3] = self.velocity[3] + (impulseZ / self.mass)
@@ -161,10 +158,16 @@ function rigidBody:processCollision(otherBody, distance, intersect_X, intersect_
         inverseOtherMass = 0
     elseif self.mass and otherBody.mass then
         cOfE = (self.elasticity * self.mass + otherBody.elasticity * otherBody.mass) / (self.mass + otherBody.mass)
+        inverseSelfMass = 1 / self.mass
+        inverseOtherMass = 1 / otherBody.mass
     else
         return
     end
     local inverseMassSum = inverseSelfMass + inverseOtherMass
+
+    if self.collider.type ~= "verts" then
+        distance = self.collider.radius - distance
+    end
 
     self.model:setTranslation(
         self.position[1] + (normal_X * distance * (inverseSelfMass / inverseMassSum)),
@@ -177,8 +180,22 @@ function rigidBody:processCollision(otherBody, distance, intersect_X, intersect_
         otherBody.position[3] - (normal_Z * distance * (inverseOtherMass / inverseMassSum))
     )
 
-    local relSelfX, relSelfY, relSelfZ = intersect_X - self.position[1], intersect_Y - self.position[2], intersect_Z - self.position[3]
-    local relOtherX, relOtherY, relOtherZ = intersect_X - otherBody.position[1], intersect_Y - otherBody.position[2], intersect_Z - otherBody.position[3]
+    local relSelfX, relSelfY, relSelfZ = fastSubtract(
+        intersect_X, 
+        intersect_Y, 
+        intersect_Z, 
+        self.position[1], 
+        self.position[2], 
+        self.position[3]
+    )
+    local relOtherX, relOtherY, relOtherZ = fastSubtract(
+        intersect_X, 
+        intersect_Y, 
+        intersect_Z, 
+        otherBody.position[1], 
+        otherBody.position[2], 
+        otherBody.position[3]
+    )
 
     local angularVelSelfX, angularVelSelfY, angularVelSelfZ = vectorCrossProduct(
         self.angularVel[1], 
@@ -198,17 +215,32 @@ function rigidBody:processCollision(otherBody, distance, intersect_X, intersect_
         relOtherZ
     )
 
-    local fullVelSelfX = self.velocity[1] + angularVelSelfX
-    local fullVelSelfY = self.velocity[2] + angularVelSelfY
-    local fullVelSelfZ = self.velocity[3] + angularVelSelfZ
+    local fullVelSelfX, fullVelSelfY, fullVelSelfZ = vectorAdd(
+        self.velocity[1], 
+        self.velocity[2], 
+        self.velocity[3], 
+        angularVelSelfX, 
+        angularVelSelfY, 
+        angularVelSelfZ
+    )
 
-    local fullVelOtherX = otherBody.velocity[1] + angularVelOtherX
-    local fullVelOtherY = otherBody.velocity[2] + angularVelOtherY
-    local fullVelOtherZ = otherBody.velocity[3] + angularVelOtherZ
+    local fullVelOtherX, fullVelOtherY, fullVelOtherZ = vectorAdd(
+        otherBody.velocity[1], 
+        otherBody.velocity[2], 
+        otherBody.velocity[3], 
+        angularVelOtherX, 
+        angularVelOtherY, 
+        angularVelOtherZ
+    )
 
-    local contactVelX = fullVelOtherX - fullVelSelfX
-    local contactVelY = fullVelOtherY - fullVelSelfY
-    local contactVelZ = fullVelOtherZ - fullVelSelfZ
+    local contactVelX, contactVelY, contactVelZ = fastSubtract( 
+        fullVelOtherX, 
+        fullVelOtherY, 
+        fullVelOtherZ, 
+        fullVelSelfX, 
+        fullVelSelfY, 
+        fullVelSelfZ
+    )
 
     local impulseForce = vectorDotProduct(contactVelX, contactVelY, contactVelZ, normal_X, normal_Y, normal_Z)
 
@@ -226,12 +258,10 @@ function rigidBody:processCollision(otherBody, distance, intersect_X, intersect_
         normal_Z
     )
 
-    local j = (-(1 + cOfE) * impulseForce) / (inverseMassSum + angularEffect)
+    -- Formula if it had angular effect: j = (-(1 + cOfE) * impulseForce) / (inverseMassSum + angularEffect)
+    local j = (-(1 + cOfE) * impulseForce) / inverseMassSum
 
     local fullImpulseX, fullImpulseY, fullImpulseZ = normal_X * j, normal_Y * j, normal_Z * j
-
-    print("Velocity before collision: ", self.velocity[1], self.velocity[2], self.velocity[3])
-    print("Impulse applied: ", fullImpulseX, fullImpulseY, fullImpulseZ)
 
     if self.mass ~= nil then
         self:applyLinearImpulse(-fullImpulseX, -fullImpulseY, -fullImpulseZ)
@@ -260,8 +290,6 @@ function rigidBody:processCollision(otherBody, distance, intersect_X, intersect_
         --     )
         -- )
     end
-
-    print("Velocity after collision: ", self.velocity[1], self.velocity[2], self.velocity[3])
 end
 
 function rigidBody:resolveCollision(otherBody)
@@ -294,9 +322,9 @@ end
 
 function rigidBody:applyVelocity(dt)
     self.model:setTranslation(
-        self.position[1] + self.velocity[1] * dt * SPEED_SCALAR,
-        self.position[2] + self.velocity[2] * dt * SPEED_SCALAR,
-        self.position[3] + self.velocity[3] * dt * SPEED_SCALAR
+        self.position[1] + self.velocity[1] * dt,
+        self.position[2] + self.velocity[2] * dt,
+        self.position[3] + self.velocity[3] * dt
     )
     -- Update collider center
     if self.collider.type == "sphere" then
