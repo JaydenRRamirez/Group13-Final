@@ -3,25 +3,60 @@ local g3d = require "g3d"
 local rigidBody = require(".rigidBody")
 
 -- Constants
-local gravity = -9.81
 local gameCenter = {10,0,4}
 local lookDirection = "x"
 
 -- Object Creation
 local background = g3d.newModel("g3dAssets/sphere.obj", "g3dAssets/starfield.png", {0,0,0}, nil, {500,500,500})
-local ballCursor = g3d.newModel("g3dAssets/sphere.obj", "kenney_prototype_textures/red/texture_08.png", {10,0,4}, nil, {0.5,0.5,0.5})
+local ballCursor = g3d.newModel("g3dAssets/sphere.obj", "kenney_prototype_textures/red/texture_08.png", {10,0,4}, nil, {0.25,0.25,0.25})
+
+local clickPlane = g3d.newModel("g3dAssets/cube.obj", "kenney_prototype_textures/orange/texture_03.png", {10,0,9}, nil, {0.1,10,1})
 
 local bounds = {
-    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,5,4}, nil, {2,0.5,7}, "static", "verts"),
-    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-5,4}, nil, {2,0.5,7}, "static", "verts"),
-    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,0,-3.5}, nil, {2,5.5,0.5}, "static", "verts"),
-    rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/orange/texture_03.png", {10,-3,-2}, nil, {2,1,-1}, "static", "verts"),
+    -- Left Wall
+    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,10,4}, nil, {1,0.5,10.5}, "static", "verts"),
+
+    -- Right Wall
+    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-10,4}, nil, {1,0.5,10.5}, "static", "verts"),
+    
+    -- Floor
+    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,0,-7}, nil, {1,10.5,0.5}, "static", "verts"),
+
+    rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/purple/texture_03.png", {10,-3,-2}, nil, {0.1,1,-1}, "static", "verts"),
+    rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/purple/texture_03.png", {10,3,-2}, nil, {0.1,-1,-1}, "static", "verts"),
 }
-local timer = 0
+
+local winBoxes = {
+    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/green/texture_08.png", {10,7,0}, nil, {0.5,0.5,0.5}, "static", "verts"),
+    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/green/texture_08.png", {10,-7,0}, nil, {0.5,0.5,0.5}, "static", "verts"),
+}
+
+local loseBoxes = {
+    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/red/texture_08.png", {10,0,-5}, nil, {0.5,0.5,0.5}, "static", "verts"),
+}
+local wonGame = false
+local lostGame = false
 
 -- keep track of all rigid bodies that need to be physics simulated aren't static
 local simulatedObjects = {}
 
+local function createPlinkoArrangement(containerTable, startX, startY, startZ, rows, cols, spacingVert, spacingHorz)
+    for row = 0, rows - 1 do
+        for col = 0, cols - 1 do
+            local offsetY = (row % 2) * (spacingHorz / 2)
+            local posY = startY + col * spacingHorz + offsetY
+            local posZ = startZ + row * spacingVert
+            table.insert(containerTable, rigidBody:newRigidBody("g3dAssets/sphere.obj", "kenney_prototype_textures/purple/texture_08.png", 
+                {startX, -posY, posZ}, 
+                nil, 
+                {0.2,0.2,0.2}, 
+                "static", 
+                "verts"
+            ))
+        end
+    end
+end
+createPlinkoArrangement(bounds, 10, -9, 3, 4, 15, 1.25, 1.25)
 
 local transformPerScreenPixel = 0
 -- Function that gets the transform height and width per screen pixel based on how far gameCenter is from the camera
@@ -93,20 +128,42 @@ local function getClickWorldPosition(mouseX, mouseY)
     return worldX, worldY, worldZ
 end
 
+local function drawWinScreen()
+    -- Background
+    love.graphics.setColor(0, 255, 0, 0.7)
+    love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
+
+    -- Placeholder for win screen drawing logic
+    love.graphics.setColor(0, 0, 0, 1)
+    love.graphics.print("You Win!", love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 10, nil, 4, 4)
+end
+
+local function drawLoseScreen()
+    -- Background
+    love.graphics.setColor(255, 0, 0, 0.7)
+    love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
+
+    -- Placeholder for lose screen drawing logic
+    love.graphics.setColor(255, 255, 255, 1)
+    love.graphics.print("You Lose!", love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 10, nil, 4, 4)
+end
+
 function love.load()
     calculateTransformPerScreenPixel()
 end
 
 function love.mousepressed(x, y, button, istouch, presses)
     if button == 1 then
-        local mWorldPosX, mWorldPosY, mWorldPosZ = getClickWorldPosition(x, y)
+        if #simulatedObjects >= 1 then 
+            table.remove(simulatedObjects, 1)
+        end
         local physBall = rigidBody:newRigidBody("g3dAssets/sphere.obj", "kenney_prototype_textures/orange/texture_08.png", 
-            {mWorldPosX, mWorldPosY, mWorldPosZ}, 
+            {ballCursor.translation[1], ballCursor.translation[2], ballCursor.translation[3]}, 
             nil, 
-            {0.5,0.5,0.5}, 
+            {0.25,0.25,0.25}, 
             "dynamic", 
             "sphere", 
-            {radius=0.5}
+            {radius=0.25}
         )
         table.insert(simulatedObjects, physBall)
     end
@@ -118,25 +175,50 @@ function love.mousemoved(x,y, dx,dy)
     ballCursor:setTranslation(mWorldPosX, mWorldPosY, mWorldPosZ)
 end
 
-local collidedThisFrame = false
+local collidedThisFrame, wonThisFrame, lostThisFrame = false, false, false
 local isPaused = false
 function love.update(dt)
     -- Make camera orthographic
     -- g3d.camera.updateOrthographicMatrix()
 
-    timer = timer + dt
     -- g3d.camera.firstPersonMovement(dt)
     if love.keyboard.isDown("escape") then love.event.push("quit") end
     if love.keyboard.isDown("p") then isPaused = not isPaused end
 
     if not isPaused then
-        -- check collisions between grabableBall and bounds
+        -- check collisions between simulated balls and bounds
         for i = 1, #simulatedObjects do
             for j = 1, #bounds do
                 collidedThisFrame = simulatedObjects[i]:resolveCollision(bounds[j])
                 bounds[j]:update(dt)
             end
             simulatedObjects[i]:update(dt)
+        end
+
+        -- check collision between ball and win/lose boxes
+        for i = 1, #simulatedObjects do
+            if not lostGame then
+                for winBoxInd = 1, #winBoxes do
+                    wonThisFrame = simulatedObjects[i]:checkCollision(winBoxes[winBoxInd])
+                    if wonThisFrame then
+                        wonGame = true
+                        -- remove ball from simulation
+                        table.remove(simulatedObjects, i)
+                        break
+                    end
+                end
+            end
+            if not wonGame then
+                for loseBoxInd = 1, #loseBoxes do
+                    lostThisFrame = simulatedObjects[i]:checkCollision(loseBoxes[loseBoxInd])
+                    if lostThisFrame then
+                        lostGame = true
+                        -- remove ball from simulation
+                        table.remove(simulatedObjects, i)
+                        break
+                    end
+                end
+            end
         end
     end
 end
@@ -147,11 +229,25 @@ function love.draw()
 	
     background:draw()
 	ballCursor:draw()
+    clickPlane:draw()
 
     for i = 1, #simulatedObjects do
         simulatedObjects[i]:draw()
     end
 	for i = 1, #bounds do
         bounds[i]:draw()
+    end
+    for i = 1, #winBoxes do
+        winBoxes[i]:draw()
+    end
+    for i = 1, #loseBoxes do
+        loseBoxes[i]:draw()
+    end
+
+    if wonGame then
+        drawWinScreen()
+    end
+    if lostGame then
+        drawLoseScreen()
     end
 end
