@@ -62,3 +62,24 @@ What do you anticipate being the hardest or riskiest part of the project?
 What are you hoping to learn by approaching the project with the tools and materials you selected above?
 
 The hardest part of this project will definitely come in the form of each of us getting acquainted and learning the ins and outs of  LOVE. As stated above, it’ll not only be the first time for all of us to tackle this engine, but we also need to learn Lua and that particular scripting language in order to build our game. Even though outside opinion describes Lua as an easy to learn language, each of us may have a different experience or ease in trying to learn. Although, it is this opportunity to quickly learn and adapt to a new engine that is the most exciting prospect of the final project, especially in seeing what we will be able to accomplish in bringing our game to life.
+
+# Devlog Entry - 11/21/2025
+## How we satisfied the software requirements
+1. It is built using a platform (i.e. engine, framework, language) that does not already provide support for 3D rendering and physics simulation
+2. It uses a third-party 3D rendering library.
+As we talked about in the planning stages, the team ultimately went on utilizing Love2d as the basis of the game engine, given the ease of understanding when it comes to Lua, as well as the documentation and additions that can be found for the engine. When it comes to the 3D rendering library, our initial attempt was to implement 3DreamEngine, but finding it more complex than necessary for the project, we switched to g3d.
+
+3. It uses a third-party physics simulation library.
+4. The playable prototype presents the player with a simple physics-based puzzle.
+5. The player is able to exert some control over the simulation in a way that allows them to succeed or fail at the puzzle.
+This portion for the requirements took most of the learning process, implementation, and overall dev time in terms for the engine, however, we were able to find ground within utilizing rigidBody for physics, while g3d handles the collisions. With every aspect in mind, we were able to craft a physics-based puzzle that gives off a good prototype presentation in what we are trying to achieve for our final game, and definitely something that will continue to see fine tuning and development. For the puzzle itself, it takes the form of a Plinko board, in which the player will drop the ball from the top, bounce off pegs that make up the middle of the board, and try to land it in a specific slot that will win them the game.
+
+6. The game detects success or failure and reports this back to the player using the game’s graphics
+The testing phase for this portion mainly boiled down to test cases of what was breaking when running the project, looking through any mismatched names or misinputted values and variables, etc. Alongside tools and tests that helped in the lua experience, we had a Lua Autoformatter that assisted in catching errors early and formatting the project.
+
+7. The codebase for the prototype must include some before-commit automation that helps developers.
+8. The codebase for the prototype must include some post-push automation that helps developers.
+In terms of testing and automation, the main implementation has been in bootstrap. Bootstrap features: professional IDE integration, automated builds, and everything you need to go from prototype to published game. Alongside that, it allows automation to a wide range of paths, from Itch.io, to Android, to Windows and MacOS, etc.
+	
+## Reflection
+F1 was a lengthy process in terms of fulfilling the requirements, as love2d required much in terms of finding not only extensions that housed the opportunity to work with 3D-oriented libraries, but also having to learn how such libraries work in order to implement the necessary assets, physics, and logic to build the puzzle. Much of the focus here was on engine work, and while we did maintain mostly our original ideas of g3d, we did have a bit of a moment in working in 3DreamEngine, but in the end, we just utilized its physics property for the project, rather than the whole engine. While we also discussed what automation and test libraries and scripts at the beginning(such as we ensured we had love2d extensions that would give us a running build at the press of a few keys, as said before, we focused on the engine at hand, and once it was at a state that left us satisfied, did we then implement such automation like Bootstrap or something to keep the code tidy like the lua Autoformatter.
