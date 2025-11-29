@@ -42,16 +42,6 @@ for i = 0, numSlots do
     table.insert(slots, divider);
 end
 
--- Base Bounds (Walls and Floor/Back)
-local bounds = {
-    -- Right Wall
-    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,5,4}, nil, {2,0.5,7}, "static", "verts"),
-    -- Left Wall
-    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-5,4}, nil, {2,0.5,7}, "static", "verts"),
-    -- Floor (or Back wall if Z is depth)
-    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,0,-4}, nil, {2,5.5,0.5}, "static", "verts")
-}
-
 -- Object Creation
 local background = g3d.newModel("g3dAssets/sphere.obj", "g3dAssets/starfield.png", {0,0,0}, nil, {500,500,500})
 local ballCursor = g3d.newModel("g3dAssets/sphere.obj", "kenney_prototype_textures/red/texture_08.png", {10,0,4}, nil, {0.5,0.5,0.5})
