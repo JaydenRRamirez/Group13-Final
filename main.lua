@@ -158,22 +158,30 @@ function love.load()
     gameInventory = Inventory:new()
 
     -- Obstacle Items
-    local ramp = Object:new({
-        name = "Plinko Ramp",
+    local conveyer = Object:new({
+        name = "Conveyer",
         type = "Obstacle",
         modelPath = "g3dAssets/cylinder.obj",
-        iconPath = "g3dAssets/earth.png" 
+        iconPath = "g3dAssets/Conveyer.png" 
     })
     
-    local block = Object:new({
-        name = "Plinko Gear",
+    local piston = Object:new({
+        name = "Piston",
         type = "Obstacle",
         modelPath = "g3dAssets/cube.obj",
-        iconPath = "g3dAssets/moon.png"
+        iconPath = "g3dAssets/Piston.png"
     })
 
-    gameInventory:addItem(ramp)
-    gameInventory:addItem(block)
+    local piston2 = Object:new({
+        name = "Piston2",
+        type = "Obstacle",
+        modelPath = "g3dAssets/cube.obj",
+        iconPath = "g3dAssets/Piston2.png"
+    })
+
+    gameInventory:addItem(conveyer)
+    gameInventory:addItem(piston)
+    gameInventory:addItem(piston2)
 end
 
 -- Clicking for when the inventory is up
