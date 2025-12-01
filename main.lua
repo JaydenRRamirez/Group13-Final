@@ -1,6 +1,10 @@
 -- Imports
 local g3d = require "g3d"
 local rigidBody = require(".rigidBody")
+local Object = require("objects")
+local Inventory = require("inventory")
+
+local gameInventory
 
 -- Constants
 local gameCenter = {10,0,4}
@@ -150,10 +154,42 @@ end
 
 function love.load()
     calculateTransformPerScreenPixel()
+
+    gameInventory = Inventory:new()
+
+    -- Obstacle Items
+    local ramp = Object:new({
+        name = "Plinko Ramp",
+        type = "Obstacle",
+        modelPath = "g3dAssets/cylinder.obj",
+        iconPath = "g3dAssets/earth.png" 
+    })
+    
+    local block = Object:new({
+        name = "Plinko Gear",
+        type = "Obstacle",
+        modelPath = "g3dAssets/cube.obj",
+        iconPath = "g3dAssets/moon.png"
+    })
+
+    gameInventory:addItem(ramp)
+    gameInventory:addItem(block)
 end
 
+-- Clicking for when the inventory is up
 function love.mousepressed(x, y, button, istouch, presses)
     if button == 1 then
+        local uiHandled = gameInventory:checkClick(x, y)
+
+        if uiHandled then
+            return
+        end
+
+        -- Blocking clicking outside of the Inventory
+        if gameInventory.isVisible then
+            return
+        end
+        
         if #simulatedObjects >= 5 then 
             table.remove(simulatedObjects, 1)
         end
@@ -166,6 +202,13 @@ function love.mousepressed(x, y, button, istouch, presses)
             {radius=0.25}
         )
         table.insert(simulatedObjects, physBall)
+    end
+end
+
+-- Press I to bring up inventory
+function love.keypressed(key)
+    if key == "i" then
+        gameInventory:toggle()
     end
 end
 
@@ -251,4 +294,6 @@ function love.draw()
     if lostGame then
         drawLoseScreen()
     end
+
+    gameInventory:draw()
 end
