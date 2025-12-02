@@ -5,7 +5,7 @@ Either organizing by person or by role, tell us who will do what on your team. Y
 
 
 Tools Lead: This person will research alternative tools, identify good ones, and help every other team member set them up on their own machine in the best configuration for your project. This person might also establish your team’s coding style guidelines and help peers setup auto-formatting systems. This person should provide support for systems like source control and automated deployment (if appropriate to your team’s approach).
-Three
+Zander
 
 
 Engine Lead: This person will research alternative engines, get buy-in from teammates on the choice, and teach peers how to use it if it is new to them. This might involve making small code examples outside of the main game project to teach others. The Engine Lead should also establish standards for which kinds of code should be organized into which folders of the project. They should try to propose software designs that insulate the rest of the team from many details of the underlying engine.
@@ -83,3 +83,8 @@ In terms of testing and automation, the main implementation has been in bootstra
 	
 ## Reflection
 F1 was a lengthy process in terms of fulfilling the requirements, as love2d required much in terms of finding not only extensions that housed the opportunity to work with 3D-oriented libraries, but also having to learn how such libraries work in order to implement the necessary assets, physics, and logic to build the puzzle. Much of the focus here was on engine work, and while we did maintain mostly our original ideas of g3d, we did have a bit of a moment in working in 3DreamEngine, but in the end, we just utilized its physics property for the project, rather than the whole engine. While we also discussed what automation and test libraries and scripts at the beginning(such as we ensured we had love2d extensions that would give us a running build at the press of a few keys, as said before, we focused on the engine at hand, and once it was at a state that left us satisfied, did we then implement such automation like Bootstrap or something to keep the code tidy like the lua Autoformatter.
+
+
+## Useful Project Documents:
+
+[Program Planning Doc](https://docs.google.com/document/d/1-9CKcUC9vJIP7k_AkpOvDtzBbWBxJ021xz6i5XMZBcM/edit?usp=sharing)
