@@ -16,18 +16,21 @@ local ballCursor = g3d.newModel("g3dAssets/sphere.obj", "kenney_prototype_textur
 
 local clickPlane = g3d.newModel("g3dAssets/cube.obj", "kenney_prototype_textures/orange/texture_03.png", {10,0,9}, nil, {0.1,10,1})
 
-local bounds = {
-    -- Left Wall
-    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,10,4}, nil, {1,0.5,10.5}, "static", "verts"),
+local sceneObjects = {
+    {
+        -- Left Wall
+        rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,10,4}, nil, {1,0.5,10.5}, "static", "verts"),
 
-    -- Right Wall
-    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-10,4}, nil, {1,0.5,10.5}, "static", "verts"),
-    
-    -- Floor
-    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,0,-7}, nil, {1,10.5,0.5}, "static", "verts"),
+        -- Right Wall
+        rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-10,4}, nil, {1,0.5,10.5}, "static", "verts"),
+        
+        -- Floor
+        rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,0,-7}, nil, {1,10.5,0.5}, "static", "verts"),
 
-    rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/purple/texture_03.png", {10,-3,-2}, nil, {0.1,1,-1}, "static", "verts"),
-    rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/purple/texture_03.png", {10,3,-2}, nil, {0.1,-1,-1}, "static", "verts"),
+        -- Ramps
+        rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/purple/texture_03.png", {10,-3,-2}, nil, {0.1,1,-1}, "static", "verts"),
+        rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/purple/texture_03.png", {10,3,-2}, nil, {0.1,-1,-1}, "static", "verts"),
+    }
 }
 
 local winBoxes = {
@@ -43,6 +46,10 @@ local lostGame = false
 
 -- keep track of all rigid bodies that need to be physics simulated aren't static
 local simulatedObjects = {}
+
+-- 1 = plinko level
+-- rest correspond to different rooms
+local currentScene = 1
 
 local function createPlinkoArrangement(containerTable, startX, startY, startZ, rows, cols, spacingVert, spacingHorz)
     for row = 0, rows - 1 do
@@ -60,7 +67,22 @@ local function createPlinkoArrangement(containerTable, startX, startY, startZ, r
         end
     end
 end
-createPlinkoArrangement(bounds, 10, -9, 3, 4, 15, 1.25, 1.25)
+createPlinkoArrangement(sceneObjects[1], 10, -9, 3, 4, 15, 1.25, 1.25)
+
+local function createScenes()
+    local scene1 = {}
+    table.insert(scene1, rigidBody:newRigidBody(
+        "custom_assets/ramp.obj",
+        "kenney_prototype_textures/purple/texture_03.png",
+        {10,-3,-2},
+        nil,
+        {0.1,1,-1},
+        "static",
+        "verts"
+    ))
+    table.insert(sceneObjects, scene1)
+end
+createScenes()
 
 local transformPerScreenPixel = 0
 -- Function that gets the transform height and width per screen pixel based on how far gameCenter is from the camera
@@ -186,7 +208,7 @@ end
 
 -- Clicking for when the inventory is up
 function love.mousepressed(x, y, button, istouch, presses)
-    if button == 1 then
+    if button == 1 and currentScene == 1 then
         local uiHandled = gameInventory:checkClick(x, y)
 
         if uiHandled then
@@ -242,11 +264,11 @@ function love.update(dt)
     if not isPaused then
         -- check collisions between simulated balls and bounds
         for i = 1, #simulatedObjects do
-            for j = 1, #bounds do
-                if simulatedObjects[i].model:AABBIntersection(bounds[j].model.aabb.minPoint, bounds[j].model.aabb.maxPoint) then
-                    collidedThisFrame = simulatedObjects[i]:resolveCollision(bounds[j])
+            for j = 1, #sceneObjects[1] do
+                if simulatedObjects[i].model:AABBIntersection(sceneObjects[1][j].model.aabb.minPoint, sceneObjects[1][j].model.aabb.maxPoint) then
+                    collidedThisFrame = simulatedObjects[i]:resolveCollision(sceneObjects[1][j])
                 end
-                bounds[j]:update(dt)
+                sceneObjects[1][j]:update(dt)
             end
             simulatedObjects[i]:update(dt)
         end
@@ -280,20 +302,23 @@ function love.draw()
     -- moon:draw()
 	
     background:draw()
-	ballCursor:draw()
-    clickPlane:draw()
+    if currentScene == 1 then
+        ballCursor:draw()
+        clickPlane:draw()
+
+        for i = 1, #winBoxes do
+            winBoxes[i]:draw()
+        end
+        for i = 1, #loseBoxes do
+            loseBoxes[i]:draw()
+        end
+    end
 
     for i = 1, #simulatedObjects do
         simulatedObjects[i]:draw()
     end
-	for i = 1, #bounds do
-        bounds[i]:draw()
-    end
-    for i = 1, #winBoxes do
-        winBoxes[i]:draw()
-    end
-    for i = 1, #loseBoxes do
-        loseBoxes[i]:draw()
+    for i = 1, #sceneObjects[currentScene] do
+        sceneObjects[currentScene][i]:draw()
     end
 
     if wonGame then
