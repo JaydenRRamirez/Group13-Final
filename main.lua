@@ -16,18 +16,22 @@ local ballCursor = g3d.newModel("g3dAssets/sphere.obj", "kenney_prototype_textur
 
 local clickPlane = g3d.newModel("g3dAssets/cube.obj", "kenney_prototype_textures/orange/texture_03.png", {10,0,9}, nil, {0.1,10,1})
 
-local bounds = {
-    -- Left Wall
-    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,10,4}, nil, {1,0.5,10.5}, "static", "verts"),
+-- 2D, sceneObjects[1][2] gives second object in first scene
+local sceneObjects = {
+    {
+        -- Left Wall
+        rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,10,4}, nil, {1,0.5,10.5}, "static", "verts"),
 
-    -- Right Wall
-    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-10,4}, nil, {1,0.5,10.5}, "static", "verts"),
-    
-    -- Floor
-    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,0,-7}, nil, {1,10.5,0.5}, "static", "verts"),
+        -- Right Wall
+        rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-10,4}, nil, {1,0.5,10.5}, "static", "verts"),
+        
+        -- Floor
+        rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,0,-7}, nil, {1,10.5,0.5}, "static", "verts"),
 
-    rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/purple/texture_03.png", {10,-3,-2}, nil, {0.1,1,-1}, "static", "verts"),
-    rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/purple/texture_03.png", {10,3,-2}, nil, {0.1,-1,-1}, "static", "verts"),
+        -- Ramps
+        rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/purple/texture_03.png", {10,-3,-2}, nil, {0.1,1,-1}, "static", "verts"),
+        rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/purple/texture_03.png", {10,3,-2}, nil, {0.1,-1,-1}, "static", "verts"),
+    }
 }
 
 local winBoxes = {
@@ -43,6 +47,17 @@ local lostGame = false
 
 -- keep track of all rigid bodies that need to be physics simulated aren't static
 local simulatedObjects = {}
+
+-- 1 = plinko level
+-- rest correspond to different rooms
+local currentScene = 1
+
+-- contains all door objects
+-- 2D, doors[2][2] gives second door in first room (corresponds to currentScene)
+local doors = {{}}
+
+-- map from door objects (rigidbody) to currentScene number
+local doorMap = {}
 
 local function createPlinkoArrangement(containerTable, startX, startY, startZ, rows, cols, spacingVert, spacingHorz)
     for row = 0, rows - 1 do
@@ -60,7 +75,56 @@ local function createPlinkoArrangement(containerTable, startX, startY, startZ, r
         end
     end
 end
-createPlinkoArrangement(bounds, 10, -9, 3, 4, 15, 1.25, 1.25)
+createPlinkoArrangement(sceneObjects[1], 10, -9, 3, 4, 15, 1.25, 1.25)
+
+local function createDoor(doorConfig)
+    local door = rigidBody:newRigidBody(
+        "g3dAssets/cube.obj",
+        "kenney_prototype_textures/light/texture_06.png",
+        doorConfig[1],
+        nil,
+        {0.1, 1, 1.5},
+        "static",
+        "verts"
+    )
+    doorMap[door] = doorConfig[2]
+    return door
+end
+
+-- doorOptions = table of arbitrary length composing of objects with a point {x, y, z} and target Scene
+local function createDoors(scene, doorOptions)
+    local allDoors = {}
+    for i = 1, #doorOptions do
+        local door = createDoor(doorOptions[i])
+        table.insert(allDoors, door)
+        table.insert(scene, door)
+    end
+    return allDoors
+end
+
+local function createScene1()
+    local scene = {}
+    local doorOptions = {{{10, 0, 0}, 3}}
+    local allDoors = createDoors(scene, doorOptions)
+
+    table.insert(sceneObjects, scene)
+    table.insert(doors, allDoors)
+end
+
+local function createScene2()
+    local scene = {}
+    local doorOptions = {{{10, 0, 5}, 2}}
+    local allDoors = createDoors(scene, doorOptions)
+
+    table.insert(sceneObjects, scene)
+    table.insert(doors, allDoors)
+end
+
+local function createScenes()
+    createScene1()
+    createScene2()
+end
+createScenes()
 
 local transformPerScreenPixel = 0
 -- Function that gets the transform height and width per screen pixel based on how far gameCenter is from the camera
@@ -198,24 +262,35 @@ function love.mousepressed(x, y, button, istouch, presses)
             return
         end
         
-        if #simulatedObjects >= 5 then 
-            table.remove(simulatedObjects, 1)
+        if currentScene == 1 then
+            if #simulatedObjects >= 5 then 
+                table.remove(simulatedObjects, 1)
+            end
+            local physBall = rigidBody:newRigidBody("g3dAssets/sphere.obj", "kenney_prototype_textures/orange/texture_08.png", 
+                {ballCursor.translation[1], ballCursor.translation[2], ballCursor.translation[3]}, 
+                nil, 
+                {0.25,0.25,0.25}, 
+                "dynamic", 
+                "sphere", 
+                {radius=0.25}
+            )
+            table.insert(simulatedObjects, physBall)
+
+        else
+            local worldx, worldy, worldz = getClickWorldPosition(x, y)
+            for i = 1, #doors[currentScene] do
+                local currentDoor = doors[currentScene][i]
+                if currentDoor.model:isPointInAABB({worldx, worldy, worldz}) then
+                    currentScene = doorMap[currentDoor]
+                end
+            end
         end
-        local physBall = rigidBody:newRigidBody("g3dAssets/sphere.obj", "kenney_prototype_textures/orange/texture_08.png", 
-            {ballCursor.translation[1], ballCursor.translation[2], ballCursor.translation[3]}, 
-            nil, 
-            {0.25,0.25,0.25}, 
-            "dynamic", 
-            "sphere", 
-            {radius=0.25}
-        )
-        table.insert(simulatedObjects, physBall)
     end
 end
 
 -- Press I to bring up inventory
 function love.keypressed(key)
-    if key == "i" then
+    if key == "i" and currentScene == 1 then
         gameInventory:toggle()
     end
 end
@@ -242,11 +317,11 @@ function love.update(dt)
     if not isPaused then
         -- check collisions between simulated balls and bounds
         for i = 1, #simulatedObjects do
-            for j = 1, #bounds do
-                if simulatedObjects[i].model:AABBIntersection(bounds[j].model.aabb.minPoint, bounds[j].model.aabb.maxPoint) then
-                    collidedThisFrame = simulatedObjects[i]:resolveCollision(bounds[j])
+            for j = 1, #sceneObjects[1] do
+                if simulatedObjects[i].model:AABBIntersection(sceneObjects[1][j].model.aabb.minPoint, sceneObjects[1][j].model.aabb.maxPoint) then
+                    collidedThisFrame = simulatedObjects[i]:resolveCollision(sceneObjects[1][j])
                 end
-                bounds[j]:update(dt)
+                sceneObjects[1][j]:update(dt)
             end
             simulatedObjects[i]:update(dt)
         end
@@ -280,20 +355,23 @@ function love.draw()
     -- moon:draw()
 	
     background:draw()
-	ballCursor:draw()
-    clickPlane:draw()
+    if currentScene == 1 then
+        ballCursor:draw()
+        clickPlane:draw()
+
+        for i = 1, #winBoxes do
+            winBoxes[i]:draw()
+        end
+        for i = 1, #loseBoxes do
+            loseBoxes[i]:draw()
+        end
+    end
 
     for i = 1, #simulatedObjects do
         simulatedObjects[i]:draw()
     end
-	for i = 1, #bounds do
-        bounds[i]:draw()
-    end
-    for i = 1, #winBoxes do
-        winBoxes[i]:draw()
-    end
-    for i = 1, #loseBoxes do
-        loseBoxes[i]:draw()
+    for i = 1, #sceneObjects[currentScene] do
+        sceneObjects[currentScene][i]:draw()
     end
 
     if wonGame then
