@@ -96,3 +96,7 @@ This part of the process has been enlightening in both furthering the understand
 ## Useful Project Documents:
 
 [Program Planning Doc](https://docs.google.com/document/d/1-9CKcUC9vJIP7k_AkpOvDtzBbWBxJ021xz6i5XMZBcM/edit?usp=sharing)
+
+## Important Notes for Running Program:
+
+Must be on main.lua before typing type > launch love
