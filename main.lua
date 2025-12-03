@@ -275,7 +275,10 @@ function love.mousepressed(x, y, button, istouch, presses)
             if #simulatedObjects >= 5 then 
                 table.remove(simulatedObjects, 1)
             end
-            local physBall = rigidBody:newRigidBody("g3dAssets/sphere.obj", "kenney_prototype_textures/orange/texture_08.png", 
+            print("Mouse X: " .. love.mouse.getX() .. ", Mouse Y: " .. love.mouse.getY())
+            if (love.mouse.getX() < 660 and love.mouse.getX() > 125 and
+                love.mouse.getY() < 50 and love.mouse.getY() > 0) then
+                local physBall = rigidBody:newRigidBody("g3dAssets/sphere.obj", "kenney_prototype_textures/light/texture_08.png", 
                 {ballCursor.translation[1], ballCursor.translation[2], ballCursor.translation[3]}, 
                 nil, 
                 {0.25,0.25,0.25}, 
@@ -284,6 +287,7 @@ function love.mousepressed(x, y, button, istouch, presses)
                 {radius=0.25}
             )
             table.insert(simulatedObjects, physBall)
+            end
         else
             local worldx, worldy, worldz = getClickWorldPosition(x, y)
             for i = 1, #doors[currentScene] do
