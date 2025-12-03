@@ -12,6 +12,7 @@ function Inventory:new()
         isVisible = false, 
         items = {},  
         selectedItemIndex = nil,
+        isDragging = false,
         x = love.graphics.getWidth() / 2 - uiWidth / 2,
         y = 50,
     }
@@ -56,15 +57,22 @@ function Inventory:checkClick(clickX, clickY)
         
         local localX = clickX - self.x - padding
         local localY = clickY - self.y - padding
+
+        local slotSize = 64
+        local slotSpacing = slotSize + padding
         
         -- Check which slot was clicked
-        local col = math.floor(localX / (inventorySlots + padding))
-        local row = math.floor(localY / (inventorySlots + padding))
-        
-        local index = row * slotsRow + col + 1
-        
-        if self.items[index] then
-            self:selectItem(index)
+        local col = math.floor(localX / slotSpacing)
+        local row = math.floor(localY / slotSpacing)
+
+        if localX % slotSpacing < slotSize and localY % slotSpacing < slotSize then
+            local index = row * slotsRow + col + 1
+            
+            if self.items[index] then
+                self:selectItem(index)
+                self.isDragging = true
+                return self.items[index]
+            end
         end
         return true
     end
@@ -111,6 +119,19 @@ function Inventory:draw()
     end
     
     love.graphics.pop()
+end
+
+-- Selected Item and Dragging
+function Inventory:getSelectedItem()
+    if self.selectedItemIndex then
+        return self.items[self.selectedItemIndex]
+    end
+    return nil
+end
+
+function Inventory:stopDragging()
+    self.isDragging = false
+    self.selectedItemIndex = nil
 end
 
 return Inventory
