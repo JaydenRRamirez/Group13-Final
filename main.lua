@@ -112,10 +112,107 @@ end
 local function createScene1()
     local scene = {}
     local doorOptions = {{{10, 0, 0}, 3}}
-    local allDoors = createDoors(scene, doorOptions)
+    --local allDoors = createDoors(scene, doorOptions)
+    --table.insert(doors, allDoors)
+
+    -- Asset Constants --
+    -- Models
+    local plane = "g3dAssets/plane.obj"
+    local barrel = "steampunkAssets/barrel.obj"
+    local box = "steampunkAssets/box.obj"
+    local tallPipe = "steampunkAssets/tallPipe.obj"
+    local medPipe = "steampunkAssets/medPipe.obj"
+    local smallPipe = "steampunkAssets/smallPipe.obj"
+    local horizontalPipe = "steampunkAssets/horizontalPipe.obj"
+
+    -- Textures
+    local darkMetal = "steampunkAssets/textures/Metal/metal_basecolor.png"
+    local lightMetal = "steampunkAssets/textures/white metal/white_meetal_basecolor.png"
+    local wood = "steampunkAssets/textures/wood/Substance_graph_diffuse.png"
+
+    -- Number Constants --
+    local horizontalDistance = 10
+
+    local ceilingHeight = 6
+    local floorHeight = -4
+
+    local depthCenter = 10
+    local depthBack = 20
+
+    local planeScale = {10,10,10}
+    -- named after the creator of the assets
+    local illAnoiScale = {0.2,0.2,0.2}
+    local pipeScale = {0.12, 0.12, 0.12}
+
+    local rotate90DegRight = {math.pi/2,0,0}
+    local rotate90DegForward = {0,math.pi/2,0}
+    local rotatePipeLeftWall = {math.pi/2, 0, 0}
+    local rotatePipeRightWall = {math.pi/2, 0, math.pi}
+    local rotatePipeBackWall = {math.pi/2, 0, math.pi/2}
+
+    -- Structure --
+    local floor = g3d.newModel(plane, darkMetal, {depthCenter, 0, floorHeight}, nil, planeScale)
+    table.insert(scene, floor)
+
+    local ceiling = g3d.newModel(plane, darkMetal, {depthCenter, 0, ceilingHeight}, nil, planeScale)
+    table.insert(scene, ceiling)
+
+    local leftWall = g3d.newModel(plane, lightMetal, {depthCenter, -horizontalDistance, 0}, rotate90DegRight, planeScale)
+    table.insert(scene, leftWall)
+
+    local rightWall = g3d.newModel(plane, lightMetal, {depthCenter, horizontalDistance, 0}, rotate90DegRight, planeScale)
+    table.insert(scene, rightWall)
+
+    local backWall = g3d.newModel(plane, wood, {depthBack, 0, 0}, rotate90DegForward, planeScale)
+    table.insert(scene, backWall)
+
+    -- Decor --
+    -- Barrels
+    local barrelObject = g3d.newModel(barrel, wood, {depthBack-1, horizontalDistance-1, floorHeight}, rotate90DegRight, illAnoiScale)
+    table.insert(scene, barrelObject)
+
+    barrelObject = g3d.newModel(barrel, wood, {depthBack-3, horizontalDistance-1, floorHeight}, rotate90DegRight, illAnoiScale)
+    table.insert(scene, barrelObject)
+
+    barrelObject = g3d.newModel(barrel, wood, {depthBack-5, horizontalDistance-1, floorHeight}, rotate90DegRight, illAnoiScale)
+    table.insert(scene, barrelObject)
+
+    -- Boxes
+    local boxObject = g3d.newModel(box, wood, {depthBack-1, -horizontalDistance+1, floorHeight+1}, nil, illAnoiScale)
+    table.insert(scene, boxObject)
+
+    boxObject = g3d.newModel(box, wood, {depthBack-1, -horizontalDistance+1, floorHeight+3}, nil, illAnoiScale)
+    table.insert(scene, boxObject)
+
+    boxObject = g3d.newModel(box, wood, {depthBack-1, -horizontalDistance+3, floorHeight+1}, nil, illAnoiScale)
+    table.insert(scene, boxObject)
+
+    boxObject = g3d.newModel(box, wood, {depthBack-12, -horizontalDistance+1, floorHeight+1}, nil, illAnoiScale)
+    table.insert(scene, boxObject)
+
+    -- Pipes
+    local pipe = g3d.newModel(tallPipe, darkMetal, {depthBack-7, -horizontalDistance+1, floorHeight}, rotatePipeRightWall, pipeScale)
+    table.insert(scene, pipe)
+
+    pipe = g3d.newModel(medPipe, darkMetal, {depthBack-1, 6, floorHeight}, rotatePipeBackWall, pipeScale)
+    table.insert(scene, pipe)
+
+    pipe = g3d.newModel(medPipe, darkMetal, {depthBack-1, 4, floorHeight}, rotatePipeBackWall, pipeScale)
+    table.insert(scene, pipe)
+
+    pipe = g3d.newModel(smallPipe, darkMetal, {depthBack-1, 2, floorHeight+3}, rotatePipeBackWall, pipeScale)
+    table.insert(scene, pipe)
+
+    pipe = g3d.newModel(smallPipe, darkMetal, {depthBack-7, horizontalDistance-1, floorHeight+1}, rotatePipeLeftWall, pipeScale)
+    table.insert(scene, pipe)
+
+    pipe = g3d.newModel(horizontalPipe, darkMetal, {depthBack-8, horizontalDistance-1, floorHeight+1}, rotatePipeLeftWall, pipeScale)
+    table.insert(scene, pipe)
+
+    pipe = g3d.newModel(horizontalPipe, darkMetal, {depthBack-1, -4, floorHeight+3}, rotatePipeBackWall, pipeScale)
+    table.insert(scene, pipe)
 
     table.insert(sceneObjects, scene)
-    table.insert(doors, allDoors)
 end
 
 local function createScene2()
@@ -408,7 +505,9 @@ function love.draw()
     -- earth:draw()
     -- moon:draw()
 	
-    background:draw()
+    if currentScene == 1 then
+        background:draw()
+    end
     if currentScene == 1 then
         if not currentPlacementItem then
             ballCursor:draw()
