@@ -84,7 +84,19 @@ In terms of testing and automation, the main implementation has been in bootstra
 ## Reflection
 F1 was a lengthy process in terms of fulfilling the requirements, as love2d required much in terms of finding not only extensions that housed the opportunity to work with 3D-oriented libraries, but also having to learn how such libraries work in order to implement the necessary assets, physics, and logic to build the puzzle. Much of the focus here was on engine work, and while we did maintain mostly our original ideas of g3d, we did have a bit of a moment in working in 3DreamEngine, but in the end, we just utilized its physics property for the project, rather than the whole engine. While we also discussed what automation and test libraries and scripts at the beginning(such as we ensured we had love2d extensions that would give us a running build at the press of a few keys, as said before, we focused on the engine at hand, and once it was at a state that left us satisfied, did we then implement such automation like Bootstrap or something to keep the code tidy like the lua Autoformatter.
 
+# Devlog Entry - 12/01/2025
+
+## How we satisfied the software requirements
+Continuing on from the first iteration of the game so far, the 3D rendering and physics simulation remains as we collectively got to work on implementing new features and interactions. Starting from the top, the introduction of a new scene that will transition to the previous game level we’ve showcased so far. Next up was the focus on the object interaction, from introducing a new Inventory UI and subsequent Object class to store these items, but also being able to drag the items onto the game board. Finally, we’ve still kept on ensuring the elements of the game board itself still carry the physics based puzzle logic and a win/lose state.
+
+## Reflection
+This part of the process has been enlightening in both furthering the understanding of the g3d and love2d engines, but also in how we are able to weave overall game and level ideas through the tools we’ve been using so far. Amongst the process, there have been some shifts on the game design based on what we’ve learned about the engine so far and its capabilities. Originally there was a proposition of gears and rotatable objects to help or hinder the trajectory of the ball in the puzzle for this phase, but seeing the complexity of attempting logic within the physics, we instead focused on the ideas of pistons and conveyors as interactables instead.
+
 
 ## Useful Project Documents:
 
 [Program Planning Doc](https://docs.google.com/document/d/1-9CKcUC9vJIP7k_AkpOvDtzBbWBxJ021xz6i5XMZBcM/edit?usp=sharing)
+
+## Important Notes for Running Program:
+
+Must be on main.lua before typing type > launch love

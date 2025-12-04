@@ -5,6 +5,8 @@ local Object = require("objects")
 local Inventory = require("inventory")
 
 local gameInventory
+local currentPlacementItem = nil
+local placementPosition = {10, 0, 4}
 
 -- Constants
 local gameCenter = {10,0,4}
@@ -251,9 +253,16 @@ end
 -- Clicking for when the inventory is up
 function love.mousepressed(x, y, button, istouch, presses)
     if button == 1 then
-        local uiHandled = gameInventory:checkClick(x, y)
+        local clickedItem = gameInventory:checkClick(x, y)
 
-        if uiHandled then
+        if clickedItem then
+            currentPlacementItem = clickedItem
+            gameInventory:toggle() 
+            return
+        end
+
+        if currentPlacementItem then
+            -- Do nothing here. We handle the placement on love.mousereleased.
             return
         end
 
@@ -266,7 +275,10 @@ function love.mousepressed(x, y, button, istouch, presses)
             if #simulatedObjects >= 5 then 
                 table.remove(simulatedObjects, 1)
             end
-            local physBall = rigidBody:newRigidBody("g3dAssets/sphere.obj", "kenney_prototype_textures/orange/texture_08.png", 
+            print("Mouse X: " .. love.mouse.getX() .. ", Mouse Y: " .. love.mouse.getY())
+            if (love.mouse.getX() < 660 and love.mouse.getX() > 125 and
+                love.mouse.getY() < 50 and love.mouse.getY() > 0) then
+                local physBall = rigidBody:newRigidBody("g3dAssets/sphere.obj", "kenney_prototype_textures/light/texture_08.png", 
                 {ballCursor.translation[1], ballCursor.translation[2], ballCursor.translation[3]}, 
                 nil, 
                 {0.25,0.25,0.25}, 
@@ -275,7 +287,7 @@ function love.mousepressed(x, y, button, istouch, presses)
                 {radius=0.25}
             )
             table.insert(simulatedObjects, physBall)
-
+            end
         else
             local worldx, worldy, worldz = getClickWorldPosition(x, y)
             for i = 1, #doors[currentScene] do
@@ -288,6 +300,29 @@ function love.mousepressed(x, y, button, istouch, presses)
     end
 end
 
+function love.mousereleased(x, y, button)
+    if button == 1 then
+        if currentPlacementItem then
+            
+            local newObstacle = rigidBody:newRigidBody(
+                currentPlacementItem.modelPath or "g3dAssets/cube.obj",
+                "kenney_prototype_textures/green/texture_03.png",
+                placementPosition,
+                nil,
+                {1, 1, 1},
+                "static",
+                "verts"
+            )
+            table.insert(sceneObjects[currentScene], newObstacle)
+            print("Placed obstacle: " .. currentPlacementItem.name)
+
+            -- Reset placement state
+            currentPlacementItem = nil
+            gameInventory:stopDragging()
+        end
+    end
+end
+
 -- Press I to bring up inventory
 function love.keypressed(key)
     if key == "i" and currentScene == 1 then
@@ -296,9 +331,13 @@ function love.keypressed(key)
 end
 
 function love.mousemoved(x,y, dx,dy)
-    -- g3d.camera.firstPersonLook(dx,dy)
     local mWorldPosX, mWorldPosY, mWorldPosZ = getClickWorldPosition(x, y)
-    ballCursor:setTranslation(mWorldPosX, mWorldPosY, mWorldPosZ)
+    
+    if currentPlacementItem then -- Check if an item is being dragged
+        placementPosition = {mWorldPosX, mWorldPosY, mWorldPosZ}
+    else
+        ballCursor:setTranslation(mWorldPosX, mWorldPosY, mWorldPosZ)
+    end
 end
 
 local collidedThisFrame, wonThisFrame, lostThisFrame = false, false, false
@@ -356,7 +395,9 @@ function love.draw()
 	
     background:draw()
     if currentScene == 1 then
-        ballCursor:draw()
+        if not currentPlacementItem then
+            ballCursor:draw()
+        end
         clickPlane:draw()
 
         for i = 1, #winBoxes do
