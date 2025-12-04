@@ -59,6 +59,7 @@ local currentScene = 1
 local timerLength = 60
 local secondsElapsed = 0
 local font
+local instructionFont
 
 -- contains all door objects
 -- 2D, doors[2][2] gives second door in first room (corresponds to currentScene)
