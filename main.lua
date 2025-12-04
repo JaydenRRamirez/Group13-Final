@@ -7,6 +7,7 @@ local Inventory = require("inventory")
 local gameInventory
 local currentPlacementItem = nil
 local placementPosition = {10, 0, 4}
+local obstaclePrototypes = {}
 
 -- Constants
 local gameCenter = {10,0,4}
@@ -322,6 +323,7 @@ end
 
 function love.load()
     font = love.graphics.newFont(24)
+    instructionFont = love.graphics.newFont(12)
 
     calculateTransformPerScreenPixel()
 
@@ -331,7 +333,7 @@ function love.load()
     local conveyer = Object:new({
         name = "Conveyer",
         type = "Obstacle",
-        modelPath = "g3dAssets/cylinder.obj",
+        modelPath = "custom_assets/model.obj",
         iconPath = "g3dAssets/Conveyer.png" 
     })
     
@@ -352,6 +354,14 @@ function love.load()
     gameInventory:addItem(conveyer)
     gameInventory:addItem(piston)
     gameInventory:addItem(piston2)
+
+    -- Store the items for quick lookup for returns
+    obstaclePrototypes[conveyer.name] = conveyer
+    obstaclePrototypes[piston.name] = piston
+    obstaclePrototypes[piston2.name] = piston2
+
+    -- Clone items back in
+    gameInventory.obstaclePrototypes = obstaclePrototypes
 end
 
 -- Clicking for when the inventory is up
@@ -374,52 +384,86 @@ function love.mousepressed(x, y, button, istouch, presses)
         if gameInventory.isVisible then
             return
         end
-        
+
+        -- Check to return them to Inventory
+        local worldx, worldy, worldz = getClickWorldPosition(x, y)
         if currentScene == 1 then
-            if #simulatedObjects >= 5 then 
-                table.remove(simulatedObjects, 1)
-            end
-            print("Mouse X: " .. love.mouse.getX() .. ", Mouse Y: " .. love.mouse.getY())
-            if (love.mouse.getX() < 660 and love.mouse.getX() > 125 and
-                love.mouse.getY() < 50 and love.mouse.getY() > 0) then
-                local physBall = rigidBody:newRigidBody("g3dAssets/sphere.obj", "kenney_prototype_textures/light/texture_08.png", 
-                {ballCursor.translation[1], ballCursor.translation[2], ballCursor.translation[3]}, 
-                nil, 
-                {0.25,0.25,0.25}, 
-                "dynamic", 
-                "sphere", 
-                {radius=0.25}
-            )
-            table.insert(simulatedObjects, physBall)
-            end
-        else
-            local worldx, worldy, worldz = getClickWorldPosition(x, y)
-            for i = 1, #doors[currentScene] do
-                local currentDoor = doors[currentScene][i]
-                if currentDoor.model:isPointInAABB({worldx, worldy, worldz}) then
-                    currentScene = doorMap[currentDoor]
+            for i = #sceneObjects[currentScene], 1, -1 do
+                local obstacle = sceneObjects[currentScene][i]
+                
+                if obstacle.name then
+                    local isClicked = false
+                    
+                    -- Check if custom pickup bounds exist (for the Conveyer)
+                    if obstacle.pickupExtents then
+                        -- Use the model's translation for current world position
+                        local pos = obstacle.model.translation 
+                        local extents = obstacle.pickupExtents
+                        
+                        -- Manual bounds check against the generous box
+                        if worldx >= (pos[1] - extents[1]) and worldx <= (pos[1] + extents[1]) and
+                           worldy >= (pos[2] - extents[2]) and worldy <= (pos[2] + extents[2]) and
+                           worldz >= (pos[3] - extents[3]) and worldz <= (pos[3] + extents[3]) then
+                            isClicked = true
+                        end
+                    else
+                        -- Use the default AABB check for all other objects (Pistons, Ramps)
+                        isClicked = obstacle.model:isPointInAABB({worldx, worldy, worldz})
+                    end
+                    
+                    if isClicked then
+                        gameInventory:returnItem(obstacle.name)
+                        table.remove(sceneObjects[currentScene], i)
+                        print("Returned obstacle: " .. obstacle.name .. " to inventory.")
+                        return
+                    end
                 end
             end
         end
     end
 end
 
+local conveyerScale = 0.05
+local defaultScale = {1, 1, 1}
+local conveyerTexture = "custom_assets/RGB_44f0f7fd2e0349fb90259c2a868d6903_belt_diffuse.png"
+local defaultTexture = "kenney_prototype_textures/green/texture_03.png"
+
 function love.mousereleased(x, y, button)
     if button == 1 then
         if currentPlacementItem then
+
+            local scale = defaultScale
+            local texturePath = defaultTexture
+            local collisionShape = "verts"
+            local collisionParams = nil 
+            
+            if currentPlacementItem.name == "Conveyer" then
+                scale = {conveyerScale, conveyerScale, conveyerScale}
+                texturePath = conveyerTexture
+                
+                -- Use a custom box collision shape for easier clicking (pickup) and physics
+                collisionShape = "box" 
+                collisionParams = {extents={5, 5, 5}} 
+            end
             
             local newObstacle = rigidBody:newRigidBody(
                 currentPlacementItem.modelPath or "g3dAssets/cube.obj",
-                "kenney_prototype_textures/green/texture_03.png",
+                texturePath,
                 placementPosition,
                 nil,
-                {1, 1, 1},
-                "static",
-                "verts"
+                scale,
+                collisionShape,
+                collisionParams
             )
+
+            newObstacle.name = currentPlacementItem.name
+            
+            --Save custom extents to the object
+            if collisionShape == "box" and collisionParams and collisionParams.extents then
+                newObstacle.pickupExtents = collisionParams.extents
+            end
             table.insert(sceneObjects[currentScene], newObstacle)
             print("Placed obstacle: " .. currentPlacementItem.name)
-
             -- Reset placement state
             currentPlacementItem = nil
             gameInventory:stopDragging()
@@ -537,6 +581,27 @@ function love.draw()
     end
     if lostGame then
         drawLoseScreen()
+    end
+
+    if currentScene == 1 then
+        love.graphics.setFont(instructionFont)
+        love.graphics.setColor(1, 1, 1, 1)
+
+        local screenWidth = love.graphics.getWidth()
+        local screenHeight = love.graphics.getHeight()
+        local textY = screenHeight - 40
+
+        local openInvText = "Press **I** to open the inventory."
+        local openInvTextWidth = instructionFont:getWidth(openInvText)
+
+        love.graphics.print(openInvText, screenWidth / 2 - openInvTextWidth - 150, textY)
+
+        if not gameInventory.isVisible and not currentPlacementItem then
+            local pickupText = "Click on placed obstacles to return them to inventory."
+            local pickupTextWidth = instructionFont:getWidth(pickupText)
+
+            love.graphics.print(pickupText, screenWidth / 2 + 150, textY)
+        end
     end
 
     gameInventory:draw()

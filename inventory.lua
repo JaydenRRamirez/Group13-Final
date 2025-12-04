@@ -15,6 +15,7 @@ function Inventory:new()
         isDragging = false,
         x = love.graphics.getWidth() / 2 - uiWidth / 2,
         y = 50,
+        obstaclePrototypes = {}
     }
     
     setmetatable(inv, self)
@@ -36,6 +37,25 @@ function Inventory:selectItem(index)
         self.selectedItemIndex = index
         print("Selected item: " .. self.items[index].name)
     end
+end
+
+function Inventory:returnItem(itemName)
+    if self.obstaclePrototypes[itemName] then
+        local itemPrototype = self.obstaclePrototypes[itemName]
+        
+        -- Create a new Object instance from the prototype to keep the list clean
+        local returnedItem = Object:new({
+            name = itemPrototype.name,
+            type = itemPrototype.type,
+            modelPath = itemPrototype.modelPath,
+            iconPath = itemPrototype.iconPath,
+            canBePlaced = itemPrototype.canBePlaced
+        })
+        
+        self:addItem(returnedItem)
+        return true
+    end
+    return false
 end
 
 --- UI Interaction
