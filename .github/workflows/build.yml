@@ -19,7 +19,7 @@ jobs:
             -   name: Build bare love package
                 uses: love-actions/love-actions-core@v1
                 with:
-                    build-list: ./assets/ ./frameworks/ ./config.lua ./main.lua
+                    build-list: ./g3d/ ./g3dAssets/ ./conf.lua ./main.lua
                     package-path: ./bare/main.love
 
             -   name: Upload .love artifact
