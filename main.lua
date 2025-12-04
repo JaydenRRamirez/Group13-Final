@@ -54,6 +54,11 @@ local simulatedObjects = {}
 -- rest correspond to different rooms
 local currentScene = 1
 
+-- seconds before transitioning to plinko level
+local timerLength = 60
+local secondsElapsed = 0
+local font
+
 -- contains all door objects
 -- 2D, doors[2][2] gives second door in first room (corresponds to currentScene)
 local doors = {{}}
@@ -219,6 +224,8 @@ local function drawLoseScreen()
 end
 
 function love.load()
+    font = love.graphics.newFont(24)
+
     calculateTransformPerScreenPixel()
 
     gameInventory = Inventory:new()
@@ -354,6 +361,14 @@ function love.update(dt)
     if love.keyboard.isDown("p") then isPaused = not isPaused end
 
     if not isPaused then
+        if currentScene ~= 1 then
+            secondsElapsed = secondsElapsed + dt
+            if secondsElapsed >= timerLength then
+                currentScene = 1
+                secondsElapsed = 0
+            end
+        end
+
         -- check collisions between simulated balls and bounds
         for i = 1, #simulatedObjects do
             for j = 1, #sceneObjects[1] do
@@ -406,6 +421,9 @@ function love.draw()
         for i = 1, #loseBoxes do
             loseBoxes[i]:draw()
         end
+    else
+        love.graphics.setFont(font)
+        love.graphics.print("Time left: " .. (timerLength - math.floor(secondsElapsed)))
     end
 
     for i = 1, #simulatedObjects do
