@@ -1,0 +1,30 @@
+
+name: Build LÖVE package
+
+on:
+    push:
+    workflow_dispatch:
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout repository
+                uses: actions/checkout@v4
+
+            -   name: Ensure output directory
+                run: |
+                    mkdir -p ./bare
+
+            -   name: Build bare love package
+                uses: love-actions/love-actions-core@v1
+                with:
+                    build-list: ./assets/ ./frameworks/ ./config.lua ./main.lua
+                    package-path: ./bare/main.love
+
+            -   name: Upload .love artifact
+                uses: actions/upload-artifact@v4
+                with:
+                    name: main.love
+                    path: ./bare/main.love
+
