@@ -468,6 +468,21 @@ function love.mousereleased(x, y, button)
             -- Reset placement state
             currentPlacementItem = nil
             gameInventory:stopDragging()
+        else
+            if (love.mouse.getX() < 660 and love.mouse.getX() > 125 and
+                love.mouse.getY() < 50 and love.mouse.getY() > 0) then
+                local physBall = rigidBody:newRigidBody(
+                    "g3dAssets/sphere.obj",
+                    "kenney_prototype_textures/light/texture_08.png", 
+                    {ballCursor.translation[1], ballCursor.translation[2], ballCursor.translation[3]}, 
+                    nil, 
+                    {0.25,0.25,0.25}, 
+                    "dynamic", 
+                    "sphere", 
+                    {radius=0.25}
+                )
+                table.insert(simulatedObjects, physBall)
+            end
         end
     end
 end
