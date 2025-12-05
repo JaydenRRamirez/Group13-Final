@@ -1,0 +1,268 @@
+{
+    "models": {
+        "plane": "g3dAssets/plane.obj",
+        "barrel": "steampunkAssets/barrel.obj",
+        "box": "steampunkAssets/box.obj",
+        "tallPipe": "steampunkAssets/tallPipe.obj",
+        "medPipe": "steampunkAssets/medPipe.obj",
+        "smallPipe": "steampunkAssets/smallPipe.obj",
+        "horizontalPipe": "steampunkAssets/horizontalPipe.obj"
+    },
+    "textures": {
+        "darkMetal": "steampunkAssets/textures/Metal/metal_basecolor.png",
+        "lightMetal": "steampunkAssets/textures/white metal/white_meetal_basecolor.png",
+        "wood": "steampunkAssets/textures/wood/Substance_graph_diffuse.png"
+    },
+    "constants": {
+        "horizontalDistance": 10,
+        "ceilingHeight": 6,
+        "floorHeight": -4,
+
+        "depthCenter": 10,
+        "depthBack": 20,
+
+        "planeScale": {
+            "x": 10,
+            "y": 10,
+            "z": 10
+        },
+        "illAnoiScale": {
+            "x": 0.2,
+            "y": 0.2,
+            "z": 0.2
+        },
+        "pipeScale": {
+            "x": 0.12,
+            "y": 0.12,
+            "z": 0.12
+        },
+
+        "rotate90DegRight": {
+            "x": "PI/2",
+            "y": 0,
+            "z": 0
+        },
+        "rotate90DegForward": {
+            "x": 0,
+            "y": "PI/2",
+            "z": 0
+        },
+        "rotatePipeLeftWall": {
+            "x": "PI/2",
+            "y": 0,
+            "z": 0
+        },
+        "rotatePipeRightWall": {
+            "x": "PI/2",
+            "y": 0,
+            "z": "PI"
+        },
+        "rotatePipeBackWall": {
+            "x": "PI/2",
+            "y": 0,
+            "z": "PI/2"
+        }
+    },
+    "scenes": [
+        {
+            "floor": {
+                "model": "plane",
+                "texture": "darkMetal",
+                "translation": {
+                    "x": "depthCenter",
+                    "y": 0,
+                    "z": "floorHeight"
+                },
+                "rotation": null,
+                "scale": "planeScale"
+            },
+            "ceiling": {
+                "model": "plane",
+                "texture": "darkMetal",
+                "translation": {
+                    "x": "depthCenter",
+                    "y": 0,
+                    "z": "ceilingHeight"
+                },
+                "rotation": null,
+                "scale": "planeScale"
+            },
+            "leftWall": {
+                "model": "plane",
+                "texture": "lightMetal",
+                "translation": {
+                    "x": "depthCenter",
+                    "y": "-horizontalDistance",
+                    "z": 0
+                },
+                "rotation": "rotate90DegRight",
+                "scale": "planeScale"
+            },
+            "rightWall": {
+                "model": "plane",
+                "texture": "lightMetal",
+                "translation": {
+                    "x": "depthCenter",
+                    "y": "horizontalDistance",
+                    "z": 0
+                },
+                "rotation": "rotate90DegRight",
+                "scale": "planeScale"
+            },
+            "backWall": {
+                "model": "plane",
+                "texture": "wood",
+                "translation": {
+                    "x": "depthBack",
+                    "y": 0,
+                    "z": 0
+                },
+                "rotation": "rotate90DegForward",
+                "scale": "planeScale"
+            },
+            "barrel1": {
+                "model": "barrel",
+                "texture": "wood",
+                "translation": {
+                    "x": "depthBack-1",
+                    "y": "horizontalDistance-1",
+                    "z": "floorHeight"
+                },
+                "rotation": "rotate90DegRight",
+                "scale": "illAnoiScale"
+            },
+            "barrel2": {
+                "model": "barrel",
+                "texture": "wood",
+                "translation": {
+                    "x": "depthBack-3",
+                    "y": "horizontalDistance-1",
+                    "z": "floorHeight"
+                },
+                "rotation": "rotate90DegRight",
+                "scale": "illAnoiScale"
+            },
+            "barrel3": {
+                "model": "barrel",
+                "texture": "wood",
+                "translation": {
+                    "x": "depthBack-5",
+                    "y": "horizontalDistance-1",
+                    "z": "floorHeight"
+                },
+                "rotation": "rotate90DegRight",
+                "scale": "illAnoiScale"
+            },
+            "box1": {
+                "model": "box",
+                "texture": "wood",
+                "translation": {
+                    "x": "depthBack-1",
+                    "y": "-horizontalDistance+1",
+                    "z": "floorHeight+1"
+                },
+                "rotation": null,
+                "scale": "illAnoiScale"
+            },
+            "box2": {
+                "model": "box",
+                "texture": "wood",
+                "translation": {
+                    "x": "depthBack-1",
+                    "y": "-horizontalDistance+1",
+                    "z": "floorHeight+3"
+                },
+                "rotation": null,
+                "scale": "illAnoiScale"
+            },
+            "box3": {
+                "model": "box",
+                "texture": "wood",
+                "translation": {
+                    "x": "depthBack-1",
+                    "y": "-horizontalDistance+3",
+                    "z": "floorHeight+1"
+                },
+                "rotation": null,
+                "scale": "illAnoiScale"
+            },
+            "box4": {
+                "model": "box",
+                "texture": "wood",
+                "translation": {
+                    "x": "depthBack-12",
+                    "y": "-horizontalDistance+1",
+                    "z": "floorHeight+1"
+                },
+                "rotation": null,
+                "scale": "illAnoiScale"
+            },
+            "tallPipe": {
+                "model": "tallPipe",
+                "texture": "darkMetal",
+                "translation": {
+                    "x": "depthBack-7",
+                    "y": "-horizontalDistance+1",
+                    "z": "floorHeight"
+                },
+                "rotation": "rotatePipeRightWall",
+                "scale": "pipeScale"
+            },
+            "medPipe1": {
+                "model": "medPipe",
+                "texture": "darkMetal",
+                "translation": {
+                    "x": "depthBack-1",
+                    "y": 6,
+                    "z": "floorHeight"
+                },
+                "rotation": "rotatePipeBackWall",
+                "scale": "pipeScale"
+            },
+            "medPipe2": {
+                "model": "medPipe",
+                "texture": "darkMetal",
+                "translation": {
+                    "x": "depthBack-1",
+                    "y": 4,
+                    "z": "floorHeight"
+                },
+                "rotation": "rotatePipeBackWall",
+                "scale": "pipeScale"
+            },
+            "smallPipe1": {
+                "model": "smallPipe",
+                "texture": "darkMetal",
+                "translation": {
+                    "x": "depthBack-1",
+                    "y": 2,
+                    "z": "floorHeight+3"
+                },
+                "rotation": "rotatePipeBackWall",
+                "scale": "pipeScale"
+            },
+            "smallPipe2": {
+                "model": "smallPipe",
+                "texture": "darkMetal",
+                "translation": {
+                    "x": "depthBack-7",
+                    "y": "horizontalDistance-1",
+                    "z": "floorHeight+1"
+                },
+                "rotation": "rotatePipeLeftWall",
+                "scale": "pipeScale"
+            },
+            "horizontalPipe1": {
+                "model": "horizontalPipe",
+                "texture": "darkMetal",
+                "translation": {
+                    "x": "depthBack-1",
+                    "y": -4,
+                    "z": "floorHeight+3"
+                },
+                "rotation": "rotatePipeBackWall",
+                "scale": "pipeScale"
+            }
+        }
+    ]
+}
