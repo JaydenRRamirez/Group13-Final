@@ -27,33 +27,54 @@ end
 
 function Inventory:addItem(item)
     if item and item.type == "Obstacle" then
-        table.insert(self.items, item)
-        print("Added " .. item.name .. " to inventory.")
+        local itemName = item.name
+        
+        if self.items[itemName] then
+            self.items[itemName].count = self.items[itemName].count + 1
+        else
+            self.items[itemName] = {
+                prototype = item,
+                count = 1
+            }
+        end
+        print("Added" .. itemName .. " to inventory. count: " .. self.items[itemName].count)
     end
 end
 
+function Inventory:getDisplayedStacks()
+    local stacks = {}
+    for _, stack in pairs(self.items) do
+        table.insert(stacks, stack)
+    end
+    return stacks
+end
+
 function Inventory:selectItem(index)
-    if self.items[index] then
+    local stacks = self:getDisplayedStacks()
+    if stacks[index] and stacks[index].count > 0 then
         self.selectedItemIndex = index
-        print("Selected item: " .. self.items[index].name)
+        print("Selected item: " .. stacks[index].prototype.name)
+        return stacks[index]
     end
 end
 
 function Inventory:returnItem(itemName)
-    if self.obstaclePrototypes[itemName] then
-        local itemPrototype = self.obstaclePrototypes[itemName]
-        
-        -- Create a new Object instance from the prototype to keep the list clean
-        local returnedItem = Object:new({
-            name = itemPrototype.name,
-            type = itemPrototype.type,
-            modelPath = itemPrototype.modelPath,
-            iconPath = itemPrototype.iconPath,
-            canBePlaced = itemPrototype.canBePlaced
-        })
-        
-        self:addItem(returnedItem)
+    local stack = self.items[itemName]
+
+    if stack then
+        stack.count = stack.count + 1
+        print("Returned " .. itemName .. " to inventory. Count: "  .. stack.count)
         return true
+    else
+        local prototype = self.obstaclePrototypes[itemName]
+        if prototype then
+            self.items[itemName] = {
+                prototype = prototype,
+                count = 1
+            }
+            print("Returned " .. itemName .. " to inventory. Count: 1")
+            return true
+        end
     end
     return false
 end
@@ -87,11 +108,13 @@ function Inventory:checkClick(clickX, clickY)
 
         if localX % slotSpacing < slotSize and localY % slotSpacing < slotSize then
             local index = row * slotsRow + col + 1
+            local stacks = self:getDisplayedStacks()
             
-            if self.items[index] then
+            if stacks[index] and stacks[index].count > 0 then
                 self:selectItem(index)
                 self.isDragging = true
-                return self.items[index]
+                stacks[index].count = stacks[index].count - 1
+                return stacks[index].prototype
             end
         end
         return true
@@ -104,6 +127,8 @@ end
 function Inventory:draw()
     if not self.isVisible then return end
     
+    local stacks = self:getDisplayedStacks()
+
     love.graphics.push()
     
     -- Inventory Background
@@ -111,7 +136,8 @@ function Inventory:draw()
     love.graphics.rectangle("fill", self.x, self.y, uiWidth, uiHeight)
 
     -- Inventory Slots
-    for i, item in ipairs(self.items) do
+    for i, stack in ipairs(stacks) do
+        local item = stack.prototype
         local col = (i - 1) % slotsRow
         local row = math.floor((i - 1) / slotsRow)
         
@@ -136,6 +162,20 @@ function Inventory:draw()
             local scale = inventorySlots / math.max(item.iconImage:getWidth(), item.iconImage:getHeight())
             love.graphics.draw(item.iconImage, drawX, drawY, 0, scale, scale)
         end
+
+        -- Draw Item Count
+        if stack.count > 0 then
+            love.graphics.setColor(1, 1, 1, 1)
+            local currentFont = love.graphics.getFont()
+            local countFont = love.graphics.newFont(16)
+            love.graphics.setFont(countFont)
+            local countText = tostring(stack.count)
+            local countX = drawX + inventorySlots - countFont:getWidth(countText) - 2
+            local countY = drawY + inventorySlots - countFont:getHeight() - 2
+
+            love.graphics.print(countText, countX, countY)
+            love.graphics.setFont(currentFont)
+        end
     end
     
     love.graphics.pop()
@@ -144,7 +184,8 @@ end
 -- Selected Item and Dragging
 function Inventory:getSelectedItem()
     if self.selectedItemIndex then
-        return self.items[self.selectedItemIndex]
+        local stacks = self:getDisplayedStacks()
+        return stacks[self.selectedItemIndex].prototype
     end
     return nil
 end

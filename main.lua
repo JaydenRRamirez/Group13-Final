@@ -352,16 +352,11 @@ function love.load()
         iconPath = "g3dAssets/Piston2.png"
     })
 
-    gameInventory:addItem(conveyer)
-    gameInventory:addItem(piston)
-    gameInventory:addItem(piston2)
-
     -- Store the items for quick lookup for returns
     obstaclePrototypes[conveyer.name] = conveyer
     obstaclePrototypes[piston.name] = piston
     obstaclePrototypes[piston2.name] = piston2
 
-    -- Clone items back in
     gameInventory.obstaclePrototypes = obstaclePrototypes
 end
 
@@ -370,7 +365,7 @@ function love.mousepressed(x, y, button, istouch, presses)
     if button == 1 then
         local clickedItem = gameInventory:checkClick(x, y)
 
-        if clickedItem then
+        if clickedItem and type(clickedItem) == "table" then
             currentPlacementItem = clickedItem
             gameInventory:toggle() 
             return
