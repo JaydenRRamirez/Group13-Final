@@ -331,31 +331,39 @@ function love.load()
     gameInventory = Inventory:new()
 
     -- Obstacle Items
-    local conveyer = Object:new({
-        name = "Conveyer",
+    local cone = Object:new({
+        name = "Cone",
         type = "Obstacle",
-        modelPath = "custom_assets/model.obj",
-        iconPath = "g3dAssets/Conveyer.png" 
+        modelPath = "custom_assets/Cone.obj",
+        iconPath = "custom_assets/cone-metal.png" 
     })
     
-    local piston = Object:new({
-        name = "Piston",
+    local halfPipe = Object:new({
+        name = "Half Pipe",
         type = "Obstacle",
-        modelPath = "g3dAssets/cube.obj",
-        iconPath = "g3dAssets/Piston.png"
+        modelPath = "custom_assets/halfpipe.obj",
+        iconPath = "custom_assets/half-pipe.png"
     })
 
-    local piston2 = Object:new({
-        name = "Piston2",
+    local ramp = Object:new({
+        name = "Ramp",
         type = "Obstacle",
-        modelPath = "g3dAssets/cube.obj",
-        iconPath = "g3dAssets/Piston2.png"
+        modelPath = "custom_assets/ramp.obj",
+        iconPath = "custom_assets/ramp-steampunk.png"
+    })
+
+    local star = Object:new({
+        name = "Star",
+        type = "Obstacle",
+        modelPath = "custom_assets/star.obj",
+        iconPath = "custom_assets/star-steampunk.png"
     })
 
     -- Store the items for quick lookup for returns
-    obstaclePrototypes[conveyer.name] = conveyer
-    obstaclePrototypes[piston.name] = piston
-    obstaclePrototypes[piston2.name] = piston2
+    obstaclePrototypes[cone.name] = cone
+    obstaclePrototypes[halfPipe.name] = halfPipe
+    obstaclePrototypes[ramp.name] = ramp
+    obstaclePrototypes[star.name] = star
 
     gameInventory.obstaclePrototypes = obstaclePrototypes
 end
@@ -419,11 +427,7 @@ function love.mousepressed(x, y, button, istouch, presses)
     end
 end
 
-local conveyerScale = 0.05
 local defaultScale = {1, 1, 1}
-local conveyerTexture = "custom_assets/RGB_44f0f7fd2e0349fb90259c2a868d6903_belt_diffuse.png"
-local defaultTexture = "kenney_prototype_textures/green/texture_03.png"
-
 function love.mousereleased(x, y, button)
     if button == 1 then
         if currentPlacementItem then
@@ -432,16 +436,7 @@ function love.mousereleased(x, y, button)
             local texturePath = defaultTexture
             local collisionShape = "verts"
             local collisionParams = nil 
-            
-            if currentPlacementItem.name == "Conveyer" then
-                scale = {conveyerScale, conveyerScale, conveyerScale}
-                texturePath = conveyerTexture
-                
-                -- Use a custom box collision shape for easier clicking (pickup) and physics
-                collisionShape = "box" 
-                collisionParams = {extents={5, 5, 5}} 
-            end
-            
+    
             local newObstacle = rigidBody:newRigidBody(
                 currentPlacementItem.modelPath or "g3dAssets/cube.obj",
                 texturePath,
