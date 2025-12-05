@@ -54,13 +54,11 @@ local simulatedObjects = {}
 
 -- 1 = plinko level
 -- rest correspond to different rooms
-local currentScene = 2
+local currentScene = 1
 
 -- seconds before transitioning to plinko level
 local timerLength = 60
 local secondsElapsed = 0
-local font
-local instructionFont
 
 -- contains all door objects
 -- 2D, doors[2][2] gives second door in first room (corresponds to currentScene)
@@ -68,6 +66,30 @@ local doors = {{}}
 
 -- map from door objects (rigidbody) to currentScene number
 local doorMap = {}
+
+-- text
+local font
+local instructionFont
+local languageJson
+local language = "english"
+
+local function languageSetup()
+    local jsonString = love.filesystem.read("languages.json")
+    languageJson = json.decode(jsonString)
+    if language == "english" then
+        love.graphics.newFont(24)
+        instructionFont = love.graphics.newFont(12)
+
+    elseif language == "chinese" then
+        font = love.graphics.newFont("fonts/chinese.ttf", 24)
+        instructionFont = love.graphics.newFont("fonts/chinese.ttf", 12)
+
+    elseif language == "arabic" then
+        love.graphics.newFont("fonts/arabic.ttf", 24)
+        instructionFont = love.graphics.newFont("fonts/arabic.ttf", 10)
+    end
+end
+languageSetup()
 
 local function createPlinkoArrangement(containerTable, startX, startY, startZ, rows, cols, spacingVert, spacingHorz)
     for row = 0, rows - 1 do
@@ -288,7 +310,7 @@ local function drawWinScreen()
 
     -- Placeholder for win screen drawing logic
     love.graphics.setColor(0, 0, 0, 1)
-    love.graphics.print("You Win!", love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 10, nil, 4, 4)
+    love.graphics.print(languageJson[language].win, love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 10, nil, 4, 4)
 end
 
 local function drawLoseScreen()
@@ -298,13 +320,10 @@ local function drawLoseScreen()
 
     -- Placeholder for lose screen drawing logic
     love.graphics.setColor(255, 255, 255, 1)
-    love.graphics.print("You Lose!", love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 10, nil, 4, 4)
+    love.graphics.print(languageJson[language].lose, love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 10, nil, 4, 4)
 end
 
 function love.load()
-    font = love.graphics.newFont(24)
-    instructionFont = love.graphics.newFont(12)
-
     calculateTransformPerScreenPixel()
 
     gameInventory = Inventory:new()
@@ -556,7 +575,7 @@ function love.draw()
         end
     else
         love.graphics.setFont(font)
-        love.graphics.print("Time left: " .. (timerLength - math.floor(secondsElapsed)))
+        love.graphics.print(languageJson[language].timer .. (timerLength - math.floor(secondsElapsed)))
     end
 
     for i = 1, #simulatedObjects do
@@ -580,13 +599,13 @@ function love.draw()
     local screenHeight = love.graphics.getHeight()
     local textY = screenHeight - 40
 
-    local openInvText = "Press **I** to open the inventory."
+    local openInvText = languageJson[language].openInv
     local openInvTextWidth = instructionFont:getWidth(openInvText)
 
     love.graphics.print(openInvText, screenWidth / 2 - openInvTextWidth - 150, textY)
 
     if not gameInventory.isVisible and not currentPlacementItem then
-        local pickupText = "Click on placed obstacles to return them to inventory."
+        local pickupText = languageJson[language].pickup
         local pickupTextWidth = instructionFont:getWidth(pickupText)
 
         love.graphics.print(pickupText, screenWidth / 2 + 150, textY)
