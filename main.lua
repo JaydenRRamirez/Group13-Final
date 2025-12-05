@@ -1,5 +1,6 @@
 -- Imports
 local g3d = require "g3d"
+local json = require "extensions/json"
 local rigidBody = require(".rigidBody")
 local Object = require("objects")
 local Inventory = require("inventory")
@@ -53,7 +54,7 @@ local simulatedObjects = {}
 
 -- 1 = plinko level
 -- rest correspond to different rooms
-local currentScene = 1
+local currentScene = 2
 
 -- seconds before transitioning to plinko level
 local timerLength = 60
@@ -111,124 +112,102 @@ local function createDoors(scene, doorOptions)
     return allDoors
 end
 
-local function createScene1()
-    local scene = {}
-    local doorOptions = {{{10, 0, 0}, 3}}
-    --local allDoors = createDoors(scene, doorOptions)
-    --table.insert(doors, allDoors)
+-- local function createScene1()
+--     local scene = {}
+--     local doorOptions = {{{10, 0, 0}, 3}}
+--     local allDoors = createDoors(scene, doorOptions)
+--     table.insert(doors, allDoors)
+-- end
 
-    -- Asset Constants --
-    -- Models
-    local plane = "g3dAssets/plane.obj"
-    local barrel = "steampunkAssets/barrel.obj"
-    local box = "steampunkAssets/box.obj"
-    local tallPipe = "steampunkAssets/tallPipe.obj"
-    local medPipe = "steampunkAssets/medPipe.obj"
-    local smallPipe = "steampunkAssets/smallPipe.obj"
-    local horizontalPipe = "steampunkAssets/horizontalPipe.obj"
+-- local function createScene2()
+--     local scene = {}
+--     local doorOptions = {{{10, 0, 5}, 2}}
+--     local allDoors = createDoors(scene, doorOptions)
 
-    -- Textures
-    local darkMetal = "steampunkAssets/textures/Metal/metal_basecolor.png"
-    local lightMetal = "steampunkAssets/textures/white metal/white_meetal_basecolor.png"
-    local wood = "steampunkAssets/textures/wood/Substance_graph_diffuse.png"
+--     table.insert(sceneObjects, scene)
+--     table.insert(doors, allDoors)
+-- end
 
-    -- Number Constants --
-    local horizontalDistance = 10
-
-    local ceilingHeight = 6
-    local floorHeight = -4
-
-    local depthCenter = 10
-    local depthBack = 20
-
-    local planeScale = {10,10,10}
-    -- named after the creator of the assets
-    local illAnoiScale = {0.2,0.2,0.2}
-    local pipeScale = {0.12, 0.12, 0.12}
-
-    local rotate90DegRight = {math.pi/2,0,0}
-    local rotate90DegForward = {0,math.pi/2,0}
-    local rotatePipeLeftWall = {math.pi/2, 0, 0}
-    local rotatePipeRightWall = {math.pi/2, 0, math.pi}
-    local rotatePipeBackWall = {math.pi/2, 0, math.pi/2}
-
-    -- Structure --
-    local floor = g3d.newModel(plane, darkMetal, {depthCenter, 0, floorHeight}, nil, planeScale)
-    table.insert(scene, floor)
-
-    local ceiling = g3d.newModel(plane, darkMetal, {depthCenter, 0, ceilingHeight}, nil, planeScale)
-    table.insert(scene, ceiling)
-
-    local leftWall = g3d.newModel(plane, lightMetal, {depthCenter, -horizontalDistance, 0}, rotate90DegRight, planeScale)
-    table.insert(scene, leftWall)
-
-    local rightWall = g3d.newModel(plane, lightMetal, {depthCenter, horizontalDistance, 0}, rotate90DegRight, planeScale)
-    table.insert(scene, rightWall)
-
-    local backWall = g3d.newModel(plane, wood, {depthBack, 0, 0}, rotate90DegForward, planeScale)
-    table.insert(scene, backWall)
-
-    -- Decor --
-    -- Barrels
-    local barrelObject = g3d.newModel(barrel, wood, {depthBack-1, horizontalDistance-1, floorHeight}, rotate90DegRight, illAnoiScale)
-    table.insert(scene, barrelObject)
-
-    barrelObject = g3d.newModel(barrel, wood, {depthBack-3, horizontalDistance-1, floorHeight}, rotate90DegRight, illAnoiScale)
-    table.insert(scene, barrelObject)
-
-    barrelObject = g3d.newModel(barrel, wood, {depthBack-5, horizontalDistance-1, floorHeight}, rotate90DegRight, illAnoiScale)
-    table.insert(scene, barrelObject)
-
-    -- Boxes
-    local boxObject = g3d.newModel(box, wood, {depthBack-1, -horizontalDistance+1, floorHeight+1}, nil, illAnoiScale)
-    table.insert(scene, boxObject)
-
-    boxObject = g3d.newModel(box, wood, {depthBack-1, -horizontalDistance+1, floorHeight+3}, nil, illAnoiScale)
-    table.insert(scene, boxObject)
-
-    boxObject = g3d.newModel(box, wood, {depthBack-1, -horizontalDistance+3, floorHeight+1}, nil, illAnoiScale)
-    table.insert(scene, boxObject)
-
-    boxObject = g3d.newModel(box, wood, {depthBack-12, -horizontalDistance+1, floorHeight+1}, nil, illAnoiScale)
-    table.insert(scene, boxObject)
-
-    -- Pipes
-    local pipe = g3d.newModel(tallPipe, darkMetal, {depthBack-7, -horizontalDistance+1, floorHeight}, rotatePipeRightWall, pipeScale)
-    table.insert(scene, pipe)
-
-    pipe = g3d.newModel(medPipe, darkMetal, {depthBack-1, 6, floorHeight}, rotatePipeBackWall, pipeScale)
-    table.insert(scene, pipe)
-
-    pipe = g3d.newModel(medPipe, darkMetal, {depthBack-1, 4, floorHeight}, rotatePipeBackWall, pipeScale)
-    table.insert(scene, pipe)
-
-    pipe = g3d.newModel(smallPipe, darkMetal, {depthBack-1, 2, floorHeight+3}, rotatePipeBackWall, pipeScale)
-    table.insert(scene, pipe)
-
-    pipe = g3d.newModel(smallPipe, darkMetal, {depthBack-7, horizontalDistance-1, floorHeight+1}, rotatePipeLeftWall, pipeScale)
-    table.insert(scene, pipe)
-
-    pipe = g3d.newModel(horizontalPipe, darkMetal, {depthBack-8, horizontalDistance-1, floorHeight+1}, rotatePipeLeftWall, pipeScale)
-    table.insert(scene, pipe)
-
-    pipe = g3d.newModel(horizontalPipe, darkMetal, {depthBack-1, -4, floorHeight+3}, rotatePipeBackWall, pipeScale)
-    table.insert(scene, pipe)
-
-    table.insert(sceneObjects, scene)
+local function parseTranslationString(constants, translationValue)
+    local newValue
+    local currIndex
+    if string.sub(translationValue, 1, 1) ~= "-" then
+        newValue = 1
+        currIndex = 1
+    else
+        newValue = -1
+        currIndex = 2
+    end
+    
+    local mathIndex = string.find(translationValue, "+", currIndex) or string.find(translationValue, "-", currIndex)
+    if mathIndex == nil then
+        return newValue * constants[string.sub(translationValue, currIndex)]
+    else
+        newValue = newValue * constants[string.sub(translationValue, currIndex, mathIndex-1)]
+        if string.sub(translationValue, mathIndex, mathIndex) == "+" then
+            return newValue + string.sub(translationValue, mathIndex+1)
+        else
+            return newValue - string.sub(translationValue, mathIndex+1)
+        end
+    end
 end
 
-local function createScene2()
-    local scene = {}
-    local doorOptions = {{{10, 0, 5}, 2}}
-    local allDoors = createDoors(scene, doorOptions)
+local function parseTranslation(constants, object)
+    local translation = {}
+    for xyz, translationValue in pairs(object.translation) do
+        local newValue
+        if type(translationValue) == "string" then
+            newValue = parseTranslationString(constants, translationValue)
+        else
+            newValue = translationValue
+        end
 
-    table.insert(sceneObjects, scene)
-    table.insert(doors, allDoors)
+        table.insert(translation, newValue)
+    end
+
+    return translation
+end
+
+local function parseRotation(constants, object)
+    if object.rotation == nil then
+        return nil
+    end
+    if type(object.rotation) == "string" then
+        local rotation = constants[object.rotation]
+        for xyz, rotationValue in pairs(rotation) do
+            if rotationValue == "PI/2" then
+                rotation[xyz] = math.pi/2
+            elseif rotationValue == "PI" then
+                rotation[xyz] = math.pi
+            end
+        end
+        return {rotation.x, rotation.y, rotation.z}
+    end
+    return {0,0,0}
+end
+
+local function parseScale(constants, object)
+    local scale = constants[object.scale]
+    return {scale.x, scale.y, scale.z}
 end
 
 local function createScenes()
-    createScene1()
-    createScene2()
+    local jsonString = love.filesystem.read("scenes.json")
+    local jsonData = json.decode(jsonString)
+
+    for sceneIndex, scene in ipairs(jsonData.scenes) do
+        local newScene = {}
+        for objectName, object in pairs(scene) do
+            local model = jsonData.models[object.model]
+            local texture = jsonData.textures[object.texture]
+            local translation = parseTranslation(jsonData.constants, object)
+            local rotation = parseRotation(jsonData.constants, object)
+            local scale = parseScale(jsonData.constants, object)
+            local newObject = g3d.newModel(model, texture, translation, rotation, scale)
+            table.insert(newScene, newObject)
+        end
+        table.insert(sceneObjects, newScene)
+    end
 end
 createScenes()
 
