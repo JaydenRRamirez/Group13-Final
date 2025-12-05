@@ -492,7 +492,7 @@ end
 function love.mousemoved(x,y, dx,dy)
     local mWorldPosX, mWorldPosY, mWorldPosZ = getClickWorldPosition(x, y)
     
-    g3d.camera.firstPersonLook(dx,dy)
+    -- g3d.camera.firstPersonLook(dx,dy)
 
     if currentPlacementItem then -- Check if an item is being dragged
         placementPosition = {mWorldPosX, mWorldPosY, mWorldPosZ}
@@ -510,7 +510,7 @@ function love.update(dt)
     -- Make camera orthographic
     -- g3d.camera.updateOrthographicMatrix()
 
-    g3d.camera.firstPersonMovement(dt)
+    -- g3d.camera.firstPersonMovement(dt)
     if love.keyboard.isDown("escape") then love.event.push("quit") end
     if love.keyboard.isDown("p") then isPaused = not isPaused end
 
