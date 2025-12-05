@@ -489,7 +489,7 @@ end
 
 -- Press I to bring up inventory
 function love.keypressed(key)
-    if key == "i" and currentScene == 1 then
+    if key == "i" then
         gameInventory:toggle()
     end
 end
@@ -599,26 +599,23 @@ function love.draw()
         drawLoseScreen()
     end
 
-    if currentScene == 1 then
-        love.graphics.setFont(instructionFont)
-        love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.setFont(instructionFont)
+    love.graphics.setColor(1, 1, 1, 1)
 
-        local screenWidth = love.graphics.getWidth()
-        local screenHeight = love.graphics.getHeight()
-        local textY = screenHeight - 40
+    local screenWidth = love.graphics.getWidth()
+    local screenHeight = love.graphics.getHeight()
+    local textY = screenHeight - 40
 
-        local openInvText = "Press **I** to open the inventory."
-        local openInvTextWidth = instructionFont:getWidth(openInvText)
+    local openInvText = "Press **I** to open the inventory."
+    local openInvTextWidth = instructionFont:getWidth(openInvText)
 
-        love.graphics.print(openInvText, screenWidth / 2 - openInvTextWidth - 150, textY)
+    love.graphics.print(openInvText, screenWidth / 2 - openInvTextWidth - 150, textY)
 
-        if not gameInventory.isVisible and not currentPlacementItem then
-            local pickupText = "Click on placed obstacles to return them to inventory."
-            local pickupTextWidth = instructionFont:getWidth(pickupText)
+    if not gameInventory.isVisible and not currentPlacementItem then
+        local pickupText = "Click on placed obstacles to return them to inventory."
+        local pickupTextWidth = instructionFont:getWidth(pickupText)
 
-            love.graphics.print(pickupText, screenWidth / 2 + 150, textY)
-        end
+        love.graphics.print(pickupText, screenWidth / 2 + 150, textY)
     end
-
     gameInventory:draw()
 end
