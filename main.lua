@@ -35,6 +35,8 @@ local sceneObjects = {
         -- Ramps
         rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/purple/texture_03.png", {10,-3,-2}, nil, {0.1,1,-1}, "static", "verts"),
         rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/purple/texture_03.png", {10,3,-2}, nil, {0.1,-1,-1}, "static", "verts"),
+
+        rigidBody:newRigidBody("custom_assets/star.obj", "kenney_prototype_textures/purple/texture_03.png", {10,0,-2}, nil, {1,1,1}, "static", "verts"),
     }
 }
 
@@ -57,7 +59,7 @@ local simulatedObjects = {}
 local currentScene = 2
 
 -- seconds before transitioning to plinko level
-local timerLength = 60
+local timerLength = 2
 local secondsElapsed = 0
 local font
 local instructionFont
@@ -443,8 +445,7 @@ function love.mousereleased(x, y, button)
             currentPlacementItem = nil
             gameInventory:stopDragging()
         else
-            if (love.mouse.getX() < 660 and love.mouse.getX() > 125 and
-                love.mouse.getY() < 50 and love.mouse.getY() > 0) then
+            if (clickPlane:isPointInAABB({ballCursor.translation[1], ballCursor.translation[2], ballCursor.translation[3]})) then
                 local physBall = rigidBody:newRigidBody(
                     "g3dAssets/sphere.obj",
                     "kenney_prototype_textures/light/texture_08.png", 
@@ -453,7 +454,8 @@ function love.mousereleased(x, y, button)
                     {0.25,0.25,0.25}, 
                     "dynamic", 
                     "sphere", 
-                    {radius=0.25}
+                    {radius=0.25},
+                    {lockedAxes={true, false, false}} -- Lock X axis
                 )
                 table.insert(simulatedObjects, physBall)
             end
@@ -471,6 +473,8 @@ end
 function love.mousemoved(x,y, dx,dy)
     local mWorldPosX, mWorldPosY, mWorldPosZ = getClickWorldPosition(x, y)
     
+    g3d.camera.firstPersonLook(dx,dy)
+
     if currentPlacementItem then -- Check if an item is being dragged
         placementPosition = {mWorldPosX, mWorldPosY, mWorldPosZ}
     else
@@ -487,7 +491,7 @@ function love.update(dt)
     -- Make camera orthographic
     -- g3d.camera.updateOrthographicMatrix()
 
-    -- g3d.camera.firstPersonMovement(dt)
+    g3d.camera.firstPersonMovement(dt)
     if love.keyboard.isDown("escape") then love.event.push("quit") end
     if love.keyboard.isDown("p") then isPaused = not isPaused end
 

@@ -92,8 +92,19 @@ function rigidBody:applyGravity(dt)
     end
 end
 
+function rigidBody:setTranslate(x, y, z)
+    if self.lockedAxes[1] then x = self.position[1] end
+    if self.lockedAxes[2] then y = self.position[2] end
+    if self.lockedAxes[3] then z = self.position[3] end
+    self.model:setTranslation(x, y, z)
+end
+
 function rigidBody:applyLinearImpulse(impulseX, impulseY, impulseZ)
     if self.mass then
+        if self.lockedAxes[1] then impulseX = 0 end
+        if self.lockedAxes[2] then impulseY = 0 end
+        if self.lockedAxes[3] then impulseZ = 0 end
+
         self.velocity[1] = self.velocity[1] + (impulseX / self.mass)
         self.velocity[2] = self.velocity[2] + (impulseY / self.mass)
         self.velocity[3] = self.velocity[3] + (impulseZ / self.mass)

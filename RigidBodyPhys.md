@@ -48,3 +48,6 @@ Arguments
 ## rigidBody:update(dt)
 
 * Processes the forces on the object, applies gravity and drag as well as moving the object through it's trajectory if it's dynamic. Does nothing if it's static. `dt` is standard change in time between frames that you can get in the `love.update(dt)` function.
+
+# Other Functions
+
