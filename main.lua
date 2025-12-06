@@ -26,7 +26,7 @@ local simulatedObjects = {}
 
 -- 1 = plinko level
 -- rest correspond to different rooms
-local currentScene = 1
+local currentScene = 3
 
 -- seconds before transitioning to plinko level (counts down to zero)
 local timer = 100000
@@ -281,7 +281,11 @@ end
 
 local function parseTranslation(constants, object)
     local translation = {}
-    for xyz, translationValue in pairs(object.translation) do
+    for i = 1, 3 do
+        local translationValue
+        if i == 1 then translationValue = object.translation["x"]
+        elseif i == 2 then translationValue = object.translation["y"]
+        else translationValue = object.translation["z"] end
         local newValue
         if type(translationValue) == "string" then
             newValue = parseTranslationString(constants, translationValue)
