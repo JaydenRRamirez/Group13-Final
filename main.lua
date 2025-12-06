@@ -49,14 +49,7 @@ local language = "english"
 -- 2D, sceneObjects[1][2] gives second object in first scene
 local sceneObjects = {}
 
-local winBoxes = {
-    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/green/texture_08.png", {10,7,0}, nil, {0.5,0.5,0.5}, "static", "verts"),
-    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/green/texture_08.png", {10,-7,0}, nil, {0.5,0.5,0.5}, "static", "verts"),
-}
-
-local loseBoxes = {
-    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/red/texture_08.png", {10,0,-5}, nil, {0.5,0.5,0.5}, "static", "verts"),
-}
+local winBoxes = {}
 
 local function languageSetup()
     local jsonString = love.filesystem.read("languages.json")
@@ -76,9 +69,17 @@ local function languageSetup()
 end
 languageSetup()
 
+
+-------------------------------------------------------------------------------------------------------
+---
+--- Title and End Scene Creation
+---
+-------------------------------------------------------------------------------------------------------
+
+
 -- Function for creating the title scene with cube-formed-letters
 local function createTitleScene()
-    local scene = {}
+    local scene = { nonSimulatedObjects = {} }
     
     -- Letter patterns (5x7 grid for each letter, 1 = cube present, 0 = empty)
     local letterPatterns = {
@@ -189,7 +190,7 @@ local function createTitleScene()
                         {0, math.pi/2, 0},  -- Rotate 90 degrees around Y-axis to face camera
                         {cubeSize, cubeSize, cubeSize}
                     )
-                    table.insert(scene, cube)
+                    table.insert(scene.nonSimulatedObjects, cube)
                 end
             end
         end
@@ -197,7 +198,33 @@ local function createTitleScene()
     
     table.insert(sceneObjects, 1, scene)  -- Insert at beginning to make it scene 1
 end
-createTitleScene()
+
+local function drawWinScreen()
+    -- Background
+    love.graphics.setColor(0, 255, 0, 0.7)
+    love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
+
+    -- Placeholder for win screen drawing logic
+    love.graphics.setColor(0, 0, 0, 1)
+    love.graphics.print(languageJson[language].win, love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 10, nil, 4, 4)
+end
+
+local function drawLoseScreen()
+    -- Background
+    love.graphics.setColor(255, 0, 0, 0.7)
+    love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
+
+    -- Placeholder for lose screen drawing logic
+    love.graphics.setColor(255, 255, 255, 1)
+    love.graphics.print(languageJson[language].lose, love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 10, nil, 4, 4)
+end
+
+
+------------------------------------------------------------------------------------------------------
+---
+--- Utility Functions
+---
+------------------------------------------------------------------------------------------------------
 
 
 local function createPlinkoArrangement(plinkoScene, startX, startY, startZ, rows, cols, spacingVert, spacingHorz)
@@ -217,91 +244,179 @@ local function createPlinkoArrangement(plinkoScene, startX, startY, startZ, rows
     end
 end
 
+local transformPerScreenPixel = 0
+-- Function that gets the transform height and width per screen pixel based on how far gameCenter is from the camera
+local function calculateTransformPerScreenPixel()
+    local distance
+    if lookDirection == "x" then
+        distance = math.abs(gameCenter[1] - g3d.camera.position[1])
+    elseif lookDirection == "y" then
+        distance = math.abs(gameCenter[2] - g3d.camera.position[2])
+    elseif lookDirection == "z" then
+        distance = math.abs(gameCenter[3] - g3d.camera.position[3])
+    end
+    -- Assuming a simple perspective projection, the transform per screen pixel
+    -- can be approximated as follows:
+    transformPerScreenPixel = 2 * (distance * math.tan(g3d.camera.fov / 2)) / love.graphics.getHeight()
+end
+
+-- Returns a normalized direction vector from screen center to mouse position
+-- Returns: dx, dy (2D vector components)
+local function getMouseLookVector(mouseX, mouseY)
+    local screenWidth = love.graphics.getWidth()
+    local screenHeight = love.graphics.getHeight()
+    
+    -- Calculate offset from screen center
+    local dx = mouseX - screenWidth / 2
+    local dy = mouseY - screenHeight / 2
+    
+    -- Normalize the vector
+    local magnitude = math.sqrt(dx * dx + dy * dy)
+    
+    if magnitude == 0 then
+        -- Mouse is at center, return zero vector
+        return 0, 0
+    end
+    
+    return dx, dy
+end
+
+
+local function getClickWorldPosition(mouseX, mouseY)
+    local worldX, worldY, worldZ
+    if mouseX == nil or mouseY == nil then
+        mouseX, mouseY = love.mouse.getPosition()
+    end
+    local rayDirX, rayDirY = getMouseLookVector(mouseX, mouseY)
+    if lookDirection == "x" or lookDirection == "-x" then
+        worldX = gameCenter[1]
+    elseif lookDirection == "y" or lookDirection == "-y" then
+        worldY = gameCenter[2]
+    elseif lookDirection == "z" or lookDirection == "-z" then
+        worldZ = gameCenter[3]
+    end
+
+    local sign = -1
+    if lookDirection.sub(1,1) == "-" then sign = 1 end 
+    
+    if worldX then
+        worldY = sign * rayDirX * transformPerScreenPixel
+        worldZ = sign * rayDirY * transformPerScreenPixel
+    elseif worldY then
+        worldX = sign * rayDirX * transformPerScreenPixel
+        worldZ = sign * rayDirY * transformPerScreenPixel
+    elseif worldZ then
+        worldX = sign * rayDirX * transformPerScreenPixel
+        worldY = sign * rayDirY * transformPerScreenPixel
+    end
+
+    return worldX, worldY, worldZ
+end
+
+
+-----------------------------------------------------------------------------------------------------
+---
+--- Plinko Level Creation
+---
+-----------------------------------------------------------------------------------------------------
+
+
 local function createPlinkoScene1()
-    local plinkoScene = {
-        -- Background
-        g3d.newModel("g3dAssets/sphere.obj", "g3dAssets/starfield.png", {0,0,0}, nil, {500,500,500}),
+    local plinkoScene = { 
+        nonSimulatedObjects = {
+            -- Background
+            g3d.newModel("g3dAssets/sphere.obj", "g3dAssets/starfield.png", {0,0,0}, nil, {500,500,500}),
 
-        clickPlane,
+            clickPlane,
+        },
+        bounds = {
+            -- Left Wall
+            rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,10,4}, nil, {1,0.5,10.5}, "static", "verts"),
 
-        -- Left Wall
-        rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,10,4}, nil, {1,0.5,10.5}, "static", "verts"),
+            -- Right Wall
+            rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-10,4}, nil, {1,0.5,10.5}, "static", "verts"),
+            
+            -- Floor
+            rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,0,-7}, nil, {1,10.5,0.5}, "static", "verts"),
 
-        -- Right Wall
-        rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-10,4}, nil, {1,0.5,10.5}, "static", "verts"),
-        
-        -- Floor
-        rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,0,-7}, nil, {1,10.5,0.5}, "static", "verts"),
-
-        -- Ramps
-        rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/purple/texture_03.png", {10,-3,-2}, nil, {0.1,1,-1}, "static", "verts"),
-        rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/purple/texture_03.png", {10,3,-2}, nil, {0.1,-1,-1}, "static", "verts"),
-        rigidBody:newRigidBody("custom_assets/star.obj", "kenney_prototype_textures/purple/texture_03.png", {10,0,-2}, nil, {1,1,1}, "static", "verts")
+            -- Ramps
+            rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/purple/texture_03.png", {10,-3,-2}, nil, {0.1,1,-1}, "static", "verts"),
+            rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/purple/texture_03.png", {10,3,-2}, nil, {0.1,-1,-1}, "static", "verts"),
+            rigidBody:newRigidBody("custom_assets/star.obj", "kenney_prototype_textures/purple/texture_03.png", {10,0,-2}, nil, {1,1,1}, "static", "verts")
+        },
+        winBoxes = {
+            rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/green/texture_08.png", {10,7,0}, nil, {0.5,0.5,0.5}, "static", "verts"),
+            rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/green/texture_08.png", {10,-7,0}, nil, {0.5,0.5,0.5}, "static", "verts"),
+        },
+        loseBoxes = {
+            rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/red/texture_08.png", {10,0,-5}, nil, {0.5,0.5,0.5}, "static", "verts"),
+        },
     }
-
-    for i = 1, #winBoxes do
-        table.insert(plinkoScene, winBoxes[i])
-    end
-
-    for i = 1, #loseBoxes do
-        table.insert(plinkoScene, loseBoxes[i])
-    end
-
-    createPlinkoArrangement(plinkoScene, 10, -9, 3, 4, 15, 1.25, 1.25)
+    createPlinkoArrangement(plinkoScene.bounds, 10, -9, 3, 4, 15, 1.25, 1.25)
 
     table.insert(sceneObjects, plinkoScene)
 end
-createPlinkoScene1()
 
 local function createPlinkoScene2()
-    local plinkoScene = {} 
     local texture = "kenney_prototype_textures/dark/texture_03.png"
     local rhombusTexture = "kenney_prototype_textures/dark/texture_01.png"
-
-    table.insert(plinkoScene, clickPlane)
-
-    -- Floor
-    table.insert(plinkoScene, rigidBody:newRigidBody("g3dAssets/cube.obj", texture, {10,0,-7}, nil, {1,10.5,0.5}, "static", "verts"))
 
     local rhombusModel = "custom_assets/Rhombus.obj"
     local defaultRhombusScale = {0.5, 0.5, 0.5}
 
-    -- Rhombus 1 (Top-most)
-    table.insert(plinkoScene, rigidBody:newRigidBody(
-        rhombusModel, 
-        rhombusTexture, 
-        {10, 0, 3.5}, 
-        {0, 0, 0},
-        defaultRhombusScale, 
-        "static", 
-        "verts"
-    ))
-    
-    -- Rhombus 2 (Middle)
-    table.insert(plinkoScene, rigidBody:newRigidBody(
-        rhombusModel, 
-        rhombusTexture, 
-        {10, 0, 1.0}, 
-        {0, 0, 0}, 
-        defaultRhombusScale, 
-        "static", 
-        "verts"
-    ))
+    local plinkoScene = {
+        nonSimulatedObjects = {
+            clickPlane,
+        },
+        bounds = {
+            -- Floor
+            rigidBody:newRigidBody("g3dAssets/cube.obj", texture, {10,0,-7}, nil, {1,10.5,0.5}, "static", "verts"),
 
-    -- Rhombus 3 (Bottom-most of the top three)
-    table.insert(plinkoScene, rigidBody:newRigidBody(
-        rhombusModel, 
-        rhombusTexture, 
-        {10, 0, -1.5}, 
-        {0, 0, 0}, 
-        defaultRhombusScale, 
-        "static", 
-        "verts"
-    ))
+            -- Rhombus 1 (Top-most)
+            rigidBody:newRigidBody(
+                rhombusModel, 
+                rhombusTexture, 
+                {10, 0, 3.5}, 
+                {0, 0, 0},
+                defaultRhombusScale, 
+                "static", 
+                "verts"
+            ),
+            
+            -- Rhombus 2 (Middle)
+            rigidBody:newRigidBody(
+                rhombusModel, 
+                rhombusTexture, 
+                {10, 0, 1.0}, 
+                {0, 0, 0}, 
+                defaultRhombusScale, 
+                "static", 
+                "verts"
+            ),
+
+            -- Rhombus 3 (Bottom-most of the top three)
+            rigidBody:newRigidBody(
+                rhombusModel, 
+                rhombusTexture, 
+                {10, 0, -1.5}, 
+                {0, 0, 0}, 
+                defaultRhombusScale, 
+                "static", 
+                "verts"
+            ),
+        }
+    }
 
     table.insert(sceneObjects, plinkoScene)
 end
-createPlinkoScene2()
+
+
+---------------------------------------------------------------------------------------------------------
+---
+--- Door Creation Functions
+---
+---------------------------------------------------------------------------------------------------------
+
 
 local function createDoor(doorConfig)
     local door = rigidBody:newRigidBody(
@@ -343,6 +458,14 @@ end
 --     table.insert(sceneObjects, scene)
 --     table.insert(doors, allDoors)
 -- end
+
+
+-----------------------------------------------------------------------------------------------------
+---
+--- Scene Creation from JSON
+---
+-----------------------------------------------------------------------------------------------------
+
 
 local function parseTranslationString(constants, translationValue)
     local newValue
@@ -416,7 +539,7 @@ local function createScenes()
     local jsonData = json.decode(jsonString)
 
     for sceneIndex, scene in ipairs(jsonData.scenes) do
-        local newScene = {}
+        local newScene = { nonSimulatedObjects = {} }
         for objectName, object in pairs(scene) do
             local model = jsonData.models[object.model]
             local texture = jsonData.textures[object.texture]
@@ -424,12 +547,19 @@ local function createScenes()
             local rotation = parseRotation(jsonData.constants, object)
             local scale = parseScale(jsonData.constants, object)
             local newObject = g3d.newModel(model, texture, translation, rotation, scale)
-            table.insert(newScene, newObject)
+            table.insert(newScene.nonSimulatedObjects, newObject)
         end
         table.insert(sceneObjects, newScene)
     end
 end
-createScenes()
+
+
+-------------------------------------------------------------------------------------------------
+---
+--- Game Initialization
+---
+-------------------------------------------------------------------------------------------------
+
 
 local screenWidth = love.graphics.getWidth()
 local screenHeight = love.graphics.getHeight()
@@ -437,95 +567,6 @@ local continueText = languageJson[language].continue
 local continueTextWidth = instructionFont:getWidth(continueText)
 local textY = screenHeight - 40
 love.graphics.print(continueText, screenWidth / 2 - continueTextWidth - 150, textY)
-
-local transformPerScreenPixel = 0
--- Function that gets the transform height and width per screen pixel based on how far gameCenter is from the camera
-local function calculateTransformPerScreenPixel()
-    local distance
-    if lookDirection == "x" then
-        distance = math.abs(gameCenter[1] - g3d.camera.position[1])
-    elseif lookDirection == "y" then
-        distance = math.abs(gameCenter[2] - g3d.camera.position[2])
-    elseif lookDirection == "z" then
-        distance = math.abs(gameCenter[3] - g3d.camera.position[3])
-    end
-    -- Assuming a simple perspective projection, the transform per screen pixel
-    -- can be approximated as follows:
-    transformPerScreenPixel = 2 * (distance * math.tan(g3d.camera.fov / 2)) / love.graphics.getHeight()
-end
-
--- Returns a normalized direction vector from screen center to mouse position
--- Returns: dx, dy (2D vector components)
-local function getMouseLookVector(mouseX, mouseY)
-    local screenWidth = love.graphics.getWidth()
-    local screenHeight = love.graphics.getHeight()
-    
-    -- Calculate offset from screen center
-    local dx = mouseX - screenWidth / 2
-    local dy = mouseY - screenHeight / 2
-    
-    -- Normalize the vector
-    local magnitude = math.sqrt(dx * dx + dy * dy)
-    
-    if magnitude == 0 then
-        -- Mouse is at center, return zero vector
-        return 0, 0
-    end
-    
-    return dx, dy
-end
-
-
-local function getClickWorldPosition(mouseX, mouseY)
-    local worldX, worldY, worldZ
-    if mouseX == nil or mouseY == nil then
-        mouseX, mouseY = love.mouse.getPosition()
-    end
-    local rayDirX, rayDirY = getMouseLookVector(mouseX, mouseY)
-    if lookDirection == "x" or lookDirection == "-x" then
-        worldX = gameCenter[1]
-    elseif lookDirection == "y" or lookDirection == "-y" then
-        worldY = gameCenter[2]
-    elseif lookDirection == "z" or lookDirection == "-z" then
-        worldZ = gameCenter[3]
-    end
-
-    local sign = -1
-    if lookDirection.sub(1,1) == "-" then sign = 1 end 
-    
-    if worldX then
-        worldY = sign * rayDirX * transformPerScreenPixel
-        worldZ = sign * rayDirY * transformPerScreenPixel
-    elseif worldY then
-        worldX = sign * rayDirX * transformPerScreenPixel
-        worldZ = sign * rayDirY * transformPerScreenPixel
-    elseif worldZ then
-        worldX = sign * rayDirX * transformPerScreenPixel
-        worldY = sign * rayDirY * transformPerScreenPixel
-    end
-
-    return worldX, worldY, worldZ
-end
-
-local function drawWinScreen()
-    -- Background
-    love.graphics.setColor(0, 255, 0, 0.7)
-    love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
-
-    -- Placeholder for win screen drawing logic
-    love.graphics.setColor(0, 0, 0, 1)
-    love.graphics.print(languageJson[language].win, love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 10, nil, 4, 4)
-end
-
-local function drawLoseScreen()
-    -- Background
-    love.graphics.setColor(255, 0, 0, 0.7)
-    love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
-
-    -- Placeholder for lose screen drawing logic
-    love.graphics.setColor(255, 255, 255, 1)
-    love.graphics.print(languageJson[language].lose, love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 10, nil, 4, 4)
-end
 
 function love.load()
     calculateTransformPerScreenPixel()
@@ -582,10 +623,22 @@ function love.load()
 
     startingStar.name = ramp.name 
 
+    createTitleScene()
+    createPlinkoScene1()
+    createPlinkoScene2()
+    createScenes()
 
     table.insert(sceneObjects[currentScene], startingStar)
     print("Test obstacle 'Star' placed in scene 1. Try clicking it!")
 end
+
+
+-------------------------------------------------------------------------------------------------
+---
+--- Input Handling
+---
+-------------------------------------------------------------------------------------------------
+
 
 -- Clicking for when the inventory is up
 function love.mousepressed(x, y, button, istouch, presses)
@@ -622,22 +675,8 @@ function love.mousepressed(x, y, button, istouch, presses)
             if obstacle.name then
                 local isClicked = false
                     
-                -- Check if custom pickup bounds exist (for the Conveyer)
-                if obstacle.pickupExtents then
-                    -- Use the model's translation for current world position
-                    local pos = obstacle.model.translation 
-                    local extents = obstacle.pickupExtents
-                        
-                    -- Manual bounds check against the generous box
-                    if worldx >= (pos[1] - extents[1]) and worldx <= (pos[1] + extents[1]) and
-                        worldy >= (pos[2] - extents[2]) and worldy <= (pos[2] + extents[2]) and
-                        worldz >= (pos[3] - extents[3]) and worldz <= (pos[3] + extents[3]) then
-                        isClicked = true
-                    end
-                else
-                    -- Use the default AABB check for all other objects (Pistons, Ramps)
-                    isClicked = obstacle.model:isPointInAABB({worldx, worldy, worldz})
-                end
+                -- Use default AABB for simpler objects
+                isClicked = obstacle.model:isPointInAABB({worldx, worldy, worldz})
                     
                 if isClicked then
                     gameInventory:returnItem(obstacle.name)
@@ -706,7 +745,8 @@ function love.mousereleased(x, y, button)
     end
 end
 
--- Press I to bring up inventory
+-- Press I to bring up inventory and P to pause
+local isPaused = false
 function love.keypressed(key)
     -- Transition from title screen to searching room on any key press
     if currentScene == 1 then
@@ -716,6 +756,10 @@ function love.keypressed(key)
     
     if key == "i" then
         gameInventory:toggle()
+    end
+
+    if key == "p" then
+        isPaused = not isPaused
     end
 end
 
@@ -731,10 +775,16 @@ function love.mousemoved(x,y, dx,dy)
     end
 end
 
-local collidedThisFrame, wonThisFrame, lostThisFrame = false, false, false
-local isPaused = false
+
+-------------------------------------------------------------------------------------------------
+---
+--- Main Update and Draw Loops
+---
+-------------------------------------------------------------------------------------------------
+
+
 function love.update(dt)
-    if wonGame or lostGame then
+    if wonGame or lostGame or isPaused then
         return
     end
     -- Make camera orthographic
@@ -742,54 +792,62 @@ function love.update(dt)
 
     -- g3d.camera.firstPersonMovement(dt)
     if love.keyboard.isDown("escape") then love.event.push("quit") end
-    if love.keyboard.isDown("p") then isPaused = not isPaused end
 
-    if not isPaused then
-        if currentScene >= 4 then
-            timer = timer - dt
-            if timer <= 0 then
-                timer = 60
-                currentScene = 2  -- Go to plinko 1
-            end
+    if currentScene >= 4 then
+        timer = timer - dt
+        if timer <= 0 then
+            timer = 60
+            currentScene = 2  -- Go to plinko 1
         end
+    end
 
-        -- check collisions between simulated balls and bounds
-        if currentScene == 2 or currentScene == 3 then
-            for i = 1, #simulatedObjects do
-                for j = 1, #sceneObjects[currentScene] do
-                    if sceneObjects[currentScene][j].model then
-                        if simulatedObjects[i].model:AABBIntersection(sceneObjects[currentScene][j].model.aabb.minPoint, sceneObjects[currentScene][j].model.aabb.maxPoint) then
-                            collidedThisFrame = simulatedObjects[i]:resolveCollision(sceneObjects[currentScene][j])
-                        end
-                        sceneObjects[currentScene][j]:update(dt)
+    -- check collisions between simulated balls and bounds
+    if currentScene == 2 or currentScene == 3 then
+        for i = 1, #simulatedObjects do 
+            if sceneObjects[currentScene].bounds == nil then
+                break
+            end
+
+             -- Check collision with all bounds in the scene
+            for j = 1, #sceneObjects[currentScene].bounds do
+                if sceneObjects[currentScene].bounds[j].model then
+                    -- Passes in min and max point of given AABB scene object and checks with simulated object, resolves collision if intersecting
+                    if simulatedObjects[i].model:AABBIntersection(sceneObjects[currentScene].bounds[j].model.aabb.minPoint, sceneObjects[currentScene].bounds[j].model.aabb.maxPoint) then
+                        simulatedObjects[i]:resolveCollision(sceneObjects[currentScene].bounds[j])
                     end
                 end
-                simulatedObjects[i]:update(dt)
             end
+            simulatedObjects[i]:update(dt)
         end
+    end
 
-        -- check collision between ball and win/lose boxes
-        for i = 1, #simulatedObjects do
-            for winBoxInd = 1, #winBoxes do
-                wonThisFrame = winBoxes[winBoxInd].model:isPointInAABB(simulatedObjects[i].position)
+    -- check collision between ball and win/lose boxes
+    for i = 1, #simulatedObjects do
+        if sceneObjects[currentScene].winBoxes then
+
+            for winBoxInd = 1, #sceneObjects[currentScene].winBoxes do
+                local wonThisFrame = sceneObjects[currentScene].winBoxes[winBoxInd].model:isPointInAABB(simulatedObjects[i].position)
                 if wonThisFrame then
                     wonGame = true
                     print("win")
-                    -- remove ball from simulation
                     table.remove(simulatedObjects, i)
                     return
                 end
             end
-            for loseBoxInd = 1, #loseBoxes do
-                lostThisFrame = loseBoxes[loseBoxInd].model:isPointInAABB(simulatedObjects[i].position)
+            
+        end
+        if sceneObjects[currentScene].loseBoxes then
+
+            for loseBoxInd = 1, #sceneObjects[currentScene].loseBoxes do
+                local lostThisFrame = sceneObjects[currentScene].loseBoxes[loseBoxInd].model:isPointInAABB(simulatedObjects[i].position)
                 if lostThisFrame then
                     lostGame = true
                     print("lose")
-                    -- remove ball from simulation
                     table.remove(simulatedObjects, i)
                     return
                 end
             end
+
         end
     end
 end
@@ -806,9 +864,29 @@ function love.draw()
     for i = 1, #simulatedObjects do
         simulatedObjects[i]:draw()
     end
-    for i = 1, #sceneObjects[currentScene] do
-        sceneObjects[currentScene][i]:draw()
-    end
+
+    -- Draw scene specific objects --
+        if sceneObjects[currentScene].nonSimulatedObjects then
+            for i = 1, #sceneObjects[currentScene].nonSimulatedObjects do
+                sceneObjects[currentScene].nonSimulatedObjects[i]:draw()
+            end
+        end
+        if sceneObjects[currentScene].bounds then
+            for i = 1, #sceneObjects[currentScene].bounds do
+                sceneObjects[currentScene].bounds[i]:draw()
+            end
+        end
+        if sceneObjects[currentScene].winBoxes then
+            for i = 1, #sceneObjects[currentScene].winBoxes do
+                sceneObjects[currentScene].winBoxes[i]:draw()
+            end
+        end
+        if sceneObjects[currentScene].loseBoxes then
+            for i = 1, #sceneObjects[currentScene].loseBoxes do
+                sceneObjects[currentScene].loseBoxes[i]:draw()
+            end
+        end
+    ---------------------------------
 
     if wonGame then
         drawWinScreen()
