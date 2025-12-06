@@ -56,10 +56,10 @@ local simulatedObjects = {}
 
 -- 1 = plinko level
 -- rest correspond to different rooms
-local currentScene = 2
+local currentScene = 3
 
 -- seconds before transitioning to plinko level
-local timerLength = 5
+local timerLength = 15
 local secondsElapsed = 0
 
 -- contains all door objects
@@ -234,6 +234,99 @@ local function createScenes()
     end
 end
 createScenes()
+
+-- Function for creating the title scene with cube-formed-letters
+local function createTitleScene()
+    local scene = {}
+    
+    -- Letter patterns (5x7 grid for each letter, 1 = cube present, 0 = empty)
+    local letterPatterns = {
+        T = {
+            {1,1,1,1,1},
+            {0,0,1,0,0},
+            {0,0,1,0,0},
+            {0,0,1,0,0},
+            {0,0,1,0,0},
+            {0,0,1,0,0},
+            {0,0,1,0,0}
+        },
+        I = {
+            {1,1,1,1,1},
+            {0,0,1,0,0},
+            {0,0,1,0,0},
+            {0,0,1,0,0},
+            {0,0,1,0,0},
+            {0,0,1,0,0},
+            {1,1,1,1,1}
+        },
+        L = {
+            {1,0,0,0,0},
+            {1,0,0,0,0},
+            {1,0,0,0,0},
+            {1,0,0,0,0},
+            {1,0,0,0,0},
+            {1,0,0,0,0},
+            {1,1,1,1,1}
+        },
+        E = {
+            {1,1,1,1,1},
+            {1,0,0,0,0},
+            {1,0,0,0,0},
+            {1,1,1,1,0},
+            {1,0,0,0,0},
+            {1,0,0,0,0},
+            {1,1,1,1,1}
+        }
+    }
+    
+    local letters = {"E", "L", "T", "I", "T"} -- Sorry I had to spell it backwards for positioning
+    local cubeSize = 0.4
+    local spacing = 0.1
+    local letterSpacing = 0.8
+    
+    -- Calculate total width of title to center it
+    local totalWidth = (#letters * (5 * (cubeSize + spacing) + letterSpacing)) - letterSpacing
+    
+    -- Starting position for the title (centered, slightly left)
+    local startX = 16
+    local startY = -totalWidth / 2 + 0.3
+    local startZ = 1
+    
+    -- Create each letter
+    for letterIndex, letter in ipairs(letters) do
+        local pattern = letterPatterns[letter]
+        local letterOffsetY = (letterIndex - 1) * (5 * (cubeSize + spacing) + letterSpacing)
+        
+        -- Create cubes for this letter based on pattern
+        for row = 1, #pattern do
+            for col = 1, #pattern[row] do
+                if pattern[row][col] == 1 then
+                    local posX = startX
+                    local posY = startY + letterOffsetY + (4 - col) * (cubeSize + spacing)  -- Mirror horizontally
+                    local posZ = startZ - (row - 1) * (cubeSize + spacing)
+                    
+                    local cube = g3d.newModel(
+                        "g3dAssets/cube.obj",
+                        "kenney_prototype_textures/orange/texture_01.png",
+                        {posX, posY, posZ},
+                        {0, math.pi/2, 0},  -- Rotate 90 degrees around Y-axis to face camera
+                        {cubeSize, cubeSize, cubeSize}
+                    )
+                    table.insert(scene, cube)
+                end
+            end
+        end
+    end
+    
+    table.insert(sceneObjects, scene)
+end
+createTitleScene()
+local screenWidth = love.graphics.getWidth()
+local screenHeight = love.graphics.getHeight()
+local continueText = languageJson[language].continue
+local continueTextWidth = instructionFont:getWidth(continueText)
+local textY = screenHeight - 40
+love.graphics.print(continueText, screenWidth / 2 - continueTextWidth - 150, textY)
 
 local transformPerScreenPixel = 0
 -- Function that gets the transform height and width per screen pixel based on how far gameCenter is from the camera
@@ -497,6 +590,12 @@ end
 
 -- Press I to bring up inventory
 function love.keypressed(key)
+    -- Transition from title screen to searching room on any key press
+    if currentScene == 3 then
+        secondsElapsed = timerLength + 1  -- Force transition to searching level
+        return
+    end
+    
     if key == "i" then
         gameInventory:toggle()
     end
@@ -531,8 +630,13 @@ function love.update(dt)
         if currentScene ~= 1 then
             secondsElapsed = secondsElapsed + dt
             if secondsElapsed >= timerLength then
-                currentScene = 1
-                secondsElapsed = 0
+                if currentScene == 3 then
+                    secondsElapsed = 0
+                    timerLength = 60
+                    currentScene = 2
+                else
+                    currentScene = 1
+                end
             end
         end
 
@@ -574,7 +678,7 @@ end
 function love.draw()
     -- earth:draw()
     -- moon:draw()
-	
+    
     if currentScene == 1 then
         background:draw()
     end
@@ -591,7 +695,7 @@ function love.draw()
         for i = 1, #loseBoxes do
             loseBoxes[i]:draw()
         end
-    else
+    elseif currentScene ~= 3 then
         if font then love.graphics.setFont(font) end
         love.graphics.print(languageJson[language].timer .. (timerLength - math.floor(secondsElapsed)))
     end
@@ -617,16 +721,28 @@ function love.draw()
     local screenHeight = love.graphics.getHeight()
     local textY = screenHeight - 40
 
-    local openInvText = languageJson[language].openInv
-    local openInvTextWidth = instructionFont:getWidth(openInvText)
+    -- Display "Press any key to continue" on title screen
+    if currentScene == 3 then
+        if font then love.graphics.setFont(font) end
+        local continueText = languageJson[language].continue
+        local continueTextWidth = (font or instructionFont):getWidth(continueText)
+        love.graphics.print(continueText, screenWidth / 2 - continueTextWidth / 2, 40)
+        love.graphics.setFont(instructionFont)
+    end
 
-    love.graphics.print(openInvText, screenWidth / 2 - openInvTextWidth - 150, textY)
+    -- Only show inventory instructions if not on title screen
+    if currentScene ~= 3 then
+        local openInvText = languageJson[language].openInv
+        local openInvTextWidth = instructionFont:getWidth(openInvText)
 
-    if not gameInventory.isVisible and not currentPlacementItem then
-        local pickupText = languageJson[language].pickup
-        local pickupTextWidth = instructionFont:getWidth(pickupText)
+        love.graphics.print(openInvText, screenWidth / 2 - openInvTextWidth - 150, textY)
 
-        love.graphics.print(pickupText, screenWidth / 2 + 150, textY)
+        if not gameInventory.isVisible and not currentPlacementItem then
+            local pickupText = languageJson[language].pickup
+            local pickupTextWidth = instructionFont:getWidth(pickupText)
+
+            love.graphics.print(pickupText, screenWidth / 2 + 150, textY)
+        end
     end
     gameInventory:draw()
 end

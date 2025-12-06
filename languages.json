@@ -4,6 +4,7 @@
         "lose": "You Lose!",
         "timer": "Time left: ",
         "openInv": "Press **I** to open the inventory.",
+        "continue": "Press any key to continue.",
         "pickup": "Click on placed obstacles to return them to inventory."
     },
     "chinese": {
@@ -11,6 +12,7 @@
         "lose": "你输了！",
         "timer": "剩余时间：",
         "openInv": "按下**I**键打开物品栏。",
+        "continue": "按任意键继续。",
         "pickup": "点击已放置的障碍物即可将其放回库存。"
     },
     "arabic": {
@@ -18,6 +20,7 @@
         "lose": "لقد خسرت!",
         "timer": "الوقت المتبقي: ",
         "openInv": "اضغط على حرف **I** لفتح قائمة المخزون.",
+        "continue": "اضغط على أي مفتاح للمتابعة.",
         "pickup": "انقر على العوائق الموضوعة لإعادتها إلى المخزون."
     }
 }
