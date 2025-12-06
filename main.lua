@@ -27,7 +27,7 @@ local simulatedObjects = {}
 -- 1 = title screen
 -- 3 = searching room
 -- 2 = plinko level
-local currentScene = 1
+local currentScene = 4
 
 -- seconds before transitioning to plinko level (counts down to zero)
 local timer = 100000
@@ -197,6 +197,7 @@ local function createTitleScene()
     table.insert(sceneObjects, 1, scene)  -- Insert at beginning to make it scene 1
 end
 createTitleScene()
+
 
 local function createPlinkoArrangement(plinkoScene, startX, startY, startZ, rows, cols, spacingVert, spacingHorz)
     for row = 0, rows - 1 do
@@ -402,6 +403,53 @@ local function calculateTransformPerScreenPixel()
     transformPerScreenPixel = 2 * (distance * math.tan(g3d.camera.fov / 2)) / love.graphics.getHeight()
 end
 
+local function createScene4()
+    local scene4 = {} 
+    local texture = "kenney_prototype_textures/dark/texture_03.png"
+    local rhombusTexture = "kenney_prototype_textures/dark/texture_01.png"
+
+    -- Floor
+    table.insert(scene4, rigidBody:newRigidBody("g3dAssets/cube.obj", texture, {10,0,-7}, nil, {1,10.5,0.5}, "static", "verts"))
+
+    local rhombusModel = "custom_assets/Rhombus.obj"
+    local defaultRhombusScale = {0.5, 0.5, 0.5}
+
+    -- Rhombus 1 (Top-most)
+    table.insert(scene4, rigidBody:newRigidBody(
+        rhombusModel, 
+        rhombusTexture, 
+        {10, 0, 3.5}, 
+        {0, 0, 0},
+        defaultRhombusScale, 
+        "static", 
+        "verts"
+    ))
+    
+    -- Rhombus 2 (Middle)
+    table.insert(scene4, rigidBody:newRigidBody(
+        rhombusModel, 
+        rhombusTexture, 
+        {10, 0, 1.0}, 
+        {0, 0, 0}, 
+        defaultRhombusScale, 
+        "static", 
+        "verts"
+    ))
+
+    -- Rhombus 3 (Bottom-most of the top three)
+    table.insert(scene4, rigidBody:newRigidBody(
+        rhombusModel, 
+        rhombusTexture, 
+        {10, 0, -1.5}, 
+        {0, 0, 0}, 
+        defaultRhombusScale, 
+        "static", 
+        "verts"
+    ))
+
+    table.insert(sceneObjects, scene4)
+end
+createScene4()
 
 -- Returns a normalized direction vector from screen center to mouse position
 -- Returns: dx, dy (2D vector components)
