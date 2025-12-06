@@ -56,7 +56,7 @@ local simulatedObjects = {}
 
 -- 1 = plinko level
 -- rest correspond to different rooms
-local currentScene = 1
+local currentScene = 2
 
 -- seconds before transitioning to plinko level
 local timerLength = 2
@@ -428,6 +428,7 @@ function love.mousepressed(x, y, button, istouch, presses)
 end
 
 local defaultScale = {1, 1, 1}
+local defaultTexture = "kenney_prototype_textures/purple/texture_03.png"
 function love.mousereleased(x, y, button)
     if button == 1 then
         if currentPlacementItem then
@@ -560,6 +561,7 @@ function love.draw()
     if currentScene == 1 then
         background:draw()
     end
+
     if currentScene == 1 then
         if not currentPlacementItem then
             ballCursor:draw()
@@ -573,7 +575,7 @@ function love.draw()
             loseBoxes[i]:draw()
         end
     else
-        love.graphics.setFont(font)
+        if font then love.graphics.setFont(font) end
         love.graphics.print(languageJson[language].timer .. (timerLength - math.floor(secondsElapsed)))
     end
 
