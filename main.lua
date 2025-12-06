@@ -14,49 +14,19 @@ local obstaclePrototypes = {}
 local gameCenter = {10,0,4}
 local lookDirection = "x"
 
--- Object Creation
-local background = g3d.newModel("g3dAssets/sphere.obj", "g3dAssets/starfield.png", {0,0,0}, nil, {500,500,500})
-local ballCursor = g3d.newModel("g3dAssets/sphere.obj", "kenney_prototype_textures/red/texture_08.png", {10,0,4}, nil, {0.25,0.25,0.25})
-
-local clickPlane = g3d.newModel("g3dAssets/cube.obj", "kenney_prototype_textures/orange/texture_03.png", {10,0,9}, nil, {0.1,10,1})
-
--- 2D, sceneObjects[1][2] gives second object in first scene
-local sceneObjects = {
-    {
-        -- Left Wall
-        rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,10,4}, nil, {1,0.5,10.5}, "static", "verts"),
-
-        -- Right Wall
-        rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-10,4}, nil, {1,0.5,10.5}, "static", "verts"),
-        
-        -- Floor
-        rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,0,-7}, nil, {1,10.5,0.5}, "static", "verts"),
-
-        -- Ramps
-        rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/purple/texture_03.png", {10,-3,-2}, nil, {0.1,1,-1}, "static", "verts"),
-        rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/purple/texture_03.png", {10,3,-2}, nil, {0.1,-1,-1}, "static", "verts"),
-
-        rigidBody:newRigidBody("custom_assets/star.obj", "kenney_prototype_textures/purple/texture_03.png", {10,0,-2}, nil, {1,1,1}, "static", "verts"),
-    }
-}
-
-local winBoxes = {
-    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/green/texture_08.png", {10,7,0}, nil, {0.5,0.5,0.5}, "static", "verts"),
-    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/green/texture_08.png", {10,-7,0}, nil, {0.5,0.5,0.5}, "static", "verts"),
-}
-
-local loseBoxes = {
-    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/red/texture_08.png", {10,0,-5}, nil, {0.5,0.5,0.5}, "static", "verts"),
-}
 local wonGame = false
 local lostGame = false
+
+-- Objects
+local ballCursor = g3d.newModel("g3dAssets/sphere.obj", "kenney_prototype_textures/red/texture_08.png", {10,0,4}, nil, {0.25,0.25,0.25})
+local clickPlane = g3d.newModel("g3dAssets/cube.obj", "kenney_prototype_textures/orange/texture_03.png", {10,0,9}, nil, {0.1,10,1})
 
 -- keep track of all rigid bodies that need to be physics simulated aren't static
 local simulatedObjects = {}
 
 -- 1 = plinko level
 -- rest correspond to different rooms
-local currentScene = 3
+local currentScene = 1
 
 -- seconds before transitioning to plinko level
 local timerLength = 15
@@ -74,6 +44,18 @@ local font
 local instructionFont
 local languageJson
 local language = "english"
+
+-- 2D, sceneObjects[1][2] gives second object in first scene
+local sceneObjects = {}
+
+local winBoxes = {
+    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/green/texture_08.png", {10,7,0}, nil, {0.5,0.5,0.5}, "static", "verts"),
+    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/green/texture_08.png", {10,-7,0}, nil, {0.5,0.5,0.5}, "static", "verts"),
+}
+
+local loseBoxes = {
+    rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/red/texture_08.png", {10,0,-5}, nil, {0.5,0.5,0.5}, "static", "verts"),
+}
 
 local function languageSetup()
     local jsonString = love.filesystem.read("languages.json")
@@ -93,13 +75,100 @@ local function languageSetup()
 end
 languageSetup()
 
-local function createPlinkoArrangement(containerTable, startX, startY, startZ, rows, cols, spacingVert, spacingHorz)
+-- Function for creating the title scene with cube-formed-letters
+local function createTitleScene()
+    local scene = {}
+    
+    -- Letter patterns (5x7 grid for each letter, 1 = cube present, 0 = empty)
+    local letterPatterns = {
+        T = {
+            {1,1,1,1,1},
+            {0,0,1,0,0},
+            {0,0,1,0,0},
+            {0,0,1,0,0},
+            {0,0,1,0,0},
+            {0,0,1,0,0},
+            {0,0,1,0,0}
+        },
+        I = {
+            {1,1,1,1,1},
+            {0,0,1,0,0},
+            {0,0,1,0,0},
+            {0,0,1,0,0},
+            {0,0,1,0,0},
+            {0,0,1,0,0},
+            {1,1,1,1,1}
+        },
+        L = {
+            {1,0,0,0,0},
+            {1,0,0,0,0},
+            {1,0,0,0,0},
+            {1,0,0,0,0},
+            {1,0,0,0,0},
+            {1,0,0,0,0},
+            {1,1,1,1,1}
+        },
+        E = {
+            {1,1,1,1,1},
+            {1,0,0,0,0},
+            {1,0,0,0,0},
+            {1,1,1,1,0},
+            {1,0,0,0,0},
+            {1,0,0,0,0},
+            {1,1,1,1,1}
+        }
+    }
+    
+    local letters = {"E", "L", "T", "I", "T"} -- Sorry I had to spell it backwards for positioning
+    local cubeSize = 0.4
+    local spacing = 0.1
+    local letterSpacing = 0.8
+    
+    -- Calculate total width of title to center it
+    local totalWidth = (#letters * (5 * (cubeSize + spacing) + letterSpacing)) - letterSpacing
+    
+    -- Starting position for the title (centered, slightly left)
+    local startX = 16
+    local startY = -totalWidth / 2 + 0.3
+    local startZ = 1
+    
+    -- Create each letter
+    for letterIndex, letter in ipairs(letters) do
+        local pattern = letterPatterns[letter]
+        local letterOffsetY = (letterIndex - 1) * (5 * (cubeSize + spacing) + letterSpacing)
+        
+        -- Create cubes for this letter based on pattern
+        for row = 1, #pattern do
+            for col = 1, #pattern[row] do
+                if pattern[row][col] == 1 then
+                    local posX = startX
+                    local posY = startY + letterOffsetY + (4 - col) * (cubeSize + spacing)  -- Mirror horizontally
+                    local posZ = startZ - (row - 1) * (cubeSize + spacing)
+                    
+                    local cube = g3d.newModel(
+                        "g3dAssets/cube.obj",
+                        "kenney_prototype_textures/orange/texture_01.png",
+                        {posX, posY, posZ},
+                        {0, math.pi/2, 0},  -- Rotate 90 degrees around Y-axis to face camera
+                        {cubeSize, cubeSize, cubeSize}
+                    )
+                    table.insert(scene, cube)
+                end
+            end
+        end
+    end
+    
+    table.insert(sceneObjects, scene)
+end
+createTitleScene()
+
+local function createPlinkoArrangement(plinkoScene, startX, startY, startZ, rows, cols, spacingVert, spacingHorz)
     for row = 0, rows - 1 do
         for col = 0, cols - 1 do
             local offsetY = (row % 2) * (spacingHorz / 2)
             local posY = startY + col * spacingHorz + offsetY
             local posZ = startZ + row * spacingVert
-            table.insert(containerTable, rigidBody:newRigidBody("g3dAssets/sphere.obj", "kenney_prototype_textures/purple/texture_08.png", 
+            table.insert(plinkoScene, rigidBody:newRigidBody("g3dAssets/sphere.obj", "kenney_prototype_textures/purple/texture_08.png", 
                 {startX, -posY, posZ}, 
                 nil, 
                 {0.2,0.2,0.2}, 
@@ -109,7 +178,42 @@ local function createPlinkoArrangement(containerTable, startX, startY, startZ, r
         end
     end
 end
-createPlinkoArrangement(sceneObjects[1], 10, -9, 3, 4, 15, 1.25, 1.25)
+
+local function createPlinkoScene()
+    local plinkoScene = {
+        -- Background
+        g3d.newModel("g3dAssets/sphere.obj", "g3dAssets/starfield.png", {0,0,0}, nil, {500,500,500}),
+
+        clickPlane,
+
+        -- Left Wall
+        rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,10,4}, nil, {1,0.5,10.5}, "static", "verts"),
+
+        -- Right Wall
+        rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-10,4}, nil, {1,0.5,10.5}, "static", "verts"),
+        
+        -- Floor
+        rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,0,-7}, nil, {1,10.5,0.5}, "static", "verts"),
+
+        -- Ramps
+        rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/purple/texture_03.png", {10,-3,-2}, nil, {0.1,1,-1}, "static", "verts"),
+        rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/purple/texture_03.png", {10,3,-2}, nil, {0.1,-1,-1}, "static", "verts"),
+        rigidBody:newRigidBody("custom_assets/star.obj", "kenney_prototype_textures/purple/texture_03.png", {10,0,-2}, nil, {1,1,1}, "static", "verts")
+    }
+
+    for i = 1, #winBoxes do
+        table.insert(plinkoScene, winBoxes[i])
+    end
+
+    for i = 1, #loseBoxes do
+        table.insert(plinkoScene, loseBoxes[i])
+    end
+
+    createPlinkoArrangement(plinkoScene, 10, -9, 3, 4, 15, 1.25, 1.25)
+
+    table.insert(sceneObjects, plinkoScene)
+end
+createPlinkoScene()
 
 local function createDoor(doorConfig)
     local door = rigidBody:newRigidBody(
@@ -235,92 +339,6 @@ local function createScenes()
 end
 createScenes()
 
--- Function for creating the title scene with cube-formed-letters
-local function createTitleScene()
-    local scene = {}
-    
-    -- Letter patterns (5x7 grid for each letter, 1 = cube present, 0 = empty)
-    local letterPatterns = {
-        T = {
-            {1,1,1,1,1},
-            {0,0,1,0,0},
-            {0,0,1,0,0},
-            {0,0,1,0,0},
-            {0,0,1,0,0},
-            {0,0,1,0,0},
-            {0,0,1,0,0}
-        },
-        I = {
-            {1,1,1,1,1},
-            {0,0,1,0,0},
-            {0,0,1,0,0},
-            {0,0,1,0,0},
-            {0,0,1,0,0},
-            {0,0,1,0,0},
-            {1,1,1,1,1}
-        },
-        L = {
-            {1,0,0,0,0},
-            {1,0,0,0,0},
-            {1,0,0,0,0},
-            {1,0,0,0,0},
-            {1,0,0,0,0},
-            {1,0,0,0,0},
-            {1,1,1,1,1}
-        },
-        E = {
-            {1,1,1,1,1},
-            {1,0,0,0,0},
-            {1,0,0,0,0},
-            {1,1,1,1,0},
-            {1,0,0,0,0},
-            {1,0,0,0,0},
-            {1,1,1,1,1}
-        }
-    }
-    
-    local letters = {"E", "L", "T", "I", "T"} -- Sorry I had to spell it backwards for positioning
-    local cubeSize = 0.4
-    local spacing = 0.1
-    local letterSpacing = 0.8
-    
-    -- Calculate total width of title to center it
-    local totalWidth = (#letters * (5 * (cubeSize + spacing) + letterSpacing)) - letterSpacing
-    
-    -- Starting position for the title (centered, slightly left)
-    local startX = 16
-    local startY = -totalWidth / 2 + 0.3
-    local startZ = 1
-    
-    -- Create each letter
-    for letterIndex, letter in ipairs(letters) do
-        local pattern = letterPatterns[letter]
-        local letterOffsetY = (letterIndex - 1) * (5 * (cubeSize + spacing) + letterSpacing)
-        
-        -- Create cubes for this letter based on pattern
-        for row = 1, #pattern do
-            for col = 1, #pattern[row] do
-                if pattern[row][col] == 1 then
-                    local posX = startX
-                    local posY = startY + letterOffsetY + (4 - col) * (cubeSize + spacing)  -- Mirror horizontally
-                    local posZ = startZ - (row - 1) * (cubeSize + spacing)
-                    
-                    local cube = g3d.newModel(
-                        "g3dAssets/cube.obj",
-                        "kenney_prototype_textures/orange/texture_01.png",
-                        {posX, posY, posZ},
-                        {0, math.pi/2, 0},  -- Rotate 90 degrees around Y-axis to face camera
-                        {cubeSize, cubeSize, cubeSize}
-                    )
-                    table.insert(scene, cube)
-                end
-            end
-        end
-    end
-    
-    table.insert(sceneObjects, scene)
-end
-createTitleScene()
 local screenWidth = love.graphics.getWidth()
 local screenHeight = love.graphics.getHeight()
 local continueText = languageJson[language].continue
@@ -569,7 +587,8 @@ function love.mousereleased(x, y, button)
             -- Reset placement state
             currentPlacementItem = nil
             gameInventory:stopDragging()
-        else
+            
+        elseif currentScene == 2 then
             if (clickPlane:isPointInAABB({ballCursor.translation[1], ballCursor.translation[2], ballCursor.translation[3]})) then
                 local physBall = rigidBody:newRigidBody(
                     "g3dAssets/sphere.obj",
@@ -591,8 +610,8 @@ end
 -- Press I to bring up inventory
 function love.keypressed(key)
     -- Transition from title screen to searching room on any key press
-    if currentScene == 3 then
-        secondsElapsed = timerLength + 1  -- Force transition to searching level
+    if currentScene == 1 then
+        currentScene = 3
         return
     end
     
@@ -627,26 +646,23 @@ function love.update(dt)
     if love.keyboard.isDown("p") then isPaused = not isPaused end
 
     if not isPaused then
-        if currentScene ~= 1 then
+        if currentScene ~= 1 and currentScene ~= 2 then
             secondsElapsed = secondsElapsed + dt
             if secondsElapsed >= timerLength then
-                if currentScene == 3 then
-                    secondsElapsed = 0
-                    timerLength = 60
-                    currentScene = 2
-                else
-                    currentScene = 1
-                end
+                secondsElapsed = 0
+                currentScene = 2                
             end
         end
 
         -- check collisions between simulated balls and bounds
         for i = 1, #simulatedObjects do
-            for j = 1, #sceneObjects[1] do
-                if simulatedObjects[i].model:AABBIntersection(sceneObjects[1][j].model.aabb.minPoint, sceneObjects[1][j].model.aabb.maxPoint) then
-                    collidedThisFrame = simulatedObjects[i]:resolveCollision(sceneObjects[1][j])
+            for j = 1, #sceneObjects[2] do
+                if sceneObjects[2][j].model then
+                    if simulatedObjects[i].model:AABBIntersection(sceneObjects[2][j].model.aabb.minPoint, sceneObjects[2][j].model.aabb.maxPoint) then
+                        collidedThisFrame = simulatedObjects[i]:resolveCollision(sceneObjects[2][j])
+                    end
+                    sceneObjects[2][j]:update(dt)
                 end
-                sceneObjects[1][j]:update(dt)
             end
             simulatedObjects[i]:update(dt)
         end
@@ -657,6 +673,7 @@ function love.update(dt)
                 wonThisFrame = winBoxes[winBoxInd].model:isPointInAABB(simulatedObjects[i].position)
                 if wonThisFrame then
                     wonGame = true
+                    print("win")
                     -- remove ball from simulation
                     table.remove(simulatedObjects, i)
                     return
@@ -666,6 +683,7 @@ function love.update(dt)
                 lostThisFrame = loseBoxes[loseBoxInd].model:isPointInAABB(simulatedObjects[i].position)
                 if lostThisFrame then
                     lostGame = true
+                    print("lose")
                     -- remove ball from simulation
                     table.remove(simulatedObjects, i)
                     return
@@ -675,27 +693,11 @@ function love.update(dt)
     end
 end
 
-function love.draw()
-    -- earth:draw()
-    -- moon:draw()
-    
-    if currentScene == 1 then
-        background:draw()
-    end
+function love.draw() 
+    if currentScene == 2 and not currentPlacementItem then
+        ballCursor:draw()
 
-    if currentScene == 1 then
-        if not currentPlacementItem then
-            ballCursor:draw()
-        end
-        clickPlane:draw()
-
-        for i = 1, #winBoxes do
-            winBoxes[i]:draw()
-        end
-        for i = 1, #loseBoxes do
-            loseBoxes[i]:draw()
-        end
-    elseif currentScene ~= 3 then
+    elseif currentScene ~= 1 then
         if font then love.graphics.setFont(font) end
         love.graphics.print(languageJson[language].timer .. (timerLength - math.floor(secondsElapsed)))
     end
@@ -722,7 +724,7 @@ function love.draw()
     local textY = screenHeight - 40
 
     -- Display "Press any key to continue" on title screen
-    if currentScene == 3 then
+    if currentScene == 1 then
         if font then love.graphics.setFont(font) end
         local continueText = languageJson[language].continue
         local continueTextWidth = (font or instructionFont):getWidth(continueText)
@@ -731,7 +733,7 @@ function love.draw()
     end
 
     -- Only show inventory instructions if not on title screen
-    if currentScene ~= 3 then
+    if currentScene ~= 1 then
         local openInvText = languageJson[language].openInv
         local openInvTextWidth = instructionFont:getWidth(openInvText)
 
