@@ -58,9 +58,8 @@ local simulatedObjects = {}
 -- rest correspond to different rooms
 local currentScene = 3
 
--- seconds before transitioning to plinko level
-local timerLength = 15
-local secondsElapsed = 0
+-- seconds before transitioning to plinko level (counts down to zero)
+local timer = 100000
 
 -- contains all door objects
 -- 2D, doors[2][2] gives second door in first room (corresponds to currentScene)
@@ -241,14 +240,14 @@ local function createTitleScene()
     
     -- Letter patterns (5x7 grid for each letter, 1 = cube present, 0 = empty)
     local letterPatterns = {
-        T = {
-            {1,1,1,1,1},
-            {0,0,1,0,0},
-            {0,0,1,0,0},
-            {0,0,1,0,0},
-            {0,0,1,0,0},
-            {0,0,1,0,0},
-            {0,0,1,0,0}
+        D = {
+            {1,1,1,0,0},
+            {1,0,0,1,0},
+            {1,0,0,0,1},
+            {1,0,0,0,1},
+            {1,0,0,0,1},
+            {1,0,0,1,0},
+            {1,1,1,0,0}
         },
         I = {
             {1,1,1,1,1},
@@ -268,18 +267,54 @@ local function createTitleScene()
             {1,0,0,0,0},
             {1,1,1,1,1}
         },
-        E = {
-            {1,1,1,1,1},
-            {1,0,0,0,0},
-            {1,0,0,0,0},
+        R = {
+            {1,1,1,1,0},
+            {1,0,0,0,1},
+            {1,0,0,0,1},
+            {1,1,1,1,0},
+            {1,0,1,0,0},
+            {1,0,0,1,0},
+            {1,0,0,0,1}
+        },
+        O = {
+            {0,1,1,1,0},
+            {1,0,0,0,1},
+            {1,0,0,0,1},
+            {1,0,0,0,1},
+            {1,0,0,0,1},
+            {1,0,0,0,1},
+            {0,1,1,1,0}
+        },
+        P = {
+            {1,1,1,1,0},
+            {1,0,0,0,1},
+            {1,0,0,0,1},
             {1,1,1,1,0},
             {1,0,0,0,0},
             {1,0,0,0,0},
-            {1,1,1,1,1}
+            {1,0,0,0,0}
+        },
+        C = {
+            {0,1,1,1,0},
+            {1,0,0,0,1},
+            {1,0,0,0,0},
+            {1,0,0,0,0},
+            {1,0,0,0,0},
+            {1,0,0,0,1},
+            {0,1,1,1,0}
+        },
+        K = {
+            {1,0,0,0,1},
+            {1,0,0,1,0},
+            {1,0,1,0,0},
+            {1,1,0,0,0},
+            {1,0,1,0,0},
+            {1,0,0,1,0},
+            {1,0,0,0,1}
         }
     }
     
-    local letters = {"E", "L", "T", "I", "T"} -- Sorry I had to spell it backwards for positioning
+    local letters = {"K", "C", "I", "L", "C", "P", "O", "R", "D"} -- Sorry I had to spell it backwards for positioning
     local cubeSize = 0.4
     local spacing = 0.1
     local letterSpacing = 0.8
@@ -481,6 +516,12 @@ end
 -- Clicking for when the inventory is up
 function love.mousepressed(x, y, button, istouch, presses)
     if button == 1 then
+        -- Transition from title screen on tap/click
+        if currentScene == 3 then
+            timer = 0  -- Set timer to 0 to trigger transition
+            return
+        end
+        
         local clickedItem = gameInventory:checkClick(x, y)
 
         if clickedItem and type(clickedItem) == "table" then
@@ -592,7 +633,7 @@ end
 function love.keypressed(key)
     -- Transition from title screen to searching room on any key press
     if currentScene == 3 then
-        secondsElapsed = timerLength + 1  -- Force transition to searching level
+        timer = -1  -- Force transition to searching level (negative triggers transition)
         return
     end
     
@@ -628,13 +669,13 @@ function love.update(dt)
 
     if not isPaused then
         if currentScene ~= 1 then
-            secondsElapsed = secondsElapsed + dt
-            if secondsElapsed >= timerLength then
+            timer = timer - dt
+            if timer <= 0 then
                 if currentScene == 3 then
-                    secondsElapsed = 0
-                    timerLength = 60
+                    timer = 60
                     currentScene = 2
                 else
+                    timer = 5
                     currentScene = 1
                 end
             end
@@ -697,7 +738,7 @@ function love.draw()
         end
     elseif currentScene ~= 3 then
         if font then love.graphics.setFont(font) end
-        love.graphics.print(languageJson[language].timer .. (timerLength - math.floor(secondsElapsed)))
+        love.graphics.print(languageJson[language].timer .. math.ceil(timer))
     end
 
     for i = 1, #simulatedObjects do
