@@ -81,14 +81,14 @@ local function createTitleScene()
     
     -- Letter patterns (5x7 grid for each letter, 1 = cube present, 0 = empty)
     local letterPatterns = {
-        T = {
-            {1,1,1,1,1},
-            {0,0,1,0,0},
-            {0,0,1,0,0},
-            {0,0,1,0,0},
-            {0,0,1,0,0},
-            {0,0,1,0,0},
-            {0,0,1,0,0}
+        D = {
+            {1,1,1,0,0},
+            {1,0,0,1,0},
+            {1,0,0,0,1},
+            {1,0,0,0,1},
+            {1,0,0,0,1},
+            {1,0,0,1,0},
+            {1,1,1,0,0}
         },
         I = {
             {1,1,1,1,1},
@@ -108,18 +108,54 @@ local function createTitleScene()
             {1,0,0,0,0},
             {1,1,1,1,1}
         },
-        E = {
+        R = {
+            {1,1,1,1,1},
+            {1,0,0,0,1},
+            {1,0,0,0,1},
+            {1,1,1,1,1},
+            {1,0,1,0,0},
+            {1,0,0,1,0},
+            {1,0,0,0,1}
+        },
+        O = {
+            {0,1,1,1,0},
+            {1,0,0,0,1},
+            {1,0,0,0,1},
+            {1,0,0,0,1},
+            {1,0,0,0,1},
+            {1,0,0,0,1},
+            {0,1,1,1,0}
+        },
+        K = {
+            {1,0,0,0,1},
+            {1,0,0,1,0},
+            {1,0,1,0,0},
+            {1,1,0,0,0},
+            {1,0,1,0,0},
+            {1,0,0,1,0},
+            {1,0,0,0,1}
+        },
+        P = {
+            {1,1,1,1,1},
+            {1,0,0,0,1},
+            {1,0,0,0,1},
             {1,1,1,1,1},
             {1,0,0,0,0},
             {1,0,0,0,0},
-            {1,1,1,1,0},
+            {1,0,0,0,0}
+        },
+        C = {
+            {0,1,1,1,0},
+            {1,0,0,0,1},
             {1,0,0,0,0},
             {1,0,0,0,0},
-            {1,1,1,1,1}
+            {1,0,0,0,0},
+            {1,0,0,0,1},
+            {0,1,1,1,0}
         }
     }
     
-    local letters = {"E", "L", "T", "I", "T"} -- Sorry I had to spell it backwards for positioning
+    local letters = {"K", "C", "I", "L","C", "P", "O", "R", "D"} -- Sorry I had to spell it backwards for positioning
     local cubeSize = 0.4
     local spacing = 0.1
     local letterSpacing = 0.8
@@ -599,7 +635,9 @@ function love.mousereleased(x, y, button)
             gameInventory:stopDragging()
             
         elseif currentScene == 2 then
-            if (clickPlane:isPointInAABB({ballCursor.translation[1], ballCursor.translation[2], ballCursor.translation[3]})) then
+            -- Check if ball cursor is within the orange clickPlane box
+            local ballPos = {ballCursor.translation[1], ballCursor.translation[2], ballCursor.translation[3]}
+            if clickPlane and clickPlane.aabb and clickPlane:isPointInAABB(ballPos) then
                 local physBall = rigidBody:newRigidBody(
                     "g3dAssets/sphere.obj",
                     "kenney_prototype_textures/light/texture_08.png", 
@@ -659,7 +697,7 @@ function love.update(dt)
         if currentScene == 1 then
             timer = timer - dt
             if timer <= 0 then
-                timer = 60
+                timer = 6
                 currentScene = 3  -- Go to searching room
             end
         elseif currentScene == 3 then
