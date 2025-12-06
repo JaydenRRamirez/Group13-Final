@@ -24,9 +24,10 @@ local clickPlane = g3d.newModel("g3dAssets/cube.obj", "kenney_prototype_textures
 -- keep track of all rigid bodies that need to be physics simulated aren't static
 local simulatedObjects = {}
 
--- 1 = plinko level
--- rest correspond to different rooms
-local currentScene = 3
+-- 1 = title screen
+-- 3 = searching room
+-- 2 = plinko level
+local currentScene = 1
 
 -- seconds before transitioning to plinko level (counts down to zero)
 local timer = 100000
@@ -157,7 +158,7 @@ local function createTitleScene()
         end
     end
     
-    table.insert(sceneObjects, scene)
+    table.insert(sceneObjects, 1, scene)  -- Insert at beginning to make it scene 1
 end
 createTitleScene()
 
@@ -503,7 +504,7 @@ end
 function love.mousepressed(x, y, button, istouch, presses)
     if button == 1 then
         -- Transition from title screen on tap/click
-        if currentScene == 3 then
+        if currentScene == 1 then
             timer = 0  -- Set timer to 0 to trigger transition
             return
         end
@@ -620,7 +621,7 @@ end
 function love.keypressed(key)
     -- Transition from title screen to searching room on any key press
     if currentScene == 1 then
-        currentScene = 3
+        timer = 0  -- Force transition
         return
     end
     
@@ -655,11 +656,17 @@ function love.update(dt)
     if love.keyboard.isDown("p") then isPaused = not isPaused end
 
     if not isPaused then
-        if currentScene ~= 1 and currentScene ~= 2 then
-            secondsElapsed = secondsElapsed + dt
-            if secondsElapsed >= timerLength then
-                secondsElapsed = 0
-                currentScene = 2                
+        if currentScene == 1 then
+            timer = timer - dt
+            if timer <= 0 then
+                timer = 60
+                currentScene = 3  -- Go to searching room
+            end
+        elseif currentScene == 3 then
+            timer = timer - dt
+            if timer <= 0 then
+                timer = 5
+                currentScene = 2  -- Go to plinko
             end
         end
 
@@ -706,7 +713,7 @@ function love.draw()
     if currentScene == 2 and not currentPlacementItem then
         ballCursor:draw()
 
-    elseif currentScene ~= 1 then
+    elseif currentScene == 3 then
         if font then love.graphics.setFont(font) end
         love.graphics.print(languageJson[language].timer .. math.ceil(timer))
     end
