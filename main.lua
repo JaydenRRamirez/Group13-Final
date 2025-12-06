@@ -59,7 +59,7 @@ local simulatedObjects = {}
 local currentScene = 2
 
 -- seconds before transitioning to plinko level
-local timerLength = 2
+local timerLength = 5
 local secondsElapsed = 0
 
 -- contains all door objects
@@ -366,6 +366,23 @@ function love.load()
     obstaclePrototypes[star.name] = star
 
     gameInventory.obstaclePrototypes = obstaclePrototypes
+
+    local startingStar = rigidBody:newRigidBody(
+        ramp.modelPath,
+        "kenney_prototype_textures/purple/texture_03.png", 
+        {10, 0, 0},
+        nil,
+        {1, 1, 1},
+        "static", 
+        "verts"
+    )
+
+
+    startingStar.name = ramp.name 
+
+
+    table.insert(sceneObjects[currentScene], startingStar)
+    print("Test obstacle 'Star' placed in scene 1. Try clicking it!")
 end
 
 -- Clicking for when the inventory is up
@@ -391,36 +408,34 @@ function love.mousepressed(x, y, button, istouch, presses)
 
         -- Check to return them to Inventory
         local worldx, worldy, worldz = getClickWorldPosition(x, y)
-        if currentScene == 1 then
-            for i = #sceneObjects[currentScene], 1, -1 do
-                local obstacle = sceneObjects[currentScene][i]
+        for i = #sceneObjects[currentScene], 1, -1 do
+            local obstacle = sceneObjects[currentScene][i]
                 
-                if obstacle.name then
-                    local isClicked = false
+            if obstacle.name then
+                local isClicked = false
                     
-                    -- Check if custom pickup bounds exist (for the Conveyer)
-                    if obstacle.pickupExtents then
-                        -- Use the model's translation for current world position
-                        local pos = obstacle.model.translation 
-                        local extents = obstacle.pickupExtents
+                -- Check if custom pickup bounds exist (for the Conveyer)
+                if obstacle.pickupExtents then
+                    -- Use the model's translation for current world position
+                    local pos = obstacle.model.translation 
+                    local extents = obstacle.pickupExtents
                         
-                        -- Manual bounds check against the generous box
-                        if worldx >= (pos[1] - extents[1]) and worldx <= (pos[1] + extents[1]) and
-                           worldy >= (pos[2] - extents[2]) and worldy <= (pos[2] + extents[2]) and
-                           worldz >= (pos[3] - extents[3]) and worldz <= (pos[3] + extents[3]) then
-                            isClicked = true
-                        end
-                    else
-                        -- Use the default AABB check for all other objects (Pistons, Ramps)
-                        isClicked = obstacle.model:isPointInAABB({worldx, worldy, worldz})
+                    -- Manual bounds check against the generous box
+                    if worldx >= (pos[1] - extents[1]) and worldx <= (pos[1] + extents[1]) and
+                        worldy >= (pos[2] - extents[2]) and worldy <= (pos[2] + extents[2]) and
+                        worldz >= (pos[3] - extents[3]) and worldz <= (pos[3] + extents[3]) then
+                        isClicked = true
                     end
+                else
+                    -- Use the default AABB check for all other objects (Pistons, Ramps)
+                    isClicked = obstacle.model:isPointInAABB({worldx, worldy, worldz})
+                end
                     
-                    if isClicked then
-                        gameInventory:returnItem(obstacle.name)
-                        table.remove(sceneObjects[currentScene], i)
-                        print("Returned obstacle: " .. obstacle.name .. " to inventory.")
-                        return
-                    end
+                if isClicked then
+                    gameInventory:returnItem(obstacle.name)
+                    table.remove(sceneObjects[currentScene], i)
+                    print("Returned obstacle: " .. obstacle.name .. " to inventory.")
+                    return
                 end
             end
         end
@@ -437,6 +452,7 @@ function love.mousereleased(x, y, button)
             local texturePath = defaultTexture
             local collisionShape = "verts"
             local collisionParams = nil 
+            local collisionStatic = "static"
     
             local newObstacle = rigidBody:newRigidBody(
                 currentPlacementItem.modelPath or "g3dAssets/cube.obj",
@@ -444,6 +460,7 @@ function love.mousereleased(x, y, button)
                 placementPosition,
                 nil,
                 scale,
+                collisionStatic,
                 collisionShape,
                 collisionParams
             )
