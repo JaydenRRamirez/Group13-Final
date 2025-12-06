@@ -28,9 +28,8 @@ local simulatedObjects = {}
 -- rest correspond to different rooms
 local currentScene = 1
 
--- seconds before transitioning to plinko level
-local timerLength = 15
-local secondsElapsed = 0
+-- seconds before transitioning to plinko level (counts down to zero)
+local timer = 100000
 
 -- contains all door objects
 -- 2D, doors[2][2] gives second door in first room (corresponds to currentScene)
@@ -499,6 +498,12 @@ end
 -- Clicking for when the inventory is up
 function love.mousepressed(x, y, button, istouch, presses)
     if button == 1 then
+        -- Transition from title screen on tap/click
+        if currentScene == 3 then
+            timer = 0  -- Set timer to 0 to trigger transition
+            return
+        end
+        
         local clickedItem = gameInventory:checkClick(x, y)
 
         if clickedItem and type(clickedItem) == "table" then
@@ -699,7 +704,7 @@ function love.draw()
 
     elseif currentScene ~= 1 then
         if font then love.graphics.setFont(font) end
-        love.graphics.print(languageJson[language].timer .. (timerLength - math.floor(secondsElapsed)))
+        love.graphics.print(languageJson[language].timer .. math.ceil(timer))
     end
 
     for i = 1, #simulatedObjects do
