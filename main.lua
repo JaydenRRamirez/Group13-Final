@@ -362,7 +362,8 @@ local function createPlinkoScene2()
     local rhombusTexture = "kenney_prototype_textures/dark/texture_01.png"
 
     local rhombusModel = "custom_assets/Rhombus.obj"
-    local defaultRhombusScale = {0.5, 0.5, 0.5}
+    local defaultRhombusScale = {0.1, 4, 0.5}
+    local negativeRhombusScale = {0.1, -4, 0.5}
 
     local plinkoScene = {
         nonSimulatedObjects = {
@@ -376,8 +377,8 @@ local function createPlinkoScene2()
             rigidBody:newRigidBody(
                 rhombusModel, 
                 rhombusTexture, 
-                {10, 0, 3.5}, 
-                {0, 0, 0},
+                {10.0, 4.0, 5.0}, 
+                {0.0, 0.05, 0},
                 defaultRhombusScale, 
                 "static", 
                 "verts"
@@ -387,9 +388,9 @@ local function createPlinkoScene2()
             rigidBody:newRigidBody(
                 rhombusModel, 
                 rhombusTexture, 
-                {10, 0, 1.0}, 
-                {0, 0, 0}, 
-                defaultRhombusScale, 
+                {10.0, -2.0, 1.5}, 
+                {0.0, 0.05, 0}, 
+                negativeRhombusScale, 
                 "static", 
                 "verts"
             ),
@@ -398,8 +399,8 @@ local function createPlinkoScene2()
             rigidBody:newRigidBody(
                 rhombusModel, 
                 rhombusTexture, 
-                {10, 0, -1.5}, 
-                {0, 0, 0}, 
+                {10, 3, -1.5}, 
+                {0.0, 0.05, 0}, 
                 defaultRhombusScale, 
                 "static", 
                 "verts"
@@ -409,7 +410,6 @@ local function createPlinkoScene2()
 
     table.insert(sceneObjects, plinkoScene)
 end
-
 
 ---------------------------------------------------------------------------------------------------------
 ---
