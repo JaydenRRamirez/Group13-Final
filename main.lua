@@ -25,12 +25,13 @@ local clickPlane = g3d.newModel("g3dAssets/cube.obj", "kenney_prototype_textures
 local simulatedObjects = {}
 
 -- 1 = title screen
--- 3 = searching room
--- 2 = plinko level
-local currentScene = 4
+-- 2 = plinko level 1
+-- 3 = plinko level 2
+-- rest = search rooms
+local currentScene = 1
 
 -- seconds before transitioning to plinko level (counts down to zero)
-local timer = 100000
+local timer = 5
 
 -- contains all door objects
 -- 2D, doors[2][2] gives second door in first room (corresponds to currentScene)
@@ -216,7 +217,7 @@ local function createPlinkoArrangement(plinkoScene, startX, startY, startZ, rows
     end
 end
 
-local function createPlinkoScene()
+local function createPlinkoScene1()
     local plinkoScene = {
         -- Background
         g3d.newModel("g3dAssets/sphere.obj", "g3dAssets/starfield.png", {0,0,0}, nil, {500,500,500}),
@@ -250,7 +251,57 @@ local function createPlinkoScene()
 
     table.insert(sceneObjects, plinkoScene)
 end
-createPlinkoScene()
+createPlinkoScene1()
+
+local function createPlinkoScene2()
+    local plinkoScene = {} 
+    local texture = "kenney_prototype_textures/dark/texture_03.png"
+    local rhombusTexture = "kenney_prototype_textures/dark/texture_01.png"
+
+    table.insert(plinkoScene, clickPlane)
+
+    -- Floor
+    table.insert(plinkoScene, rigidBody:newRigidBody("g3dAssets/cube.obj", texture, {10,0,-7}, nil, {1,10.5,0.5}, "static", "verts"))
+
+    local rhombusModel = "custom_assets/Rhombus.obj"
+    local defaultRhombusScale = {0.5, 0.5, 0.5}
+
+    -- Rhombus 1 (Top-most)
+    table.insert(plinkoScene, rigidBody:newRigidBody(
+        rhombusModel, 
+        rhombusTexture, 
+        {10, 0, 3.5}, 
+        {0, 0, 0},
+        defaultRhombusScale, 
+        "static", 
+        "verts"
+    ))
+    
+    -- Rhombus 2 (Middle)
+    table.insert(plinkoScene, rigidBody:newRigidBody(
+        rhombusModel, 
+        rhombusTexture, 
+        {10, 0, 1.0}, 
+        {0, 0, 0}, 
+        defaultRhombusScale, 
+        "static", 
+        "verts"
+    ))
+
+    -- Rhombus 3 (Bottom-most of the top three)
+    table.insert(plinkoScene, rigidBody:newRigidBody(
+        rhombusModel, 
+        rhombusTexture, 
+        {10, 0, -1.5}, 
+        {0, 0, 0}, 
+        defaultRhombusScale, 
+        "static", 
+        "verts"
+    ))
+
+    table.insert(sceneObjects, plinkoScene)
+end
+createPlinkoScene2()
 
 local function createDoor(doorConfig)
     local door = rigidBody:newRigidBody(
@@ -403,54 +454,6 @@ local function calculateTransformPerScreenPixel()
     transformPerScreenPixel = 2 * (distance * math.tan(g3d.camera.fov / 2)) / love.graphics.getHeight()
 end
 
-local function createScene4()
-    local scene4 = {} 
-    local texture = "kenney_prototype_textures/dark/texture_03.png"
-    local rhombusTexture = "kenney_prototype_textures/dark/texture_01.png"
-
-    -- Floor
-    table.insert(scene4, rigidBody:newRigidBody("g3dAssets/cube.obj", texture, {10,0,-7}, nil, {1,10.5,0.5}, "static", "verts"))
-
-    local rhombusModel = "custom_assets/Rhombus.obj"
-    local defaultRhombusScale = {0.5, 0.5, 0.5}
-
-    -- Rhombus 1 (Top-most)
-    table.insert(scene4, rigidBody:newRigidBody(
-        rhombusModel, 
-        rhombusTexture, 
-        {10, 0, 3.5}, 
-        {0, 0, 0},
-        defaultRhombusScale, 
-        "static", 
-        "verts"
-    ))
-    
-    -- Rhombus 2 (Middle)
-    table.insert(scene4, rigidBody:newRigidBody(
-        rhombusModel, 
-        rhombusTexture, 
-        {10, 0, 1.0}, 
-        {0, 0, 0}, 
-        defaultRhombusScale, 
-        "static", 
-        "verts"
-    ))
-
-    -- Rhombus 3 (Bottom-most of the top three)
-    table.insert(scene4, rigidBody:newRigidBody(
-        rhombusModel, 
-        rhombusTexture, 
-        {10, 0, -1.5}, 
-        {0, 0, 0}, 
-        defaultRhombusScale, 
-        "static", 
-        "verts"
-    ))
-
-    table.insert(sceneObjects, scene4)
-end
-createScene4()
-
 -- Returns a normalized direction vector from screen center to mouse position
 -- Returns: dx, dy (2D vector components)
 local function getMouseLookVector(mouseX, mouseY)
@@ -589,7 +592,7 @@ function love.mousepressed(x, y, button, istouch, presses)
     if button == 1 then
         -- Transition from title screen on tap/click
         if currentScene == 1 then
-            timer = 0  -- Set timer to 0 to trigger transition
+            currentScene = 4
             return
         end
         
@@ -682,7 +685,7 @@ function love.mousereleased(x, y, button)
             currentPlacementItem = nil
             gameInventory:stopDragging()
             
-        elseif currentScene == 2 then
+        elseif currentScene == 2 or currentScene == 3 then
             -- Check if ball cursor is within the orange clickPlane box
             local ballPos = {ballCursor.translation[1], ballCursor.translation[2], ballCursor.translation[3]}
             if clickPlane and clickPlane.aabb and clickPlane:isPointInAABB(ballPos) then
@@ -707,7 +710,7 @@ end
 function love.keypressed(key)
     -- Transition from title screen to searching room on any key press
     if currentScene == 1 then
-        timer = 0  -- Force transition
+        currentScene = 4
         return
     end
     
@@ -742,31 +745,27 @@ function love.update(dt)
     if love.keyboard.isDown("p") then isPaused = not isPaused end
 
     if not isPaused then
-        if currentScene == 1 then
+        if currentScene >= 4 then
             timer = timer - dt
             if timer <= 0 then
-                timer = 6
-                currentScene = 3  -- Go to searching room
-            end
-        elseif currentScene == 3 then
-            timer = timer - dt
-            if timer <= 0 then
-                timer = 5
-                currentScene = 2  -- Go to plinko
+                timer = 60
+                currentScene = 2  -- Go to plinko 1
             end
         end
 
         -- check collisions between simulated balls and bounds
-        for i = 1, #simulatedObjects do
-            for j = 1, #sceneObjects[2] do
-                if sceneObjects[2][j].model then
-                    if simulatedObjects[i].model:AABBIntersection(sceneObjects[2][j].model.aabb.minPoint, sceneObjects[2][j].model.aabb.maxPoint) then
-                        collidedThisFrame = simulatedObjects[i]:resolveCollision(sceneObjects[2][j])
+        if currentScene == 2 or currentScene == 3 then
+            for i = 1, #simulatedObjects do
+                for j = 1, #sceneObjects[currentScene] do
+                    if sceneObjects[currentScene][j].model then
+                        if simulatedObjects[i].model:AABBIntersection(sceneObjects[currentScene][j].model.aabb.minPoint, sceneObjects[currentScene][j].model.aabb.maxPoint) then
+                            collidedThisFrame = simulatedObjects[i]:resolveCollision(sceneObjects[currentScene][j])
+                        end
+                        sceneObjects[currentScene][j]:update(dt)
                     end
-                    sceneObjects[2][j]:update(dt)
                 end
+                simulatedObjects[i]:update(dt)
             end
-            simulatedObjects[i]:update(dt)
         end
 
         -- check collision between ball and win/lose boxes
@@ -796,10 +795,10 @@ function love.update(dt)
 end
 
 function love.draw() 
-    if currentScene == 2 and not currentPlacementItem then
+    if (currentScene == 2 or currentScene == 3) and not currentPlacementItem then
         ballCursor:draw()
 
-    elseif currentScene == 3 then
+    elseif currentScene >= 4 then
         if font then love.graphics.setFont(font) end
         love.graphics.print(languageJson[language].timer .. math.ceil(timer))
     end
