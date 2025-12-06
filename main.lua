@@ -21,7 +21,7 @@ local lostGame = false
 local ballCursor = g3d.newModel("g3dAssets/sphere.obj", "kenney_prototype_textures/red/texture_08.png", {10,0,4}, nil, {0.25,0.25,0.25})
 local clickPlane = g3d.newModel("g3dAssets/cube.obj", "kenney_prototype_textures/orange/texture_03.png", {10,0,9}, nil, {0.1,10,1})
 
--- keep track of all rigid bodies that need to be physics simulated aren't static
+-- keep track of all rigid bodies that need to have movement physics simulated
 local simulatedObjects = {}
 
 -- 1 = title screen
@@ -566,6 +566,9 @@ local screenHeight = love.graphics.getHeight()
 local continueText = languageJson[language].continue
 local continueTextWidth = instructionFont:getWidth(continueText)
 local textY = screenHeight - 40
+
+local prevCurrentScene = currentScene
+
 love.graphics.print(continueText, screenWidth / 2 - continueTextWidth - 150, textY)
 
 function love.load()
@@ -786,6 +789,10 @@ end
 function love.update(dt)
     if wonGame or lostGame or isPaused then
         return
+    end
+    if prevCurrentScene ~= currentScene then
+        simulatedObjects = {}
+        prevCurrentScene = currentScene
     end
     -- Make camera orthographic
     -- g3d.camera.updateOrthographicMatrix()
