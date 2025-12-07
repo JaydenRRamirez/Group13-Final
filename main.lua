@@ -10,6 +10,8 @@ local currentPlacementItem = nil
 local placementPosition = {10, 0, 4}
 local obstaclePrototypes = {}
 
+-- I have made a change
+
 -- Constants
 local gameCenter = {10,0,4}
 local lookDirection = "x"
@@ -32,6 +34,9 @@ local clickPlane = g3d.newModel("g3dAssets/cube.obj", "kenney_prototype_textures
 -- keep track of all rigid bodies that need to have movement physics simulated
 local simulatedObjects = {}
 
+-- Ball ammo counter
+local ballAmmo = 5
+
 -- 1 = title screen
 -- 2 = plinko level 1
 -- 3 = plinko level 2
@@ -39,7 +44,8 @@ local simulatedObjects = {}
 local currentScene = 4
 
 -- seconds before transitioning to plinko level (counts down to zero)
-local timer = 60
+local timerConstant = 60
+local timer = timerConstant
 
 -- contains all door objects
 -- 2D, doors[2][2] gives second door in first room (corresponds to currentScene)
@@ -781,8 +787,9 @@ function love.mousepressed(x, y, button, istouch, presses)
                 wonGame = false
                 lostGame = false
                 simulatedObjects = {}
+                ballAmmo = 5
                 currentScene = 1
-                timer = 5
+                timer = timerConstant
                 return
             end
             
@@ -882,9 +889,9 @@ function love.mousereleased(x, y, button)
             gameInventory:stopDragging()
             
         elseif currentScene == 2 or currentScene == 3 then
-            -- Check if ball cursor is within the orange clickPlane box
+            -- Check if ball cursor is within the orange clickPlane box and player has ammo
             local ballPos = {ballCursor.translation[1], ballCursor.translation[2], ballCursor.translation[3]}
-            if clickPlane and clickPlane.aabb and clickPlane:isPointInAABB(ballPos) then
+            if ballAmmo > 0 and clickPlane and clickPlane.aabb and clickPlane:isPointInAABB(ballPos) then
                 local physBall = rigidBody:newRigidBody(
                     "g3dAssets/sphere.obj",
                     "kenney_prototype_textures/light/texture_08.png", 
@@ -897,6 +904,8 @@ function love.mousereleased(x, y, button)
                     {lockedAxes={true, false, false}} -- Lock X axis
                 )
                 table.insert(simulatedObjects, physBall)
+                ballAmmo = ballAmmo - 1
+                print("Balls remaining: " .. ballAmmo)
             end
 
         else
@@ -980,7 +989,7 @@ function love.update(dt)
     if currentScene >= 4 then
         timer = timer - dt
         if timer <= 0 then
-            timer = 60
+            timer = timerConstant
             currentScene = 2  -- Go to plinko 1
         end
     end
@@ -1039,6 +1048,17 @@ end
 function love.draw() 
     if (currentScene == 2 or currentScene == 3) and not currentPlacementItem then
         ballCursor:draw()
+        
+        -- Draw ball ammo indicators in top right corner
+        love.graphics.setColor(1, 1, 1, 1)
+        local ballSize = 20
+        local spacing = 10
+        local startX = love.graphics.getWidth() - 25
+        local startY = 20
+        
+        for i = 1, ballAmmo do
+            love.graphics.circle("fill", startX, startY + (i - 1) * (ballSize + spacing), ballSize / 2)
+        end
 
     elseif currentScene >= 4 then
         if font then love.graphics.setFont(font) end
