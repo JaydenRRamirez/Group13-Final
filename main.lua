@@ -10,12 +10,22 @@ local currentPlacementItem = nil
 local placementPosition = {10, 0, 4}
 local obstaclePrototypes = {}
 
+-- I have made a change
+
 -- Constants
 local gameCenter = {10,0,4}
 local lookDirection = "x"
 
 local wonGame = false
 local lostGame = false
+local playAgainButton = {x = 0, y = 0, width = 200, height = 60}
+local quitButton = {x = 0, y = 0, width = 200, height = 60}
+
+local leftArrowImage = love.graphics.newImage("custom_assets/arrowLeft.png")
+local rightArrowImage = love.graphics.newImage("custom_assets/arrowRight.png")
+local upArrowImage = love.graphics.newImage("custom_assets/arrowUp.png")
+local downArrowImage = love.graphics.newImage("custom_assets/arrowDown.png")
+local arrowScale = 0.05
 
 -- Objects
 local ballCursor = g3d.newModel("g3dAssets/sphere.obj", "kenney_prototype_textures/red/texture_08.png", {10,0,4}, nil, {0.25,0.25,0.25})
@@ -24,14 +34,23 @@ local clickPlane = g3d.newModel("g3dAssets/cube.obj", "kenney_prototype_textures
 -- keep track of all rigid bodies that need to have movement physics simulated
 local simulatedObjects = {}
 
--- 1 = title screen
--- 2 = plinko level 1
--- 3 = plinko level 2
--- rest = search rooms
-local currentScene = 3
+local titleScreen = 1
+local plinkoLevel1 = 2
+local plinkoLevel2 = 3
+local searchRoom1 = 4
+local searchRoom2 = 5
+
+local plinkoLevels = {plinkoLevel1, plinkoLevel2}
+local searchRooms = {searchRoom1, searchRoom2}
+
+local currentScene = titleScreen
+
+-- Ball ammo counter
+local ballAmmo = 5
 
 -- seconds before transitioning to plinko level (counts down to zero)
-local timer = 5
+local timerConstant = 60
+local timer = timerConstant
 
 -- contains all door objects
 -- 2D, doors[2][2] gives second door in first room (corresponds to currentScene)
@@ -204,9 +223,36 @@ local function drawWinScreen()
     love.graphics.setColor(0, 255, 0, 0.7)
     love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
 
-    -- Placeholder for win screen drawing logic
+    -- Win text
     love.graphics.setColor(0, 0, 0, 1)
     love.graphics.print(languageJson[language].win, love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 10, nil, 4, 4)
+    
+    -- Play Again button
+    playAgainButton.x = love.graphics.getWidth() / 2 - playAgainButton.width / 2
+    playAgainButton.y = love.graphics.getHeight() / 2 + 100
+    
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.rectangle("fill", playAgainButton.x, playAgainButton.y, playAgainButton.width, playAgainButton.height)
+    
+    love.graphics.setColor(0, 0, 0, 1)
+    local buttonFont = love.graphics.newFont(24)
+    love.graphics.setFont(buttonFont)
+    local buttonText = "Play Again"
+    local textWidth = buttonFont:getWidth(buttonText)
+    love.graphics.print(buttonText, playAgainButton.x + playAgainButton.width / 2 - textWidth / 2, playAgainButton.y + 15)
+    
+    -- Quit Game button
+    quitButton.x = love.graphics.getWidth() / 2 - quitButton.width / 2
+    quitButton.y = playAgainButton.y + playAgainButton.height + 20
+    
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.rectangle("fill", quitButton.x, quitButton.y, quitButton.width, quitButton.height)
+    
+    love.graphics.setColor(0, 0, 0, 1)
+    love.graphics.setFont(buttonFont)
+    local quitText = "Quit Game"
+    local quitTextWidth = buttonFont:getWidth(quitText)
+    love.graphics.print(quitText, quitButton.x + quitButton.width / 2 - quitTextWidth / 2, quitButton.y + 15)
 end
 
 local function drawLoseScreen()
@@ -214,9 +260,36 @@ local function drawLoseScreen()
     love.graphics.setColor(255, 0, 0, 0.7)
     love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
 
-    -- Placeholder for lose screen drawing logic
+    -- Lose text
     love.graphics.setColor(255, 255, 255, 1)
     love.graphics.print(languageJson[language].lose, love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 10, nil, 4, 4)
+    
+    -- Play Again button
+    playAgainButton.x = love.graphics.getWidth() / 2 - playAgainButton.width / 2
+    playAgainButton.y = love.graphics.getHeight() / 2 + 100
+    
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.rectangle("fill", playAgainButton.x, playAgainButton.y, playAgainButton.width, playAgainButton.height)
+    
+    love.graphics.setColor(0, 0, 0, 1)
+    local buttonFont = love.graphics.newFont(24)
+    love.graphics.setFont(buttonFont)
+    local buttonText = "Play Again"
+    local textWidth = buttonFont:getWidth(buttonText)
+    love.graphics.print(buttonText, playAgainButton.x + playAgainButton.width / 2 - textWidth / 2, playAgainButton.y + 15)
+    
+    -- Quit Game button
+    quitButton.x = love.graphics.getWidth() / 2 - quitButton.width / 2
+    quitButton.y = playAgainButton.y + playAgainButton.height + 20
+    
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.rectangle("fill", quitButton.x, quitButton.y, quitButton.width, quitButton.height)
+    
+    love.graphics.setColor(0, 0, 0, 1)
+    love.graphics.setFont(buttonFont)
+    local quitText = "Quit Game"
+    local quitTextWidth = buttonFont:getWidth(quitText)
+    love.graphics.print(quitText, quitButton.x + quitButton.width / 2 - quitTextWidth / 2, quitButton.y + 15)
 end
 
 
@@ -577,13 +650,35 @@ local function parseScale(constants, object)
     return {scale.x, scale.y, scale.z}
 end
 
+local function parseArrows(arrows, newScene)
+    newScene.arrows = {}
+    for arrowName, arrow in pairs(arrows) do
+        local newArrow = {}
+
+        if arrow.direction == "left" then newArrow.image = leftArrowImage
+        elseif arrow.direction == "up" then newArrow.image = upArrowImage
+        elseif arrow.direction == "right" then newArrow.image = rightArrowImage
+        else newArrow.image = downArrowImage end
+
+        newArrow.width, newArrow.height = newArrow.image:getPixelDimensions()
+        newArrow.width = newArrow.width * arrowScale
+        newArrow.height = newArrow.height * arrowScale
+
+        newArrow.position = arrow.position
+        newArrow.scale = arrowScale
+        newArrow.targetScene = arrow.targetScene
+
+        table.insert(newScene.arrows, newArrow)
+    end
+end
+
 local function createScenes()
     local jsonString = love.filesystem.read("scenes.json")
     local jsonData = json.decode(jsonString)
 
     for sceneIndex, scene in ipairs(jsonData.scenes) do
         local newScene = { nonSimulatedObjects = {} }
-        for objectName, object in pairs(scene) do
+        for objectName, object in pairs(scene.objects) do
             local model = jsonData.models[object.model]
             local texture = jsonData.textures[object.texture]
             local translation = parseTranslation(jsonData.constants, object)
@@ -592,6 +687,9 @@ local function createScenes()
             local newObject = g3d.newModel(model, texture, translation, rotation, scale)
             table.insert(newScene.nonSimulatedObjects, newObject)
         end
+
+        parseArrows(scene.arrows, newScene)
+
         table.insert(sceneObjects, newScene)
     end
 end
@@ -657,7 +755,7 @@ function love.load()
     gameInventory.obstaclePrototypes = obstaclePrototypes
 
     local startingStar = rigidBody:newRigidBody(
-        ramp.modelPath,
+        star.modelPath,
         "kenney_prototype_textures/purple/texture_03.png", 
         {10, 0, 0},
         nil,
@@ -667,14 +765,24 @@ function love.load()
     )
 
 
-    startingStar.name = ramp.name 
+    startingStar.name = star.name
+
+    --print(ramp)
+    --gameInventory.addItem(obstaclePrototypes["Ramp"])
 
     createTitleScene()
     createPlinkoScene1()
     createPlinkoScene2()
     createScenes()
+    --table.insert(sceneObjects[currentScene], ramp)
+    --if not sceneObjects[currentScene].inventoryObjects then sceneObjects[currentScene].inventoryObjects = {} end
+    -- table.insert(sceneObjects[currentScene].inventoryObjects, startingStar)
 
-    table.insert(sceneObjects[currentScene], startingStar)
+    -- Initialize a table for placed obstacles in the current scene
+    local currentSceneObj = sceneObjects[currentScene]
+    if not currentSceneObj.playerObstacles then currentSceneObj.playerObstacles = {} end
+    -- Insert the starting object into the table.
+    table.insert(currentSceneObj.playerObstacles, startingStar)
     print("Test obstacle 'Star' placed in scene 1. Try clicking it!")
 end
 
@@ -689,9 +797,31 @@ end
 -- Clicking for when the inventory is up
 function love.mousepressed(x, y, button, istouch, presses)
     if button == 1 then
+        -- Check for play again button click on win/lose screen
+        if wonGame or lostGame then
+            if x >= playAgainButton.x and x <= playAgainButton.x + playAgainButton.width and
+               y >= playAgainButton.y and y <= playAgainButton.y + playAgainButton.height then
+                -- Reset game state
+                wonGame = false
+                lostGame = false
+                simulatedObjects = {}
+                ballAmmo = 5
+                currentScene = 1
+                timer = timerConstant
+                return
+            end
+            
+            -- Check for quit button click
+            if x >= quitButton.x and x <= quitButton.x + quitButton.width and
+               y >= quitButton.y and y <= quitButton.y + quitButton.height then
+                love.event.quit()
+                return
+            end
+        end
+        
         -- Transition from title screen on tap/click
-        if currentScene == 1 then
-            currentScene = 4
+        if currentScene == titleScreen then
+            currentScene = searchRoom1
             return
         end
         
@@ -715,24 +845,58 @@ function love.mousepressed(x, y, button, istouch, presses)
 
         -- Check to return them to Inventory
         local worldx, worldy, worldz = getClickWorldPosition(x, y)
-        for i = #sceneObjects[currentScene], 1, -1 do
-            local obstacle = sceneObjects[currentScene][i]
+        --for i = #sceneObjects[currentScene], 1, -1 do
+          --  local obstacle = sceneObjects[currentScene][i]
                 
-            if obstacle.name then
-                local isClicked = false
+            --if obstacle.name then
+              --  local isClicked = false
                     
                 -- Use default AABB for simpler objects
-                isClicked = obstacle.model:isPointInAABB({worldx, worldy, worldz})
+                --isClicked = obstacle.model:isPointInAABB({worldx, worldy, worldz})
                     
-                if isClicked then
-                    gameInventory:returnItem(obstacle.name)
-                    table.remove(sceneObjects[currentScene], i)
-                    print("Returned obstacle: " .. obstacle.name .. " to inventory.")
-                    return
+                --if isClicked then
+                    --gameInventory:returnItem(obstacle.name)
+                    --table.remove(sceneObjects[currentScene], i)
+                    --print("Returned obstacle: " .. obstacle.name .. " to inventory.")
+                    --return
+                --end
+            --end
+
+            -- Check the new list of player obstacles for clicks
+            local currentObstacles = sceneObjects[currentScene].playerObstacles
+            if currentObstacles then
+                for i = #currentObstacles, 1, -1 do
+                    local obstacle = currentObstacles[i]
+
+                    if obstacle.name then
+                        local isClicked = false
+
+                        -- Use default AABB for simpler objects
+                        isClicked = obstacle.model:isPointInAABB({worldx, worldy, worldz})
+
+                        if isClicked then
+                            gameInventory:returnItem(obstacle.name)
+                            table.remove(currentObstacles, i)
+                            print("Returned obstacle: " .. obstacle.name .. " to inventory.")
+                            return
+                        end
+                    end
                 end
             end
         end
     end
+
+local function isInPlinkoScene()
+    for i = 1, #plinkoLevels do
+        if currentScene == plinkoLevels[i] then return true end
+    end
+    return false
+end
+
+local function pointIsBetweenBounds(pointX, pointY, boundPosX, boundPosY, boundWidth, boundHeight)
+    local pointWithinX = pointX < boundPosX + boundWidth and pointX > boundPosX
+    local pointWithinY = pointY < boundPosY + boundHeight and pointY > boundPosY
+    return pointWithinX and pointWithinY
 end
 
 local defaultScale = {1, 1, 1}
@@ -764,16 +928,20 @@ function love.mousereleased(x, y, button)
             if collisionShape == "box" and collisionParams and collisionParams.extents then
                 newObstacle.pickupExtents = collisionParams.extents
             end
+
+            local currentSceneObj = sceneObjects[currentScene]
+            if not currentSceneObj.playerObstacles then currentSceneObj.playerObstacles = {}
+            end
             table.insert(sceneObjects[currentScene], newObstacle)
             print("Placed obstacle: " .. currentPlacementItem.name)
             -- Reset placement state
             currentPlacementItem = nil
             gameInventory:stopDragging()
             
-        elseif currentScene == 2 or currentScene == 3 then
+        elseif isInPlinkoScene() then
             -- Check if ball cursor is within the orange clickPlane box
             local ballPos = {ballCursor.translation[1], ballCursor.translation[2], ballCursor.translation[3]}
-            if clickPlane and clickPlane.aabb and clickPlane:isPointInAABB(ballPos) then
+            if ballAmmo > 0 and clickPlane and clickPlane.aabb and clickPlane:isPointInAABB(ballPos) then
                 local physBall = rigidBody:newRigidBody(
                     "g3dAssets/sphere.obj",
                     "kenney_prototype_textures/light/texture_08.png", 
@@ -786,6 +954,24 @@ function love.mousereleased(x, y, button)
                     {lockedAxes={true, false, false}} -- Lock X axis
                 )
                 table.insert(simulatedObjects, physBall)
+                ballAmmo = ballAmmo - 1
+                print("Balls remaining: " .. ballAmmo)
+            end
+
+        else
+            if sceneObjects[currentScene].arrows then
+                for i = 1, #sceneObjects[currentScene].arrows do
+                    local arrow = sceneObjects[currentScene].arrows[i]
+                    if pointIsBetweenBounds(
+                        x, y,
+                        arrow.position.x,
+                        arrow.position.y,
+                        arrow.width,
+                        arrow.height
+                    ) then
+                        currentScene = arrow.targetScene
+                    end
+                end
             end
         end
     end
@@ -795,8 +981,8 @@ end
 local isPaused = false
 function love.keypressed(key)
     -- Transition from title screen to searching room on any key press
-    if currentScene == 1 then
-        currentScene = 4
+    if currentScene == titleScreen then
+        currentScene = searchRoom1
         return
     end
     
@@ -850,16 +1036,16 @@ function love.update(dt)
     -- g3d.camera.firstPersonMovement(dt)
     if love.keyboard.isDown("escape") then love.event.push("quit") end
 
-    if currentScene >= 4 then
+    if currentScene >= searchRoom1 then
         timer = timer - dt
         if timer <= 0 then
-            timer = 60
-            currentScene = 2  -- Go to plinko 1
+            currentScene = plinkoLevel1
+            timer = timerConstant
         end
     end
 
     -- check collisions between simulated balls and bounds
-    if currentScene == 2 or currentScene == 3 then
+    if isInPlinkoScene() then
         for i = 1, #simulatedObjects do 
             if sceneObjects[currentScene].bounds == nil then
                 break
@@ -909,11 +1095,30 @@ function love.update(dt)
     end
 end
 
-function love.draw() 
-    if (currentScene == 2 or currentScene == 3) and not currentPlacementItem then
-        ballCursor:draw()
+local function drawFromTable(objectTable)
+    if objectTable then
+        for i = 1, #objectTable do
+            objectTable[i]:draw()
+        end
+    end
+end
 
-    elseif currentScene >= 4 then
+function love.draw() 
+    if isInPlinkoScene() and not currentPlacementItem then
+        ballCursor:draw()
+        
+        -- Draw ball ammo indicators in top right corner
+        love.graphics.setColor(1, 1, 1, 1)
+        local ballSize = 20
+        local spacing = 10
+        local startX = love.graphics.getWidth() - 25
+        local startY = 20
+        
+        for i = 1, ballAmmo do
+            love.graphics.circle("fill", startX, startY + (i - 1) * (ballSize + spacing), ballSize / 2)
+        end
+
+    elseif currentScene >= searchRoom1 then
         if font then love.graphics.setFont(font) end
         love.graphics.print(languageJson[language].timer .. math.ceil(timer))
     end
@@ -923,24 +1128,23 @@ function love.draw()
     end
 
     -- Draw scene specific objects --
-        if sceneObjects[currentScene].nonSimulatedObjects then
-            for i = 1, #sceneObjects[currentScene].nonSimulatedObjects do
-                sceneObjects[currentScene].nonSimulatedObjects[i]:draw()
+        for propertyName, property in pairs(sceneObjects[currentScene]) do
+            if type(property) == "table" and propertyName ~= "arrows" then
+                drawFromTable(property)
             end
         end
-        if sceneObjects[currentScene].bounds then
-            for i = 1, #sceneObjects[currentScene].bounds do
-                sceneObjects[currentScene].bounds[i]:draw()
-            end
-        end
-        if sceneObjects[currentScene].winBoxes then
-            for i = 1, #sceneObjects[currentScene].winBoxes do
-                sceneObjects[currentScene].winBoxes[i]:draw()
-            end
-        end
-        if sceneObjects[currentScene].loseBoxes then
-            for i = 1, #sceneObjects[currentScene].loseBoxes do
-                sceneObjects[currentScene].loseBoxes[i]:draw()
+
+        if sceneObjects[currentScene].arrows then
+            for i = 1, #sceneObjects[currentScene].arrows do
+                local arrow = sceneObjects[currentScene].arrows[i]
+                love.graphics.draw(
+                    arrow.image,
+                    arrow.position.x,
+                    arrow.position.y,
+                    0,
+                    arrowScale,
+                    arrowScale
+                )
             end
         end
     ---------------------------------
@@ -960,7 +1164,7 @@ function love.draw()
     local textY = screenHeight - 40
 
     -- Display "Press any key to continue" on title screen
-    if currentScene == 1 then
+    if currentScene == titleScreen then
         if font then love.graphics.setFont(font) end
         local continueText = languageJson[language].continue
         local continueTextWidth = (font or instructionFont):getWidth(continueText)
@@ -969,7 +1173,7 @@ function love.draw()
     end
 
     -- Only show inventory instructions if not on title screen
-    if currentScene ~= 1 then
+    if currentScene ~= titleScreen then
         local openInvText = languageJson[language].openInv
         local openInvTextWidth = instructionFont:getWidth(openInvText)
 
