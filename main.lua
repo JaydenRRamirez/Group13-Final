@@ -747,7 +747,7 @@ function love.load()
     gameInventory.obstaclePrototypes = obstaclePrototypes
 
     local startingStar = rigidBody:newRigidBody(
-        ramp.modelPath,
+        star.modelPath,
         "kenney_prototype_textures/purple/texture_03.png", 
         {10, 0, 0},
         nil,
@@ -757,14 +757,18 @@ function love.load()
     )
 
 
-    startingStar.name = ramp.name 
+    startingStar.name = star.name
+
+    --print(ramp)
+    --gameInventory.addItem(obstaclePrototypes["Ramp"])
 
     createTitleScene()
     createPlinkoScene1()
     createPlinkoScene2()
     createScenes()
-
-    table.insert(sceneObjects[currentScene], startingStar)
+    --table.insert(sceneObjects[currentScene], ramp)
+    if not sceneObjects[currentScene].inventoryObjects then sceneObjects[currentScene].inventoryObjects = {} end
+    table.insert(sceneObjects[currentScene].inventoryObjects, startingStar)
     print("Test obstacle 'Star' placed in scene 1. Try clicking it!")
 end
 
@@ -1045,6 +1049,14 @@ function love.update(dt)
     end
 end
 
+local function drawFromTable(objectTable)
+    if objectTable then
+        for i = 1, #objectTable do
+            objectTable[i]:draw()
+        end
+    end
+end
+
 function love.draw() 
     if (currentScene == 2 or currentScene == 3) and not currentPlacementItem then
         ballCursor:draw()
@@ -1070,24 +1082,9 @@ function love.draw()
     end
 
     -- Draw scene specific objects --
-        if sceneObjects[currentScene].nonSimulatedObjects then
-            for i = 1, #sceneObjects[currentScene].nonSimulatedObjects do
-                sceneObjects[currentScene].nonSimulatedObjects[i]:draw()
-            end
-        end
-        if sceneObjects[currentScene].bounds then
-            for i = 1, #sceneObjects[currentScene].bounds do
-                sceneObjects[currentScene].bounds[i]:draw()
-            end
-        end
-        if sceneObjects[currentScene].winBoxes then
-            for i = 1, #sceneObjects[currentScene].winBoxes do
-                sceneObjects[currentScene].winBoxes[i]:draw()
-            end
-        end
-        if sceneObjects[currentScene].loseBoxes then
-            for i = 1, #sceneObjects[currentScene].loseBoxes do
-                sceneObjects[currentScene].loseBoxes[i]:draw()
+        for propertyName, property in pairs(sceneObjects[currentScene]) do
+            if type(property) == "table" and propertyName ~= "arrows" then
+                drawFromTable(property)
             end
         end
 
