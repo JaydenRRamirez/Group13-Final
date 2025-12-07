@@ -52,13 +52,6 @@ local ballAmmo = 5
 local timerConstant = 60
 local timer = timerConstant
 
--- contains all door objects
--- 2D, doors[2][2] gives second door in first room (corresponds to currentScene)
-local doors = {{}}
-
--- map from door objects (rigidbody) to currentScene number
-local doorMap = {}
-
 -- text
 local font
 local instructionFont
@@ -67,8 +60,6 @@ local language = "english"
 
 -- 2D, sceneObjects[1][2] gives second object in first scene
 local sceneObjects = {}
-
-local winBoxes = {}
 
 local function languageSetup()
     local jsonString = love.filesystem.read("languages.json")
@@ -602,6 +593,19 @@ local function parseScale(constants, object)
     return {scale.x, scale.y, scale.z}
 end
 
+local function parseObjects(jsonData, objects, newScene)
+    newScene.nonSimulatedObjects = {}
+    for objectName, object in pairs(objects) do
+        local model = jsonData.models[object.model]
+        local texture = jsonData.textures[object.texture]
+        local translation = parseTranslation(jsonData.constants, object)
+        local rotation = parseRotation(jsonData.constants, object)
+        local scale = parseScale(jsonData.constants, object)
+        local newObject = g3d.newModel(model, texture, translation, rotation, scale)
+        table.insert(newScene.nonSimulatedObjects, newObject)
+    end
+end
+
 local function parseArrows(arrows, newScene)
     newScene.arrows = {}
     for arrowName, arrow in pairs(arrows) do
@@ -624,23 +628,30 @@ local function parseArrows(arrows, newScene)
     end
 end
 
+local function parseObstacles(jsonData, playerObstacles, newScene)
+    newScene.playerObstacles = {}
+
+    for obstacleName, obstacle in pairs(playerObstacles) do
+        local model = gameInventory.obstaclePrototypes[obstacle.name].modelPath
+        local texture = jsonData.textures[obstacle.texture]
+        local translation = parseTranslation(jsonData.constants, obstacle)
+        local rotation = nil
+        local scale = parseScale(jsonData.constants, obstacle)
+        local newObstacle = g3d.newModel(model, texture, translation, rotation, scale)
+        newObstacle["name"] = obstacle.name
+        table.insert(newScene.playerObstacles, newObstacle)
+    end
+end
+
 local function createScenes()
     local jsonString = love.filesystem.read("scenes.json")
     local jsonData = json.decode(jsonString)
 
     for sceneIndex, scene in ipairs(jsonData.scenes) do
-        local newScene = { nonSimulatedObjects = {} }
-        for objectName, object in pairs(scene.objects) do
-            local model = jsonData.models[object.model]
-            local texture = jsonData.textures[object.texture]
-            local translation = parseTranslation(jsonData.constants, object)
-            local rotation = parseRotation(jsonData.constants, object)
-            local scale = parseScale(jsonData.constants, object)
-            local newObject = g3d.newModel(model, texture, translation, rotation, scale)
-            table.insert(newScene.nonSimulatedObjects, newObject)
-        end
-
+        local newScene = {}
+        parseObjects(jsonData, scene.objects, newScene)
         parseArrows(scene.arrows, newScene)
+        parseObstacles(jsonData, scene.playerObstacles, newScene)
 
         table.insert(sceneObjects, newScene)
     end
@@ -676,72 +687,10 @@ function love.load()
 
     gameInventory = Inventory:new()
 
-    -- Obstacle Items
-    local cone = Object:new({
-        name = "Cone",
-        type = "Obstacle",
-        modelPath = "custom_assets/Cone.obj",
-        iconPath = "custom_assets/cone-metal.png" 
-    })
-    
-    local halfPipe = Object:new({
-        name = "Half Pipe",
-        type = "Obstacle",
-        modelPath = "custom_assets/halfpipe.obj",
-        iconPath = "custom_assets/half-pipe.png"
-    })
-
-    local ramp = Object:new({
-        name = "Ramp",
-        type = "Obstacle",
-        modelPath = "custom_assets/ramp.obj",
-        iconPath = "custom_assets/ramp-steampunk.png"
-    })
-
-    local star = Object:new({
-        name = "Star",
-        type = "Obstacle",
-        modelPath = "custom_assets/star.obj",
-        iconPath = "custom_assets/star-steampunk.png"
-    })
-
-    -- Store the items for quick lookup for returns
-    obstaclePrototypes[cone.name] = cone
-    obstaclePrototypes[halfPipe.name] = halfPipe
-    obstaclePrototypes[ramp.name] = ramp
-    obstaclePrototypes[star.name] = star
-
-    gameInventory.obstaclePrototypes = obstaclePrototypes
-
-    local startingStar = rigidBody:newRigidBody(
-        star.modelPath,
-        "kenney_prototype_textures/purple/texture_03.png", 
-        {10, 0, 0},
-        nil,
-        {1, 1, 1},
-        "static", 
-        "verts"
-    )
-
-    startingStar.name = star.name
-
-    gameInventory:addItem(obstaclePrototypes["Cone"])
-    gameInventory:addItem(obstaclePrototypes["Ramp"])
-
-    --print(ramp)
-    --gameInventory.addItem(obstaclePrototypes["Ramp"])
+    gameInventory:addItem(gameInventory.obstaclePrototypes["Cone"])
+    gameInventory:addItem(gameInventory.obstaclePrototypes["Ramp"])
 
     loadScenes()
-    --table.insert(sceneObjects[currentScene], ramp)
-    --if not sceneObjects[currentScene].inventoryObjects then sceneObjects[currentScene].inventoryObjects = {} end
-    -- table.insert(sceneObjects[currentScene].inventoryObjects, startingStar)
-
-    -- Initialize a table for placed obstacles in the current scene
-    local currentSceneObj = sceneObjects[currentScene]
-    if not currentSceneObj.playerObstacles then currentSceneObj.playerObstacles = {} end
-    -- Insert the starting object into the table.
-    table.insert(currentSceneObj.playerObstacles, startingStar)
-    print("Test obstacle 'Star' placed in scene 1. Try clicking it!")
 end
 
 
@@ -824,20 +773,35 @@ function love.mousepressed(x, y, button, istouch, presses)
             --end
 
             -- Check the new list of player obstacles for clicks
+            local currentSceneObj = sceneObjects[currentScene]
             local currentObstacles = sceneObjects[currentScene].playerObstacles
+            local currentBounds = currentSceneObj.bounds
             if currentObstacles then
-                for i = #currentObstacles, 1, -1 do
+                for i = 1, #currentObstacles do
                     local obstacle = currentObstacles[i]
 
                     if obstacle.name then
                         local isClicked = false
 
                         -- Use default AABB for simpler objects
-                        isClicked = obstacle.model:isPointInAABB({worldx, worldy, worldz})
+                        if obstacle.model then
+                            isClicked = obstacle.model:isPointInAABB({worldx, worldy, worldz})
+                        else
+                            isClicked = obstacle:isPointInAABB({worldx, worldy, worldz})
+                        end
 
                         if isClicked then
                             gameInventory:returnItem(obstacle.name)
                             table.remove(currentObstacles, i)
+                            -- Remove scene's collision bounds
+                            if currentBounds then
+                                for j = #currentBounds, 1, -1 do
+                                    if currentBounds[j] == obstacle then
+                                        table.remove(currentBounds, j)
+                                        break
+                                    end
+                                end
+                            end
                             print("Returned obstacle: " .. obstacle.name .. " to inventory.")
                             return
                         end
