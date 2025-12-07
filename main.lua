@@ -772,8 +772,14 @@ function love.load()
     createPlinkoScene2()
     createScenes()
     --table.insert(sceneObjects[currentScene], ramp)
-    if not sceneObjects[currentScene].inventoryObjects then sceneObjects[currentScene].inventoryObjects = {} end
-    table.insert(sceneObjects[currentScene].inventoryObjects, startingStar)
+    --if not sceneObjects[currentScene].inventoryObjects then sceneObjects[currentScene].inventoryObjects = {} end
+    -- table.insert(sceneObjects[currentScene].inventoryObjects, startingStar)
+
+    -- Initialize a table for placed obstacles in the current scene
+    local currentSceneObj = sceneObjects[currentScene]
+    if not currentSceneObj.playerObstacles then currentSceneObj.playerObstacles = {} end
+    -- Insert the starting object into the table.
+    table.insert(currentSceneObj.playerObstacles, startingStar)
     print("Test obstacle 'Star' placed in scene 1. Try clicking it!")
 end
 
@@ -836,25 +842,46 @@ function love.mousepressed(x, y, button, istouch, presses)
 
         -- Check to return them to Inventory
         local worldx, worldy, worldz = getClickWorldPosition(x, y)
-        for i = #sceneObjects[currentScene], 1, -1 do
-            local obstacle = sceneObjects[currentScene][i]
+        --for i = #sceneObjects[currentScene], 1, -1 do
+          --  local obstacle = sceneObjects[currentScene][i]
                 
-            if obstacle.name then
-                local isClicked = false
+            --if obstacle.name then
+              --  local isClicked = false
                     
                 -- Use default AABB for simpler objects
-                isClicked = obstacle.model:isPointInAABB({worldx, worldy, worldz})
+                --isClicked = obstacle.model:isPointInAABB({worldx, worldy, worldz})
                     
-                if isClicked then
-                    gameInventory:returnItem(obstacle.name)
-                    table.remove(sceneObjects[currentScene], i)
-                    print("Returned obstacle: " .. obstacle.name .. " to inventory.")
-                    return
+                --if isClicked then
+                    --gameInventory:returnItem(obstacle.name)
+                    --table.remove(sceneObjects[currentScene], i)
+                    --print("Returned obstacle: " .. obstacle.name .. " to inventory.")
+                    --return
+                --end
+            --end
+
+            -- Check the new list of player obstacles for clicks
+            local currentObstacles = sceneObjects[currentScene].playerObstacles
+            if currentObstacles then
+                for i = #currentObstacles, 1, -1 do
+                    local obstacle = currentObstacles[i]
+
+                    if obstacle.name then
+                        local isClicked = false
+
+                        -- Use default AABB for simpler objects
+                        isClicked = obstacle.model:isPointInAABB({worldx, worldy, worldz})
+
+                        if isClicked then
+                            gameInventory:returnItem(obstacle.name)
+                            table.remove(currentObstacles, i)
+                            print("Returned obstacle: " .. obstacle.name .. " to inventory.")
+                            return
+                        end
+                    end
                 end
             end
         end
     end
-end
 
 local function isInPlinkoScene()
     for i = 1, #plinkoLevels do
@@ -897,6 +924,10 @@ function love.mousereleased(x, y, button)
             --Save custom extents to the object
             if collisionShape == "box" and collisionParams and collisionParams.extents then
                 newObstacle.pickupExtents = collisionParams.extents
+            end
+
+            local currentSceneObj = sceneObjects[currentScene]
+            if not currentSceneObj.playerObstacles then currentSceneObj.playerObstacles = {}
             end
             table.insert(sceneObjects[currentScene], newObstacle)
             print("Placed obstacle: " .. currentPlacementItem.name)
