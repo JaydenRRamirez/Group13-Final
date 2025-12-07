@@ -44,6 +44,11 @@
             "y": 1,
             "z": 1
         },
+        "obstacleScale": {
+            "x": 3,
+            "y": 3,
+            "z": 3
+        },
 
         "rotate90DegRight": {
             "x": "PI/2",
@@ -287,6 +292,18 @@
                     },
                     "targetScene": 5
                 }
+            },
+            "playerObstacles": {
+                "cone": {
+                    "name": "Cone",
+                    "texture": "lightMetal",
+                    "translation": {
+                        "x": "depthCenter",
+                        "y": 0,
+                        "z": "floorHeight"
+                    },
+                    "scale": "obstacleScale"
+                }
             }
         },
         {
@@ -367,6 +384,9 @@
                     },
                     "targetScene": 4
                 }
+            },
+            "playerObstacles": {
+
             }
         }
     ]

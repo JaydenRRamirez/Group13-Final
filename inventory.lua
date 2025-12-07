@@ -7,6 +7,43 @@ local uiWidth = 300
 local uiHeight = 200
 local slotsRow = 4
 
+-- -- Obstacle Items
+-- local obstaclePrototypes = {}
+
+-- local cone = Object:new({
+--     name = "Cone",
+--     type = "Obstacle",
+--     modelPath = "custom_assets/Cone.obj",
+--     iconPath = "custom_assets/cone-metal.png" 
+-- })
+
+-- local halfPipe = Object:new({
+--     name = "Half Pipe",
+--     type = "Obstacle",
+--     modelPath = "custom_assets/halfpipe.obj",
+--     iconPath = "custom_assets/half-pipe.png"
+-- })
+
+-- local ramp = Object:new({
+--     name = "Ramp",
+--     type = "Obstacle",
+--     modelPath = "custom_assets/ramp.obj",
+--     iconPath = "custom_assets/ramp-steampunk.png"
+-- })
+
+-- local star = Object:new({
+--     name = "Star",
+--     type = "Obstacle",
+--     modelPath = "custom_assets/star.obj",
+--     iconPath = "custom_assets/star-steampunk.png"
+-- })
+
+-- -- Store the items for quick lookup for returns
+-- obstaclePrototypes[cone.name] = cone
+-- obstaclePrototypes[halfPipe.name] = halfPipe
+-- obstaclePrototypes[ramp.name] = ramp
+-- obstaclePrototypes[star.name] = star
+
 function Inventory:new()
     local inv = {
         isVisible = false, 
@@ -15,7 +52,32 @@ function Inventory:new()
         isDragging = false,
         x = love.graphics.getWidth() / 2 - uiWidth / 2,
         y = 50,
-        obstaclePrototypes = {}
+        obstaclePrototypes = {
+            ["Cone"] = Object:new({
+                name = "Cone",
+                type = "Obstacle",
+                modelPath = "custom_assets/Cone.obj",
+                iconPath = "custom_assets/cone-metal.png" 
+            }),
+            ["Half Pipe"] = Object:new({
+                name = "Half Pipe",
+                type = "Obstacle",
+                modelPath = "custom_assets/halfpipe.obj",
+                iconPath = "custom_assets/half-pipe.png"
+            }),
+            ["Ramp"] = Object:new({
+                name = "Ramp",
+                type = "Obstacle",
+                modelPath = "custom_assets/ramp.obj",
+                iconPath = "custom_assets/ramp-steampunk.png"
+            }),
+            ["Star"] = Object:new({
+                name = "Star",
+                type = "Obstacle",
+                modelPath = "custom_assets/star.obj",
+                iconPath = "custom_assets/star-steampunk.png"
+            })
+        }
     }
     
     setmetatable(inv, self)
