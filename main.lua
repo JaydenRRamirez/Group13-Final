@@ -817,7 +817,9 @@ function love.mousepressed(x, y, button, istouch, presses)
             --end
 
             -- Check the new list of player obstacles for clicks
+            local currentSceneObj = sceneObjects[currentScene]
             local currentObstacles = sceneObjects[currentScene].playerObstacles
+            local currentBounds = currentSceneObj.bounds
             if currentObstacles then
                 for i = #currentObstacles, 1, -1 do
                     local obstacle = currentObstacles[i]
@@ -831,6 +833,15 @@ function love.mousepressed(x, y, button, istouch, presses)
                         if isClicked then
                             gameInventory:returnItem(obstacle.name)
                             table.remove(currentObstacles, i)
+                            -- Remove scene's collision bounds
+                            if currentBounds then
+                                for j = #currentBounds, 1, -1 do
+                                    if currentBounds[j] == obstacle then
+                                        table.remove(currentBounds, j)
+                                        break
+                                    end
+                                end
+                            end
                             print("Returned obstacle: " .. obstacle.name .. " to inventory.")
                             return
                         end
