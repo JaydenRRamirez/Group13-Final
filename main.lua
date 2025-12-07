@@ -10,12 +10,16 @@ local currentPlacementItem = nil
 local placementPosition = {10, 0, 4}
 local obstaclePrototypes = {}
 
+-- I have made a change
+
 -- Constants
 local gameCenter = {10,0,4}
 local lookDirection = "x"
 
 local wonGame = false
 local lostGame = false
+local playAgainButton = {x = 0, y = 0, width = 200, height = 60}
+local quitButton = {x = 0, y = 0, width = 200, height = 60}
 
 local leftArrowImage = love.graphics.newImage("custom_assets/arrowLeft.png")
 local rightArrowImage = love.graphics.newImage("custom_assets/arrowRight.png")
@@ -41,8 +45,12 @@ local searchRooms = {searchRoom1, searchRoom2}
 
 local currentScene = titleScreen
 
+-- Ball ammo counter
+local ballAmmo = 5
+
 -- seconds before transitioning to plinko level (counts down to zero)
-local timer = 60
+local timerConstant = 60
+local timer = timerConstant
 
 -- contains all door objects
 -- 2D, doors[2][2] gives second door in first room (corresponds to currentScene)
@@ -215,9 +223,36 @@ local function drawWinScreen()
     love.graphics.setColor(0, 255, 0, 0.7)
     love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
 
-    -- Placeholder for win screen drawing logic
+    -- Win text
     love.graphics.setColor(0, 0, 0, 1)
     love.graphics.print(languageJson[language].win, love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 10, nil, 4, 4)
+    
+    -- Play Again button
+    playAgainButton.x = love.graphics.getWidth() / 2 - playAgainButton.width / 2
+    playAgainButton.y = love.graphics.getHeight() / 2 + 100
+    
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.rectangle("fill", playAgainButton.x, playAgainButton.y, playAgainButton.width, playAgainButton.height)
+    
+    love.graphics.setColor(0, 0, 0, 1)
+    local buttonFont = love.graphics.newFont(24)
+    love.graphics.setFont(buttonFont)
+    local buttonText = "Play Again"
+    local textWidth = buttonFont:getWidth(buttonText)
+    love.graphics.print(buttonText, playAgainButton.x + playAgainButton.width / 2 - textWidth / 2, playAgainButton.y + 15)
+    
+    -- Quit Game button
+    quitButton.x = love.graphics.getWidth() / 2 - quitButton.width / 2
+    quitButton.y = playAgainButton.y + playAgainButton.height + 20
+    
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.rectangle("fill", quitButton.x, quitButton.y, quitButton.width, quitButton.height)
+    
+    love.graphics.setColor(0, 0, 0, 1)
+    love.graphics.setFont(buttonFont)
+    local quitText = "Quit Game"
+    local quitTextWidth = buttonFont:getWidth(quitText)
+    love.graphics.print(quitText, quitButton.x + quitButton.width / 2 - quitTextWidth / 2, quitButton.y + 15)
 end
 
 local function drawLoseScreen()
@@ -225,9 +260,36 @@ local function drawLoseScreen()
     love.graphics.setColor(255, 0, 0, 0.7)
     love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
 
-    -- Placeholder for lose screen drawing logic
+    -- Lose text
     love.graphics.setColor(255, 255, 255, 1)
     love.graphics.print(languageJson[language].lose, love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 10, nil, 4, 4)
+    
+    -- Play Again button
+    playAgainButton.x = love.graphics.getWidth() / 2 - playAgainButton.width / 2
+    playAgainButton.y = love.graphics.getHeight() / 2 + 100
+    
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.rectangle("fill", playAgainButton.x, playAgainButton.y, playAgainButton.width, playAgainButton.height)
+    
+    love.graphics.setColor(0, 0, 0, 1)
+    local buttonFont = love.graphics.newFont(24)
+    love.graphics.setFont(buttonFont)
+    local buttonText = "Play Again"
+    local textWidth = buttonFont:getWidth(buttonText)
+    love.graphics.print(buttonText, playAgainButton.x + playAgainButton.width / 2 - textWidth / 2, playAgainButton.y + 15)
+    
+    -- Quit Game button
+    quitButton.x = love.graphics.getWidth() / 2 - quitButton.width / 2
+    quitButton.y = playAgainButton.y + playAgainButton.height + 20
+    
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.rectangle("fill", quitButton.x, quitButton.y, quitButton.width, quitButton.height)
+    
+    love.graphics.setColor(0, 0, 0, 1)
+    love.graphics.setFont(buttonFont)
+    local quitText = "Quit Game"
+    local quitTextWidth = buttonFont:getWidth(quitText)
+    love.graphics.print(quitText, quitButton.x + quitButton.width / 2 - quitTextWidth / 2, quitButton.y + 15)
 end
 
 
@@ -726,6 +788,28 @@ end
 -- Clicking for when the inventory is up
 function love.mousepressed(x, y, button, istouch, presses)
     if button == 1 then
+        -- Check for play again button click on win/lose screen
+        if wonGame or lostGame then
+            if x >= playAgainButton.x and x <= playAgainButton.x + playAgainButton.width and
+               y >= playAgainButton.y and y <= playAgainButton.y + playAgainButton.height then
+                -- Reset game state
+                wonGame = false
+                lostGame = false
+                simulatedObjects = {}
+                ballAmmo = 5
+                currentScene = 1
+                timer = timerConstant
+                return
+            end
+            
+            -- Check for quit button click
+            if x >= quitButton.x and x <= quitButton.x + quitButton.width and
+               y >= quitButton.y and y <= quitButton.y + quitButton.height then
+                love.event.quit()
+                return
+            end
+        end
+        
         -- Transition from title screen on tap/click
         if currentScene == titleScreen then
             currentScene = searchRoom1
@@ -823,7 +907,7 @@ function love.mousereleased(x, y, button)
         elseif isInPlinkoScene() then
             -- Check if ball cursor is within the orange clickPlane box
             local ballPos = {ballCursor.translation[1], ballCursor.translation[2], ballCursor.translation[3]}
-            if clickPlane and clickPlane.aabb and clickPlane:isPointInAABB(ballPos) then
+            if ballAmmo > 0 and clickPlane and clickPlane.aabb and clickPlane:isPointInAABB(ballPos) then
                 local physBall = rigidBody:newRigidBody(
                     "g3dAssets/sphere.obj",
                     "kenney_prototype_textures/light/texture_08.png", 
@@ -836,6 +920,8 @@ function love.mousereleased(x, y, button)
                     {lockedAxes={true, false, false}} -- Lock X axis
                 )
                 table.insert(simulatedObjects, physBall)
+                ballAmmo = ballAmmo - 1
+                print("Balls remaining: " .. ballAmmo)
             end
 
         else
@@ -919,8 +1005,8 @@ function love.update(dt)
     if currentScene >= searchRoom1 then
         timer = timer - dt
         if timer <= 0 then
-            timer = 60
             currentScene = plinkoLevel1
+            timer = timerConstant
         end
     end
 
@@ -986,6 +1072,17 @@ end
 function love.draw() 
     if isInPlinkoScene() and not currentPlacementItem then
         ballCursor:draw()
+        
+        -- Draw ball ammo indicators in top right corner
+        love.graphics.setColor(1, 1, 1, 1)
+        local ballSize = 20
+        local spacing = 10
+        local startX = love.graphics.getWidth() - 25
+        local startY = 20
+        
+        for i = 1, ballAmmo do
+            love.graphics.circle("fill", startX, startY + (i - 1) * (ballSize + spacing), ballSize / 2)
+        end
 
     elseif currentScene >= searchRoom1 then
         if font then love.graphics.setFont(font) end
