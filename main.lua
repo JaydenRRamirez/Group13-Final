@@ -30,11 +30,16 @@ local clickPlane = g3d.newModel("g3dAssets/cube.obj", "kenney_prototype_textures
 -- keep track of all rigid bodies that need to have movement physics simulated
 local simulatedObjects = {}
 
--- 1 = title screen
--- 2 = plinko level 1
--- 3 = plinko level 2
--- rest = search rooms
-local currentScene = 4
+local titleScreen = 1
+local plinkoLevel1 = 2
+local plinkoLevel2 = 3
+local searchRoom1 = 4
+local searchRoom2 = 5
+
+local plinkoLevels = {plinkoLevel1, plinkoLevel2}
+local searchRooms = {searchRoom1, searchRoom2}
+
+local currentScene = titleScreen
 
 -- seconds before transitioning to plinko level (counts down to zero)
 local timer = 60
@@ -722,8 +727,8 @@ end
 function love.mousepressed(x, y, button, istouch, presses)
     if button == 1 then
         -- Transition from title screen on tap/click
-        if currentScene == 1 then
-            currentScene = 4
+        if currentScene == titleScreen then
+            currentScene = searchRoom1
             return
         end
         
@@ -767,6 +772,13 @@ function love.mousepressed(x, y, button, istouch, presses)
     end
 end
 
+local function isInPlinkoScene()
+    for i = 1, #plinkoLevels do
+        if currentScene == plinkoLevels[i] then return true end
+    end
+    return false
+end
+
 local function pointIsBetweenBounds(pointX, pointY, boundPosX, boundPosY, boundWidth, boundHeight)
     local pointWithinX = pointX < boundPosX + boundWidth and pointX > boundPosX
     local pointWithinY = pointY < boundPosY + boundHeight and pointY > boundPosY
@@ -808,7 +820,7 @@ function love.mousereleased(x, y, button)
             currentPlacementItem = nil
             gameInventory:stopDragging()
             
-        elseif currentScene == 2 or currentScene == 3 then
+        elseif isInPlinkoScene() then
             -- Check if ball cursor is within the orange clickPlane box
             local ballPos = {ballCursor.translation[1], ballCursor.translation[2], ballCursor.translation[3]}
             if clickPlane and clickPlane.aabb and clickPlane:isPointInAABB(ballPos) then
@@ -849,8 +861,8 @@ end
 local isPaused = false
 function love.keypressed(key)
     -- Transition from title screen to searching room on any key press
-    if currentScene == 1 then
-        currentScene = 4
+    if currentScene == titleScreen then
+        currentScene = searchRoom1
         return
     end
     
@@ -904,16 +916,16 @@ function love.update(dt)
     -- g3d.camera.firstPersonMovement(dt)
     if love.keyboard.isDown("escape") then love.event.push("quit") end
 
-    if currentScene >= 4 then
+    if currentScene >= searchRoom1 then
         timer = timer - dt
         if timer <= 0 then
             timer = 60
-            currentScene = 2  -- Go to plinko 1
+            currentScene = plinkoLevel1
         end
     end
 
     -- check collisions between simulated balls and bounds
-    if currentScene == 2 or currentScene == 3 then
+    if isInPlinkoScene() then
         for i = 1, #simulatedObjects do 
             if sceneObjects[currentScene].bounds == nil then
                 break
@@ -972,10 +984,10 @@ local function drawFromTable(objectTable)
 end
 
 function love.draw() 
-    if (currentScene == 2 or currentScene == 3) and not currentPlacementItem then
+    if isInPlinkoScene() and not currentPlacementItem then
         ballCursor:draw()
 
-    elseif currentScene >= 4 then
+    elseif currentScene >= searchRoom1 then
         if font then love.graphics.setFont(font) end
         love.graphics.print(languageJson[language].timer .. math.ceil(timer))
     end
@@ -1021,7 +1033,7 @@ function love.draw()
     local textY = screenHeight - 40
 
     -- Display "Press any key to continue" on title screen
-    if currentScene == 1 then
+    if currentScene == titleScreen then
         if font then love.graphics.setFont(font) end
         local continueText = languageJson[language].continue
         local continueTextWidth = (font or instructionFont):getWidth(continueText)
@@ -1030,7 +1042,7 @@ function love.draw()
     end
 
     -- Only show inventory instructions if not on title screen
-    if currentScene ~= 1 then
+    if currentScene ~= titleScreen then
         local openInvText = languageJson[language].openInv
         local openInvTextWidth = instructionFont:getWidth(openInvText)
 
