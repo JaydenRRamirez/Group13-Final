@@ -6,12 +6,14 @@
         "tallPipe": "steampunkAssets/tallPipe.obj",
         "medPipe": "steampunkAssets/medPipe.obj",
         "smallPipe": "steampunkAssets/smallPipe.obj",
-        "horizontalPipe": "steampunkAssets/horizontalPipe.obj"
+        "horizontalPipe": "steampunkAssets/horizontalPipe.obj",
+        "gear": "steampunkAssets/gear.obj"
     },
     "textures": {
         "darkMetal": "steampunkAssets/textures/Metal/metal_basecolor.png",
         "lightMetal": "steampunkAssets/textures/white metal/white_meetal_basecolor.png",
-        "wood": "steampunkAssets/textures/wood/Substance_graph_diffuse.png"
+        "wood": "steampunkAssets/textures/wood/Substance_graph_diffuse.png",
+        "copper": "steampunkAssets/copper.jpg"
     },
     "constants": {
         "horizontalDistance": 10,
@@ -36,6 +38,11 @@
             "y": 0.12,
             "z": 0.12
         },
+        "gearScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+        },
 
         "rotate90DegRight": {
             "x": "PI/2",
@@ -59,6 +66,11 @@
         },
         "rotatePipeBackWall": {
             "x": "PI/2",
+            "y": 0,
+            "z": "PI/2"
+        },
+        "rotateGear": {
+            "x": 0,
             "y": 0,
             "z": "PI/2"
         }
@@ -278,7 +290,72 @@
         },
         {
             "objects": {
-
+                "floor": {
+                    "model": "plane",
+                    "texture": "darkMetal",
+                    "translation": {
+                        "x": "depthCenter",
+                        "y": 0,
+                        "z": "floorHeight"
+                    },
+                    "rotation": null,
+                    "scale": "planeScale"
+                },
+                "ceiling": {
+                    "model": "plane",
+                    "texture": "darkMetal",
+                    "translation": {
+                        "x": "depthCenter",
+                        "y": 0,
+                        "z": "ceilingHeight"
+                    },
+                    "rotation": null,
+                    "scale": "planeScale"
+                },
+                "leftWall": {
+                    "model": "plane",
+                    "texture": "lightMetal",
+                    "translation": {
+                        "x": "depthCenter",
+                        "y": "-horizontalDistance",
+                        "z": 0
+                    },
+                    "rotation": "rotate90DegRight",
+                    "scale": "planeScale"
+                },
+                "rightWall": {
+                    "model": "plane",
+                    "texture": "lightMetal",
+                    "translation": {
+                        "x": "depthCenter",
+                        "y": "horizontalDistance",
+                        "z": 0
+                    },
+                    "rotation": "rotate90DegRight",
+                    "scale": "planeScale"
+                },
+                "backWall": {
+                    "model": "plane",
+                    "texture": "wood",
+                    "translation": {
+                        "x": "depthBack",
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": "rotate90DegForward",
+                    "scale": "planeScale"
+                },
+                "gear1": {
+                    "model": "gear",
+                    "texture": "darkMetal",
+                    "translation": {
+                        "x": "depthBack",
+                        "y": "-horizontalDistance+2",
+                        "z": "ceilingHeight-3"
+                    },
+                    "rotation": "rotateGear",
+                    "scale": "gearScale"
+                }
             },
             "arrows": {
                 "leftArrow": {
