@@ -802,6 +802,13 @@ function love.keypressed(key)
     if key == "p" then
         isPaused = not isPaused
     end
+
+    -- DElETE THIS ONCE GAME IS DONE ------------------ for testing, changes scene on number keys
+    local sceneNumber = tonumber(key)
+    if sceneNumber and sceneNumber >= 1 and sceneNumber <= #sceneObjects then
+        currentScene = sceneNumber
+        print("Switched to scene " .. sceneNumber)
+    end
 end
 
 function love.mousemoved(x,y, dx,dy)
