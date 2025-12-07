@@ -701,6 +701,12 @@ end
 ---
 -------------------------------------------------------------------------------------------------
 
+local function isInPlinkoScene()
+    for i = 1, #plinkoLevels do
+        if currentScene == plinkoLevels[i] then return true end
+    end
+    return false
+end
 
 -- Clicking for when the inventory is up
 function love.mousepressed(x, y, button, istouch, presses)
@@ -739,9 +745,14 @@ function love.mousepressed(x, y, button, istouch, presses)
         local clickedItem = gameInventory:checkClick(x, y)
 
         if clickedItem and type(clickedItem) == "table" then
-            currentPlacementItem = clickedItem
-            gameInventory:toggle() 
-            return
+            if isInPlinkoScene() then
+                currentPlacementItem = clickedItem
+                gameInventory:toggle()
+                return
+            else
+                gameInventory:returnItem(clickedItem.name)
+                return
+            end
         end
 
         if currentPlacementItem then
@@ -811,13 +822,6 @@ function love.mousepressed(x, y, button, istouch, presses)
             end
         end
     end
-
-local function isInPlinkoScene()
-    for i = 1, #plinkoLevels do
-        if currentScene == plinkoLevels[i] then return true end
-    end
-    return false
-end
 
 local function pointIsBetweenBounds(pointX, pointY, boundPosX, boundPosY, boundWidth, boundHeight)
     local pointWithinX = pointX < boundPosX + boundWidth and pointX > boundPosX
@@ -959,7 +963,9 @@ function love.mousemoved(x,y, dx,dy)
         ghostModel:setTranslation(mWorldPosX, mWorldPosY, mWorldPosZ)
     else
         ghostModel = nil
-        ballCursor:setTranslation(mWorldPosX, mWorldPosY, mWorldPosZ)
+        if isInPlinkoScene() then
+            ballCursor:setTranslation(mWorldPosX, mWorldPosY, mWorldPosZ)
+        end
     end
 end
 
