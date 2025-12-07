@@ -398,31 +398,36 @@ local function createPlinkoScene1()
     local plinkoScene = { 
         nonSimulatedObjects = {
             -- Background
-            g3d.newModel("g3dAssets/sphere.obj", "g3dAssets/starfield.png", {0,0,0}, nil, {500,500,500}),
+            g3d.newModel("g3dAssets/sphere.obj", "steampunkAssets/textures/wood/Substance_graph_diffuse.png", {0,0,0}, nil, {500,500,500}),
 
             clickPlane,
         },
         bounds = {
             -- Left Wall
-            rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,10,4}, nil, {1,0.5,10.5}, "static", "verts"),
+            rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,10,0}, nil, {1,0.5,14}, "static", "verts"),
 
             -- Right Wall
-            rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-10,4}, nil, {1,0.5,10.5}, "static", "verts"),
-            
-            -- Floor
-            rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,0,-7}, nil, {1,10.5,0.5}, "static", "verts"),
+            rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-10,0}, nil, {1,0.5,14}, "static", "verts"),
 
             -- Ramps
-            rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/purple/texture_03.png", {10,-3,-2}, nil, {0.1,1,-1}, "static", "verts"),
-            rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/purple/texture_03.png", {10,3,-2}, nil, {0.1,-1,-1}, "static", "verts"),
-            rigidBody:newRigidBody("custom_assets/star.obj", "kenney_prototype_textures/purple/texture_03.png", {10,0,-2}, nil, {1,1,1}, "static", "verts")
+            rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-4.5,-4}, nil, {0.1,2,-1}, "static", "verts"),
+            rigidBody:newRigidBody("custom_assets/ramp.obj", "kenney_prototype_textures/dark/texture_03.png", {10,4.5,-4}, nil, {0.1,-2,-1}, "static", "verts"),
+
+            -- Upper Slopes
+            rigidBody:newRigidBody("custom_assets/Rhombus.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-1.5,0}, nil, {0.5,-1,0.5}, "static", "verts"),
+            rigidBody:newRigidBody("custom_assets/Rhombus.obj", "kenney_prototype_textures/dark/texture_03.png", {10,1.5,0}, nil, {0.5,1,0.5}, "static", "verts"),
+
+            -- Side winbox defenders
+            rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,8,0}, nil, {0.5,2.5,0.5}, "static", "verts"),
+            rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/dark/texture_03.png", {10,-8,0}, nil, {0.5,2.5,0.5}, "static", "verts"),
         },
         winBoxes = {
-            rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/green/texture_08.png", {10,7,0}, nil, {0.5,0.5,0.5}, "static", "verts"),
-            rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/green/texture_08.png", {10,-7,0}, nil, {0.5,0.5,0.5}, "static", "verts"),
+            rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/green/texture_08.png", {10,8,-3.7}, nil, {0.5,1.5,0.5}, "static", "verts"),
+            rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/green/texture_08.png", {10,-8,-3.7}, nil, {0.5,1.5,0.5}, "static", "verts"),
         },
         loseBoxes = {
-            rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/red/texture_08.png", {10,0,-5}, nil, {0.5,0.5,0.5}, "static", "verts"),
+            rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/red/texture_08.png", {10,0,-6}, nil, {0.5,2,0.5}, "static", "verts"),
+            rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/red/texture_08.png", {10,0,0.5}, nil, {0.5,0.45,0.5}, "static", "verts"),
         },
     }
     createPlinkoArrangement(plinkoScene.bounds, 10, -9, 3, 4, 15, 1.25, 1.25)
@@ -441,21 +446,13 @@ local function createPlinkoScene2()
 
     local plinkoScene = {
         nonSimulatedObjects = {
+            -- Background
+            g3d.newModel("g3dAssets/sphere.obj", "steampunkAssets/textures/wood/Substance_graph_diffuse.png", {0,0,0}, nil, {500,500,500}),
+
             clickPlane,
         },
         bounds = {
-            -- Rhombus 1 (Top-most)
-            -- rigidBody:newRigidBody(
-            --     rhombusModel, 
-            --     rhombusTexture, 
-            --     {10.0, 5.0, 5.0}, 
-            --     nil,
-            --     negativeRhombusScale, 
-            --     "static", 
-            --     "verts"
-            -- ),
-            
-            -- Rhombus 2 (Middle)
+            -- Rhombus 1 (Middle)
             rigidBody:newRigidBody(
                 rhombusModel, 
                 rhombusTexture, 
@@ -466,7 +463,7 @@ local function createPlinkoScene2()
                 "verts"
             ),
 
-            -- Rhombus 3 (Bottom-most of the top three)
+            -- Rhombus 2 (Bottom-most of the top three)
             rigidBody:newRigidBody(
                 rhombusModel, 
                 rhombusTexture, 
@@ -483,7 +480,7 @@ local function createPlinkoScene2()
                 {10, 5, -6.5}, 
                 nil, 
                 smallRhombusScale, 
-                "static", 
+                "static",
                 "verts"
             ),
 
@@ -516,7 +513,13 @@ local function createPlinkoScene2()
                 "static", 
                 "verts"
             ),
-        }
+        },
+        winBoxes = {
+            rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/green/texture_08.png", {10,7.5,-8}, nil, {0.5,2,0.5}, "static", "verts"),
+        },
+        loseBoxes = {
+            rigidBody:newRigidBody("g3dAssets/cube.obj", "kenney_prototype_textures/red/texture_08.png", {10,-1,-8}, nil, {0.5,6.45,0.5}, "static", "verts"),
+        },
     }
 
     createPlinkoArrangement(plinkoScene.bounds, 10, -11, 5, 2, 18, 1.25, 1.25)
