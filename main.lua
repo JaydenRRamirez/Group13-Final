@@ -719,6 +719,7 @@ function love.load()
     startingStar.name = star.name
 
     gameInventory:addItem(obstaclePrototypes["Cone"])
+    gameInventory:addItem(obstaclePrototypes["Ramp"])
 
     --print(ramp)
     --gameInventory.addItem(obstaclePrototypes["Ramp"])
@@ -886,6 +887,12 @@ function love.mousereleased(x, y, button)
             if not currentSceneObj.playerObstacles then currentSceneObj.playerObstacles = {}
             end
             table.insert(currentSceneObj.playerObstacles, newObstacle)
+            -- Add to the scene's collision bounds
+            if currentSceneObj.bounds then
+                table.insert(currentSceneObj.bounds, newObstacle)
+            else
+                currentSceneObj.bounds = {newObstacle}
+            end
             print("Placed obstacle: " .. currentPlacementItem.name)
             -- Reset placement state
             currentPlacementItem = nil
