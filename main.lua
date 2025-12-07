@@ -233,7 +233,7 @@ local function createPlinkoArrangement(plinkoScene, startX, startY, startZ, rows
             local offsetY = (row % 2) * (spacingHorz / 2)
             local posY = startY + col * spacingHorz + offsetY
             local posZ = startZ + row * spacingVert
-            table.insert(plinkoScene, rigidBody:newRigidBody("g3dAssets/sphere.obj", "kenney_prototype_textures/purple/texture_08.png", 
+            table.insert(plinkoScene, rigidBody:newRigidBody("g3dAssets/sphere.obj", "kenney_prototype_textures/dark/texture_03.png", 
                 {startX, -posY, posZ}, 
                 nil, 
                 {0.2,0.2,0.2}, 
@@ -358,12 +358,12 @@ local function createPlinkoScene1()
 end
 
 local function createPlinkoScene2()
-    local texture = "kenney_prototype_textures/dark/texture_03.png"
+        local texture = "kenney_prototype_textures/dark/texture_03.png"
     local rhombusTexture = "kenney_prototype_textures/dark/texture_01.png"
 
     local rhombusModel = "custom_assets/Rhombus.obj"
-    local defaultRhombusScale = {0.1, 4, 0.5}
-    local negativeRhombusScale = {0.1, -4, 0.5}
+    local defaultRhombusScale = {0.1, 6, 0.5}
+    local negativeRhombusScale = {0.1, -6, 0.5}
     local smallRhombusScale = {0.1, 1, 0.2}
 
     local plinkoScene = {
@@ -372,21 +372,21 @@ local function createPlinkoScene2()
         },
         bounds = {
             -- Rhombus 1 (Top-most)
-            rigidBody:newRigidBody(
-                rhombusModel, 
-                rhombusTexture, 
-                {10.0, 4.0, 5.0}, 
-                nil,
-                negativeRhombusScale, 
-                "static", 
-                "verts"
-            ),
+            -- rigidBody:newRigidBody(
+            --     rhombusModel, 
+            --     rhombusTexture, 
+            --     {10.0, 5.0, 5.0}, 
+            --     nil,
+            --     negativeRhombusScale, 
+            --     "static", 
+            --     "verts"
+            -- ),
             
             -- Rhombus 2 (Middle)
             rigidBody:newRigidBody(
                 rhombusModel, 
                 rhombusTexture, 
-                {10.0, -2.0, 1.5}, 
+                {10.0, -4.0, 1.5}, 
                 nil, 
                 defaultRhombusScale, 
                 "static", 
@@ -397,7 +397,7 @@ local function createPlinkoScene2()
             rigidBody:newRigidBody(
                 rhombusModel, 
                 rhombusTexture, 
-                {10, 3, -1.5}, 
+                {10, 4, -1.5}, 
                 nil, 
                 negativeRhombusScale, 
                 "static", 
@@ -407,7 +407,7 @@ local function createPlinkoScene2()
             rigidBody:newRigidBody(
                 rhombusModel, 
                 rhombusTexture, 
-                {10, 6, -6.5}, 
+                {10, 5, -6.5}, 
                 nil, 
                 smallRhombusScale, 
                 "static", 
@@ -417,7 +417,7 @@ local function createPlinkoScene2()
             rigidBody:newRigidBody(
                 rhombusModel, 
                 rhombusTexture, 
-                {10, 3, -6}, 
+                {10, 2, -6}, 
                 nil, 
                 smallRhombusScale, 
                 "static", 
@@ -427,7 +427,7 @@ local function createPlinkoScene2()
             rigidBody:newRigidBody(
                 rhombusModel, 
                 rhombusTexture, 
-                {10, 0, -5.5}, 
+                {10, -1, -5.5}, 
                 nil, 
                 smallRhombusScale, 
                 "static", 
@@ -437,7 +437,7 @@ local function createPlinkoScene2()
             rigidBody:newRigidBody(
                 rhombusModel, 
                 rhombusTexture, 
-                {10, -3, -5}, 
+                {10, -4, -5}, 
                 nil, 
                 smallRhombusScale, 
                 "static", 
@@ -445,6 +445,8 @@ local function createPlinkoScene2()
             ),
         }
     }
+
+    createPlinkoArrangement(plinkoScene.bounds, 10, -11, 5, 2, 18, 1.25, 1.25)
 
     table.insert(sceneObjects, plinkoScene)
 end
