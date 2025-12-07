@@ -364,15 +364,13 @@ local function createPlinkoScene2()
     local rhombusModel = "custom_assets/Rhombus.obj"
     local defaultRhombusScale = {0.1, 4, 0.5}
     local negativeRhombusScale = {0.1, -4, 0.5}
+    local smallRhombusScale = {0.1, 1, 0.2}
 
     local plinkoScene = {
         nonSimulatedObjects = {
             clickPlane,
         },
         bounds = {
-            -- Floor
-            rigidBody:newRigidBody("g3dAssets/cube.obj", texture, {10,0,-7}, nil, {1,10.5,0.5}, "static", "verts"),
-
             -- Rhombus 1 (Top-most)
             rigidBody:newRigidBody(
                 rhombusModel, 
@@ -402,6 +400,46 @@ local function createPlinkoScene2()
                 {10, 3, -1.5}, 
                 nil, 
                 negativeRhombusScale, 
+                "static", 
+                "verts"
+            ),
+
+            rigidBody:newRigidBody(
+                rhombusModel, 
+                rhombusTexture, 
+                {10, 6, -6.5}, 
+                nil, 
+                smallRhombusScale, 
+                "static", 
+                "verts"
+            ),
+
+            rigidBody:newRigidBody(
+                rhombusModel, 
+                rhombusTexture, 
+                {10, 3, -6}, 
+                nil, 
+                smallRhombusScale, 
+                "static", 
+                "verts"
+            ),
+
+            rigidBody:newRigidBody(
+                rhombusModel, 
+                rhombusTexture, 
+                {10, 0, -5.5}, 
+                nil, 
+                smallRhombusScale, 
+                "static", 
+                "verts"
+            ),
+
+            rigidBody:newRigidBody(
+                rhombusModel, 
+                rhombusTexture, 
+                {10, -3, -5}, 
+                nil, 
+                smallRhombusScale, 
                 "static", 
                 "verts"
             ),
