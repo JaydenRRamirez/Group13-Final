@@ -1048,6 +1048,17 @@ end
 function love.draw() 
     if (currentScene == 2 or currentScene == 3) and not currentPlacementItem then
         ballCursor:draw()
+        
+        -- Draw ball ammo indicators in top right corner
+        love.graphics.setColor(1, 1, 1, 1)
+        local ballSize = 20
+        local spacing = 10
+        local startX = love.graphics.getWidth() - 25
+        local startY = 20
+        
+        for i = 1, ballAmmo do
+            love.graphics.circle("fill", startX, startY + (i - 1) * (ballSize + spacing), ballSize / 2)
+        end
 
     elseif currentScene >= 4 then
         if font then love.graphics.setFont(font) end
