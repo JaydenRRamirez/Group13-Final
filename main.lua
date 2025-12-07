@@ -10,6 +10,8 @@ local currentPlacementItem = nil
 local placementPosition = {10, 0, 4}
 local obstaclePrototypes = {}
 
+-- I have made a change
+
 -- Constants
 local gameCenter = {10,0,4}
 local lookDirection = "x"
@@ -39,7 +41,8 @@ local simulatedObjects = {}
 local currentScene = 4
 
 -- seconds before transitioning to plinko level (counts down to zero)
-local timer = 60
+local timerConstant = 60
+local timer = timerConstant
 
 -- contains all door objects
 -- 2D, doors[2][2] gives second door in first room (corresponds to currentScene)
@@ -782,7 +785,7 @@ function love.mousepressed(x, y, button, istouch, presses)
                 lostGame = false
                 simulatedObjects = {}
                 currentScene = 1
-                timer = 5
+                timer = timerConstant
                 return
             end
             
@@ -980,7 +983,7 @@ function love.update(dt)
     if currentScene >= 4 then
         timer = timer - dt
         if timer <= 0 then
-            timer = 60
+            timer = timerConstant
             currentScene = 2  -- Go to plinko 1
         end
     end
