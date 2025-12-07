@@ -716,8 +716,9 @@ function love.load()
         "verts"
     )
 
-
     startingStar.name = star.name
+
+    gameInventory:addItem(obstaclePrototypes["Cone"])
 
     --print(ramp)
     --gameInventory.addItem(obstaclePrototypes["Ramp"])

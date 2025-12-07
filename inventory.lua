@@ -25,20 +25,36 @@ end
 
 --- Item Management
 
-function Inventory:addItem(item)
-    if item and item.type == "Obstacle" then
-        local itemName = item.name
+--function Inventory:addItem(item)
+  --  if item and item.type == "Obstacle" then
+    --    local itemName = item.name
         
-        if self.items[itemName] then
-            self.items[itemName].count = self.items[itemName].count + 1
-        else
-            self.items[itemName] = {
-                prototype = item,
-                count = 1
-            }
-        end
-        print("Added" .. itemName .. " to inventory. count: " .. self.items[itemName].count)
+      --  if self.items[itemName] then
+        --    self.items[itemName].count = self.items[itemName].count + 1
+        --else
+          --  self.items[itemName] = {
+            --    prototype = item,
+              --  count = 1
+            --}
+        --end
+        --print("Added" .. itemName .. " to inventory. count: " .. self.items[itemName].count)
+    --end
+--end
+
+-- Adding through a prototype if it doesn't exist, or increment
+function Inventory:addItem(item)
+    local itemName = item.name
+
+    if self.items[itemName] then
+        self.items[itemName].count = self.items[itemName].count + 1
+    else
+        self.items[itemName] = {
+            prototype = item,
+            count = 1
+        }
+        self.obstaclePrototypes[itemName] = item
     end
+    print("Added " .. itemName .. " to inventory. Count: " .. self.items[itemName].count)
 end
 
 function Inventory:getDisplayedStacks()
