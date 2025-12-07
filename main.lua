@@ -9,6 +9,7 @@ local gameInventory
 local currentPlacementItem = nil
 local placementPosition = {10, 0, 4}
 local obstaclePrototypes = {}
+local ghostModel = nil
 
 -- I have made a change
 
@@ -868,6 +869,7 @@ function love.mousereleased(x, y, button)
             -- Reset placement state
             currentPlacementItem = nil
             gameInventory:stopDragging()
+            ghostModel = nil
             
         elseif isInPlinkoScene() then
             -- Check if ball cursor is within the orange clickPlane box
@@ -940,7 +942,23 @@ function love.mousemoved(x,y, dx,dy)
 
     if currentPlacementItem then -- Check if an item is being dragged
         placementPosition = {mWorldPosX, mWorldPosY, mWorldPosZ}
+        -- Create or update the ghost model
+        if not ghostModel or ghostModel.modelPath ~= currentPlacementItem.modelPath then
+            local tempTexturePath = "kenney_prototype_textures/green/texture_08.png"
+            local scale = {1, 1, 1}
+
+            ghostModel = g3d.newModel(
+                currentPlacementItem.modelPath,
+                tempTexturePath,
+                placementPosition,
+                nil,
+                scale
+            )
+            ghostModel.modelPath = currentPlacementItem.modelPath
+        end
+        ghostModel:setTranslation(mWorldPosX, mWorldPosY, mWorldPosZ)
     else
+        ghostModel = nil
         ballCursor:setTranslation(mWorldPosX, mWorldPosY, mWorldPosZ)
     end
 end
@@ -1079,6 +1097,10 @@ function love.draw()
             end
         end
     ---------------------------------
+    -- Draw the ghost model
+    if ghostModel then
+        ghostModel:draw()
+    end
 
     if wonGame then
         drawWinScreen()
