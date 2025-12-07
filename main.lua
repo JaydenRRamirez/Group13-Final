@@ -17,6 +17,12 @@ local lookDirection = "x"
 local wonGame = false
 local lostGame = false
 
+local leftArrowImage = love.graphics.newImage("custom_assets/arrowLeft.png")
+local rightArrowImage = love.graphics.newImage("custom_assets/arrowRight.png")
+local upArrowImage = love.graphics.newImage("custom_assets/arrowUp.png")
+local downArrowImage = love.graphics.newImage("custom_assets/arrowDown.png")
+local arrowScale = 0.05
+
 -- Objects
 local ballCursor = g3d.newModel("g3dAssets/sphere.obj", "kenney_prototype_textures/red/texture_08.png", {10,0,4}, nil, {0.25,0.25,0.25})
 local clickPlane = g3d.newModel("g3dAssets/cube.obj", "kenney_prototype_textures/orange/texture_03.png", {10,0,9}, nil, {0.1,10,1})
@@ -28,10 +34,10 @@ local simulatedObjects = {}
 -- 2 = plinko level 1
 -- 3 = plinko level 2
 -- rest = search rooms
-local currentScene = 3
+local currentScene = 4
 
 -- seconds before transitioning to plinko level (counts down to zero)
-local timer = 5
+local timer = 60
 
 -- contains all door objects
 -- 2D, doors[2][2] gives second door in first room (corresponds to currentScene)
@@ -534,13 +540,35 @@ local function parseScale(constants, object)
     return {scale.x, scale.y, scale.z}
 end
 
+local function parseArrows(arrows, newScene)
+    newScene.arrows = {}
+    for arrowName, arrow in pairs(arrows) do
+        local newArrow = {}
+
+        if arrow.direction == "left" then newArrow.image = leftArrowImage
+        elseif arrow.direction == "up" then newArrow.image = upArrowImage
+        elseif arrow.direction == "right" then newArrow.image = rightArrowImage
+        else newArrow.image = downArrowImage end
+
+        newArrow.width, newArrow.height = newArrow.image:getPixelDimensions()
+        newArrow.width = newArrow.width * arrowScale
+        newArrow.height = newArrow.height * arrowScale
+
+        newArrow.position = arrow.position
+        newArrow.scale = arrowScale
+        newArrow.targetScene = arrow.targetScene
+
+        table.insert(newScene.arrows, newArrow)
+    end
+end
+
 local function createScenes()
     local jsonString = love.filesystem.read("scenes.json")
     local jsonData = json.decode(jsonString)
 
     for sceneIndex, scene in ipairs(jsonData.scenes) do
         local newScene = { nonSimulatedObjects = {} }
-        for objectName, object in pairs(scene) do
+        for objectName, object in pairs(scene.objects) do
             local model = jsonData.models[object.model]
             local texture = jsonData.textures[object.texture]
             local translation = parseTranslation(jsonData.constants, object)
@@ -549,6 +577,9 @@ local function createScenes()
             local newObject = g3d.newModel(model, texture, translation, rotation, scale)
             table.insert(newScene.nonSimulatedObjects, newObject)
         end
+
+        parseArrows(scene.arrows, newScene)
+
         table.insert(sceneObjects, newScene)
     end
 end
@@ -692,6 +723,12 @@ function love.mousepressed(x, y, button, istouch, presses)
     end
 end
 
+local function pointIsBetweenBounds(pointX, pointY, boundPosX, boundPosY, boundWidth, boundHeight)
+    local pointWithinX = pointX < boundPosX + boundWidth and pointX > boundPosX
+    local pointWithinY = pointY < boundPosY + boundHeight and pointY > boundPosY
+    return pointWithinX and pointWithinY
+end
+
 local defaultScale = {1, 1, 1}
 local defaultTexture = "kenney_prototype_textures/purple/texture_03.png"
 function love.mousereleased(x, y, button)
@@ -743,6 +780,22 @@ function love.mousereleased(x, y, button)
                     {lockedAxes={true, false, false}} -- Lock X axis
                 )
                 table.insert(simulatedObjects, physBall)
+            end
+
+        else
+            if sceneObjects[currentScene].arrows then
+                for i = 1, #sceneObjects[currentScene].arrows do
+                    local arrow = sceneObjects[currentScene].arrows[i]
+                    if pointIsBetweenBounds(
+                        x, y,
+                        arrow.position.x,
+                        arrow.position.y,
+                        arrow.width,
+                        arrow.height
+                    ) then
+                        currentScene = arrow.targetScene
+                    end
+                end
             end
         end
     end
@@ -891,6 +944,20 @@ function love.draw()
         if sceneObjects[currentScene].loseBoxes then
             for i = 1, #sceneObjects[currentScene].loseBoxes do
                 sceneObjects[currentScene].loseBoxes[i]:draw()
+            end
+        end
+
+        if sceneObjects[currentScene].arrows then
+            for i = 1, #sceneObjects[currentScene].arrows do
+                local arrow = sceneObjects[currentScene].arrows[i]
+                love.graphics.draw(
+                    arrow.image,
+                    arrow.position.x,
+                    arrow.position.y,
+                    0,
+                    arrowScale,
+                    arrowScale
+                )
             end
         end
     ---------------------------------
