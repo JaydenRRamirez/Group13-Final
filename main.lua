@@ -28,7 +28,7 @@ local simulatedObjects = {}
 -- 2 = plinko level 1
 -- 3 = plinko level 2
 -- rest = search rooms
-local currentScene = 1
+local currentScene = 3
 
 -- seconds before transitioning to plinko level (counts down to zero)
 local timer = 5
@@ -378,8 +378,8 @@ local function createPlinkoScene2()
                 rhombusModel, 
                 rhombusTexture, 
                 {10.0, 4.0, 5.0}, 
-                {0.0, 0.05, 0},
-                defaultRhombusScale, 
+                nil,
+                negativeRhombusScale, 
                 "static", 
                 "verts"
             ),
@@ -389,8 +389,8 @@ local function createPlinkoScene2()
                 rhombusModel, 
                 rhombusTexture, 
                 {10.0, -2.0, 1.5}, 
-                {0.0, 0.05, 0}, 
-                negativeRhombusScale, 
+                nil, 
+                defaultRhombusScale, 
                 "static", 
                 "verts"
             ),
@@ -400,8 +400,8 @@ local function createPlinkoScene2()
                 rhombusModel, 
                 rhombusTexture, 
                 {10, 3, -1.5}, 
-                {0.0, 0.05, 0}, 
-                defaultRhombusScale, 
+                nil, 
+                negativeRhombusScale, 
                 "static", 
                 "verts"
             ),
