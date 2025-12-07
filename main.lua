@@ -34,6 +34,9 @@ local clickPlane = g3d.newModel("g3dAssets/cube.obj", "kenney_prototype_textures
 -- keep track of all rigid bodies that need to have movement physics simulated
 local simulatedObjects = {}
 
+-- Ball ammo counter
+local ballAmmo = 5
+
 -- 1 = title screen
 -- 2 = plinko level 1
 -- 3 = plinko level 2
@@ -784,6 +787,7 @@ function love.mousepressed(x, y, button, istouch, presses)
                 wonGame = false
                 lostGame = false
                 simulatedObjects = {}
+                ballAmmo = 5
                 currentScene = 1
                 timer = timerConstant
                 return
@@ -885,9 +889,9 @@ function love.mousereleased(x, y, button)
             gameInventory:stopDragging()
             
         elseif currentScene == 2 or currentScene == 3 then
-            -- Check if ball cursor is within the orange clickPlane box
+            -- Check if ball cursor is within the orange clickPlane box and player has ammo
             local ballPos = {ballCursor.translation[1], ballCursor.translation[2], ballCursor.translation[3]}
-            if clickPlane and clickPlane.aabb and clickPlane:isPointInAABB(ballPos) then
+            if ballAmmo > 0 and clickPlane and clickPlane.aabb and clickPlane:isPointInAABB(ballPos) then
                 local physBall = rigidBody:newRigidBody(
                     "g3dAssets/sphere.obj",
                     "kenney_prototype_textures/light/texture_08.png", 
@@ -900,6 +904,8 @@ function love.mousereleased(x, y, button)
                     {lockedAxes={true, false, false}} -- Lock X axis
                 )
                 table.insert(simulatedObjects, physBall)
+                ballAmmo = ballAmmo - 1
+                print("Balls remaining: " .. ballAmmo)
             end
 
         else
