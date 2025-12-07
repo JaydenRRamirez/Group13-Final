@@ -43,7 +43,7 @@ local searchRoom2 = 5
 local plinkoLevels = {plinkoLevel1, plinkoLevel2}
 local searchRooms = {searchRoom1, searchRoom2}
 
-local currentScene = titleScreen
+local currentScene = searchRoom1
 
 -- Ball ammo counter
 local ballAmmo = 5
@@ -524,54 +524,6 @@ local function createPlinkoScene2()
     table.insert(sceneObjects, plinkoScene)
 end
 
----------------------------------------------------------------------------------------------------------
----
---- Door Creation Functions
----
----------------------------------------------------------------------------------------------------------
-
-
-local function createDoor(doorConfig)
-    local door = rigidBody:newRigidBody(
-        "g3dAssets/cube.obj",
-        "kenney_prototype_textures/light/texture_06.png",
-        doorConfig[1],
-        nil,
-        {0.1, 1, 1.5},
-        "static",
-        "verts"
-    )
-    doorMap[door] = doorConfig[2]
-    return door
-end
-
--- doorOptions = table of arbitrary length composing of objects with a point {x, y, z} and target Scene
-local function createDoors(scene, doorOptions)
-    local allDoors = {}
-    for i = 1, #doorOptions do
-        local door = createDoor(doorOptions[i])
-        table.insert(allDoors, door)
-        table.insert(scene, door)
-    end
-    return allDoors
-end
-
--- local function createScene1()
---     local scene = {}
---     local doorOptions = {{{10, 0, 0}, 3}}
---     local allDoors = createDoors(scene, doorOptions)
---     table.insert(doors, allDoors)
--- end
-
--- local function createScene2()
---     local scene = {}
---     local doorOptions = {{{10, 0, 5}, 2}}
---     local allDoors = createDoors(scene, doorOptions)
-
---     table.insert(sceneObjects, scene)
---     table.insert(doors, allDoors)
--- end
-
 
 -----------------------------------------------------------------------------------------------------
 ---
@@ -929,7 +881,7 @@ function love.mousereleased(x, y, button)
             local currentSceneObj = sceneObjects[currentScene]
             if not currentSceneObj.playerObstacles then currentSceneObj.playerObstacles = {}
             end
-            table.insert(sceneObjects[currentScene], newObstacle)
+            table.insert(currentSceneObj.playerObstacles, newObstacle)
             print("Placed obstacle: " .. currentPlacementItem.name)
             -- Reset placement state
             currentPlacementItem = nil

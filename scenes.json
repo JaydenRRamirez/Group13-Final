@@ -13,7 +13,8 @@
         "darkMetal": "steampunkAssets/textures/Metal/metal_basecolor.png",
         "lightMetal": "steampunkAssets/textures/white metal/white_meetal_basecolor.png",
         "wood": "steampunkAssets/textures/wood/Substance_graph_diffuse.png",
-        "copper": "steampunkAssets/copper.jpg"
+        "copper": "steampunkAssets/copper.jpg",
+        "rustedCopper": "steampunkAssets/textures/roof/Roof_basecolor_orange.png"
     },
     "constants": {
         "horizontalDistance": 10,
@@ -292,7 +293,7 @@
             "objects": {
                 "floor": {
                     "model": "plane",
-                    "texture": "darkMetal",
+                    "texture": "lightMetal",
                     "translation": {
                         "x": "depthCenter",
                         "y": 0,
@@ -303,7 +304,7 @@
                 },
                 "ceiling": {
                     "model": "plane",
-                    "texture": "darkMetal",
+                    "texture": "lightMetal",
                     "translation": {
                         "x": "depthCenter",
                         "y": 0,
@@ -314,7 +315,7 @@
                 },
                 "leftWall": {
                     "model": "plane",
-                    "texture": "lightMetal",
+                    "texture": "darkMetal",
                     "translation": {
                         "x": "depthCenter",
                         "y": "-horizontalDistance",
@@ -325,7 +326,7 @@
                 },
                 "rightWall": {
                     "model": "plane",
-                    "texture": "lightMetal",
+                    "texture": "darkMetal",
                     "translation": {
                         "x": "depthCenter",
                         "y": "horizontalDistance",
@@ -347,7 +348,7 @@
                 },
                 "gear1": {
                     "model": "gear",
-                    "texture": "darkMetal",
+                    "texture": "rustedCopper",
                     "translation": {
                         "x": "depthBack",
                         "y": "-horizontalDistance+2",
