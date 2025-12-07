@@ -676,6 +676,13 @@ local prevCurrentScene = currentScene
 
 love.graphics.print(continueText, screenWidth / 2 - continueTextWidth - 150, textY)
 
+local function loadScenes()
+    createTitleScene()
+    createPlinkoScene1()
+    createPlinkoScene2()
+    createScenes()
+end
+
 function love.load()
     calculateTransformPerScreenPixel()
 
@@ -684,10 +691,7 @@ function love.load()
     gameInventory:addItem(gameInventory.obstaclePrototypes["Cone"])
     gameInventory:addItem(gameInventory.obstaclePrototypes["Ramp"])
 
-    createTitleScene()
-    createPlinkoScene1()
-    createPlinkoScene2()
-    createScenes()
+    loadScenes()
 end
 
 
@@ -712,6 +716,9 @@ function love.mousepressed(x, y, button, istouch, presses)
                 ballAmmo = 5
                 currentScene = 1
                 timer = timerConstant
+
+                sceneObjects = {}
+                loadScenes()
                 return
             end
             
