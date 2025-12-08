@@ -753,7 +753,7 @@ local screenWidth = love.graphics.getWidth()
 local screenHeight = love.graphics.getHeight()
 local continueText = languageJson.text[language].continue
 local continueTextWidth = font:getWidth(continueText)
-local loadingText = languageJson[language].loading
+local loadingText = languageJson.text[language].loading
 local loadingTextWidth = font:getWidth(loadingText)
 local textY = screenHeight - 40
 
