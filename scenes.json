@@ -1,17 +1,20 @@
 {
     "models": {
         "plane": "g3dAssets/plane.obj",
+        "cube": "g3dAssets/cube.obj",
         "barrel": "steampunkAssets/barrel.obj",
         "box": "steampunkAssets/box.obj",
         "tallPipe": "steampunkAssets/tallPipe.obj",
         "medPipe": "steampunkAssets/medPipe.obj",
         "smallPipe": "steampunkAssets/smallPipe.obj",
         "horizontalPipe": "steampunkAssets/horizontalPipe.obj",
-        "gear": "steampunkAssets/gear.obj"
+        "gear": "steampunkAssets/gear.obj",
+        "desk": "custom_assets/desk.obj"
     },
     "textures": {
         "darkMetal": "steampunkAssets/textures/Metal/metal_basecolor.png",
         "lightMetal": "steampunkAssets/textures/white metal/white_meetal_basecolor.png",
+        "lightRoughMetal": "steampunkAssets/textures/Metal/metal_roughness.png",
         "wood": "steampunkAssets/textures/wood/Substance_graph_diffuse.png",
         "copper": "steampunkAssets/copper.jpg",
         "rustedCopper": "steampunkAssets/textures/roof/Roof_basecolor_orange.png"
@@ -44,9 +47,54 @@
             "y": 1,
             "z": 1
         },
+        "longGearScale": {
+            "x": 1,
+            "y": 8,
+            "z": 1
+        },
         "obstacleScale": {
             "x": 3,
             "y": 3,
+            "z": 3
+        },
+        "upsideDownObstacleScale": {
+            "x": 3,
+            "y": 3,
+            "z": -3
+        },
+        "halfPipeScale": {
+            "x": 2,
+            "y": 2,
+            "z": 2
+        },
+        "fHalfPipeScale": {
+            "x": 2,
+            "y": -2,
+            "z": 2
+        },
+        "sHalfPipeScale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+        },
+        "fsHalfPipeScale": {
+            "x": 1,
+            "y": -1,
+            "z": 1
+        },
+        "sStarScale": {
+            "x": 0.5,
+            "y": 0.5,
+            "z": 0.5
+        },
+        "backShelfScale": {
+            "x": 0.2,
+            "y": 3,
+            "z": 1
+        },
+        "leftDeskScale": {
+            "x": 3,
+            "y": 5,
             "z": 3
         },
 
@@ -79,6 +127,11 @@
             "x": 0,
             "y": 0,
             "z": "PI/2"
+        },
+        "rotateDesk": {
+            "x": 0,
+            "y": "PI/2",
+            "z": 0
         }
     },
     "scenes": [
@@ -303,6 +356,26 @@
                         "z": "floorHeight"
                     },
                     "scale": "obstacleScale"
+                },
+                "rightCeilingPiece": {
+                    "name": "Half Pipe",
+                    "texture": "lightMetal",
+                    "translation": {
+                        "x": "depthCenter",
+                        "y": "-horizontalDistance",
+                        "z": "floorHeight+10"
+                    },
+                    "scale": "halfPipeScale"
+                },
+                "leftCeilingPiece": {
+                    "name": "Half Pipe",
+                    "texture": "lightMetal",
+                    "translation": {
+                        "x": "depthCenter",
+                        "y": "horizontalDistance",
+                        "z": "floorHeight+10"
+                    },
+                    "scale": "fHalfPipeScale"
                 }
             }
         },
@@ -354,7 +427,7 @@
                 },
                 "backWall": {
                     "model": "plane",
-                    "texture": "wood",
+                    "texture": "lightRoughMetal",
                     "translation": {
                         "x": "depthBack",
                         "y": 0,
@@ -461,6 +534,50 @@
                     },
                     "rotation":"rotate90DegForward",
                     "scale":"illAnoiScale"
+                },
+                "shelfBack": {
+                    "model": "cube",
+                    "texture": "wood",
+                    "translation": {
+                        "x":"depthBack-2.5",
+                        "y":"horizontalDistance-4",
+                        "z":"ceilingHeight-7"
+                    },
+                    "rotation":"rotate90DegForward",
+                    "scale":"backShelfScale"
+                },
+                "shelfGear": {
+                    "model": "gear",
+                    "texture": "rustedCopper",
+                    "translation": {
+                        "x": "depthBack-2.5",
+                        "y": "horizontalDistance-4",
+                        "z": "ceilingHeight-5.7"
+                    },
+                    "rotation": "rotateGear",
+                    "scale": "gearScale"
+                },
+                "groundGear": {
+                    "model": "gear",
+                    "texture": "rustedCopper",
+                    "translation": {
+                        "x": "depthBack-7",
+                        "y": "-horizontalDistance+1.2",
+                        "z": "ceilingHeight-9"
+                    },
+                    "rotation": "rotateGear",
+                    "scale": "longGearScale"
+                },
+                "leftDesk": {
+                    "model": "desk",
+                    "texture": "wood",
+                    "translation": {
+                        "x": "depthBack-11",
+                        "y": "horizontalDistance-2",
+                        "z": "ceilingHeight-9"
+                    },
+                    "rotation": "rotateDesk",
+                    "scale": "leftDeskScale"
                 }
             },
             "arrows": {
@@ -474,7 +591,56 @@
                 }
             },
             "playerObstacles": {
-
+                "cone": {
+                    "name": "Cone",
+                    "texture": "lightMetal",
+                    "translation": {
+                        "x": "depthCenter",
+                        "y": 0,
+                        "z": "ceilingHeight"
+                    },
+                    "scale": "upsideDownObstacleScale"
+                },
+                "leftCircleSide": {
+                    "name": "Half Pipe",
+                    "texture": "wood",
+                    "translation": {
+                        "x": "depthCenter",
+                        "y": "horizontalDistance-2",
+                        "z": "floorHeight+3.5"
+                    },
+                    "scale": "sHalfPipeScale"
+                },
+                "rightCircleSide": {
+                    "name": "Half Pipe",
+                    "texture": "wood",
+                    "translation": {
+                        "x": "depthCenter",
+                        "y": "horizontalDistance-2",
+                        "z": "floorHeight+3.5"
+                    },
+                    "scale": "fsHalfPipeScale"
+                },
+                "underDeskStar": {
+                    "name": "Star",
+                    "texture": "rustedCopper",
+                    "translation": {
+                        "x": "depthCenter",
+                        "y": "horizontalDistance-2",
+                        "z": "floorHeight+0.5"
+                    },
+                    "scale": "sStarScale"
+                },
+                "scrapStar": {
+                    "name": "Star",
+                    "texture": "darkMetal",
+                    "translation": {
+                        "x": "depthCenter",
+                        "y": "-horizontalDistance+1.5",
+                        "z": "floorHeight+2"
+                    },
+                    "scale": "sStarScale"
+                }
             }
         }
     ]

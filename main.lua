@@ -59,7 +59,7 @@ local maxBallAmmo = 5
 local ballAmmo = maxBallAmmo
 
 -- seconds before transitioning to plinko level (counts down to zero)
-local timerCooldown = 5
+local timerCooldown = 60
 local timer = timerCooldown
 
 -- text
