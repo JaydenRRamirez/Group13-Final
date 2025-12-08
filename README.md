@@ -92,6 +92,24 @@ Continuing on from the first iteration of the game so far, the 3D rendering and 
 ## Reflection
 This part of the process has been enlightening in both furthering the understanding of the g3d and love2d engines, but also in how we are able to weave overall game and level ideas through the tools we’ve been using so far. Amongst the process, there have been some shifts on the game design based on what we’ve learned about the engine so far and its capabilities. Originally there was a proposition of gears and rotatable objects to help or hinder the trajectory of the ball in the puzzle for this phase, but seeing the complexity of attempting logic within the physics, we instead focused on the ideas of pistons and conveyors as interactables instead.
 
+# Devlog Entry - 12/05/2025
+
+## Selected Requirements:
+
+[External DSL] - With most of the team having used JSONs in past projects and classes, it was a skill we already had. We were able to use it to clean up the creation of scenes and objects within them, as well as for the localization requirement.
+
+[i18n + I10n] - As mentioned in the DSL requirement, it was simple to implement localization using the JSON system established prior.
+
+[Touchscreen Implementation] Our game already used mouse controls for most features, which were easy to adapt into touch controls. The keybind-only features were easy to adapt to on screen buttons, as they were either single button presses or toggles.
+
+[Unlimited Undos] With the current structure of the inventory system, we are able to do unlimited undos simply by the functionality of returning items into the inventory, which had already been implemented. Navigation also came with undos built in, as every action for moving between rooms came with a button to move back.
+
+## How we satisfied the software requirements.
+The external DSL requirement was fulfilled using JSONs to build the room search scenes and everything within them. Objects and their locations are stored within one, as well as constants that are used for readability within the JSON itself and for ease of creating new scenes. This JSON is then parsed within our code into a Lua table that acts as our scene system. We also have another JSON that is used for localization, which stores all in-game text for all three supported languages. This also helped with the i18n + l10n (language) requirement. To add the ability for the user to choose a language in game, we added buttons to the main menu that can change the language for all in game text. Unlimited Undos were already implemented due to the existing inventory system being able to pick up placed items, as well as room traversal always having a corresponding button to traverse back. We fulfilled the touchscreen requirement by converting all mouse controls to touch controls (which was simple), adding an on screen button to open and close the inventory, and adding the switch language buttons.
+
+## Reflection
+Much like F2 and F1, there were many aspects of this segment that were a challenge to figure out, and others that were a breeze thanks to tapping into past knowledge. One big change of plan we had was when our team saw what features were already implemented, and realized our original plan was out of scope. Because of this, we descoped our tools with unique functionality to simple primitive obstacles that can be placed on the plinko levels. This kept the general concept of the puzzle-based plinko gameplay we originally planned, while allowing us to actually finish the game in time. It also allowed us to have the time to add another whole plinko level, and the one the user encounters is randomly chosen for each playthrough, adding replay value to the game.
+
 
 ## Useful Project Documents:
 
