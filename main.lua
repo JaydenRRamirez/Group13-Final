@@ -52,14 +52,14 @@ local searchRoom2 = 5
 local plinkoLevels = {plinkoLevel1, plinkoLevel2}
 local searchRooms = {searchRoom1, searchRoom2}
 
-local currentScene = searchRoom2
+local currentScene = titleScreen
 
 -- Ball ammo counter
 local maxBallAmmo = 5
 local ballAmmo = maxBallAmmo
 
 -- seconds before transitioning to plinko level (counts down to zero)
-local timerCooldown = 5
+local timerCooldown = 60
 local timer = timerCooldown
 
 -- text
