@@ -277,10 +277,8 @@ local function drawWinScreen()
     love.graphics.rectangle("fill", playAgainButton.x, playAgainButton.y, playAgainButton.width, playAgainButton.height)
     
     love.graphics.setColor(0, 0, 0, 1)
-    local buttonFont = love.graphics.newFont(24)
-    love.graphics.setFont(buttonFont)
-    local buttonText = "Play Again"
-    local textWidth = buttonFont:getWidth(buttonText)
+    local buttonText = languageJson.text[language].playAgain
+    local textWidth = font:getWidth(buttonText)
     love.graphics.print(buttonText, playAgainButton.x + playAgainButton.width / 2 - textWidth / 2, playAgainButton.y + 15)
     
     -- Quit Game button
@@ -291,9 +289,8 @@ local function drawWinScreen()
     love.graphics.rectangle("fill", quitButton.x, quitButton.y, quitButton.width, quitButton.height)
     
     love.graphics.setColor(0, 0, 0, 1)
-    love.graphics.setFont(buttonFont)
-    local quitText = "Quit Game"
-    local quitTextWidth = buttonFont:getWidth(quitText)
+    local quitText = languageJson.text[language].quit
+    local quitTextWidth =font:getWidth(quitText)
     love.graphics.print(quitText, quitButton.x + quitButton.width / 2 - quitTextWidth / 2, quitButton.y + 15)
 end
 
@@ -314,10 +311,8 @@ local function drawLoseScreen()
     love.graphics.rectangle("fill", playAgainButton.x, playAgainButton.y, playAgainButton.width, playAgainButton.height)
     
     love.graphics.setColor(0, 0, 0, 1)
-    local buttonFont = love.graphics.newFont(24)
-    love.graphics.setFont(buttonFont)
-    local buttonText = "Play Again"
-    local textWidth = buttonFont:getWidth(buttonText)
+    local buttonText = languageJson.text[language].playAgain
+    local textWidth = font:getWidth(buttonText)
     love.graphics.print(buttonText, playAgainButton.x + playAgainButton.width / 2 - textWidth / 2, playAgainButton.y + 15)
     
     -- Quit Game button
@@ -328,9 +323,8 @@ local function drawLoseScreen()
     love.graphics.rectangle("fill", quitButton.x, quitButton.y, quitButton.width, quitButton.height)
     
     love.graphics.setColor(0, 0, 0, 1)
-    love.graphics.setFont(buttonFont)
-    local quitText = "Quit Game"
-    local quitTextWidth = buttonFont:getWidth(quitText)
+    local quitText = languageJson.text[language].quit
+    local quitTextWidth = font:getWidth(quitText)
     love.graphics.print(quitText, quitButton.x + quitButton.width / 2 - quitTextWidth / 2, quitButton.y + 15)
 end
 

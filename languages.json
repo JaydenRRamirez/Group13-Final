@@ -21,7 +21,9 @@
             "continue": "Press any key or tap the screen to continue.",
             "pickup": "Click on placed obstacles to return them to your inventory.",
             "search": "Find and click on obstacles to add them to your inventory.",
-            "loading": "Loading..."
+            "loading": "Loading...",
+            "playAgain": "Play Again",
+            "quit": "Quit Game"
         },
         "chinese": {
             "win": "你赢了！",
@@ -30,7 +32,9 @@
             "continue": "按任意键或点击屏幕继续。",
             "pickup": "点击已放置的障碍物即可将其放回库存。",
             "search": "找到并点击障碍物，即可将其添加到您的物品栏中。",
-            "loading": "加载中..."
+            "loading": "加载中...",
+            "playAgain": "再玩一次",
+            "quit": "退出游戏"
         },
         "arabic": {
             "win": "لقد فزت!",
@@ -39,7 +43,9 @@
             "continue": "اضغط على أي مفتاح أو انقر على الشاشة للمتابعة.",
             "pickup": "انقر على العوائق الموضوعة لإعادتها إلى المخزون.",
             "search": "ابحث عن العوائق وانقر عليها لإضافتها إلى مخزونك.",
-            "loading": "تحميل..."
+            "loading": "تحميل...",
+            "playAgain": "العب مرة أخرى",
+            "quit": "الخروج من اللعبة"
         }
     }
 }
