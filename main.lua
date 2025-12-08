@@ -69,16 +69,16 @@ local function languageSetup()
     local jsonString = love.filesystem.read("languages.json")
     languageJson = json.decode(jsonString)
     if language == "english" then
-        love.graphics.newFont(24)
-        instructionFont = love.graphics.newFont(12)
+        font = love.graphics.newFont(24)
+        instructionFont = love.graphics.newFont(24)
 
     elseif language == "chinese" then
         font = love.graphics.newFont("fonts/chinese.ttf", 24)
-        instructionFont = love.graphics.newFont("fonts/chinese.ttf", 12)
+        instructionFont = love.graphics.newFont("fonts/chinese.ttf", 24)
 
     elseif language == "arabic" then
         love.graphics.newFont("fonts/arabic.ttf", 24)
-        instructionFont = love.graphics.newFont("fonts/arabic.ttf", 10)
+        instructionFont = love.graphics.newFont("fonts/arabic.ttf", 24)
     end
 end
 languageSetup()
@@ -1202,10 +1202,12 @@ function love.draw()
     -- Only show inventory instructions if not on title screen
     if currentScene ~= titleScreen then
         if not gameInventory.isVisible and not currentPlacementItem then
-            local pickupText = languageJson[language].pickup
-            local pickupTextWidth = instructionFont:getWidth(pickupText)
+            local bottomText
+            if isInPlinkoScene() then bottomText = languageJson[language].pickup
+            else bottomText = languageJson[language].search end
+            local pickupTextWidth = instructionFont:getWidth(bottomText)
 
-            love.graphics.print(pickupText, screenWidth / 2 + 150, textY)
+            love.graphics.print(bottomText, (screenWidth / 2) - (pickupTextWidth / 2), textY)
         end
     end
     gameInventory:draw()
