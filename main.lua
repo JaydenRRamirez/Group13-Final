@@ -47,17 +47,20 @@ local searchRooms = {searchRoom1, searchRoom2}
 local currentScene = titleScreen
 
 -- Ball ammo counter
-local ballAmmo = 5
+local maxBallAmmo = 5
+local ballAmmo = maxBallAmmo
 
 -- seconds before transitioning to plinko level (counts down to zero)
-local timerConstant = 60
-local timer = timerConstant
+local timerCooldown = 60
+local timer = timerCooldown
 
 -- text
 local font
 local instructionFont
 local languageJson
 local language = "english"
+
+local inventoryButtonData = {}
 
 -- 2D, sceneObjects[1][2] gives second object in first scene
 local sceneObjects = {}
@@ -66,16 +69,16 @@ local function languageSetup()
     local jsonString = love.filesystem.read("languages.json")
     languageJson = json.decode(jsonString)
     if language == "english" then
-        love.graphics.newFont(24)
-        instructionFont = love.graphics.newFont(12)
+        font = love.graphics.newFont(24)
+        instructionFont = love.graphics.newFont(24)
 
     elseif language == "chinese" then
         font = love.graphics.newFont("fonts/chinese.ttf", 24)
-        instructionFont = love.graphics.newFont("fonts/chinese.ttf", 12)
+        instructionFont = love.graphics.newFont("fonts/chinese.ttf", 24)
 
     elseif language == "arabic" then
         love.graphics.newFont("fonts/arabic.ttf", 24)
-        instructionFont = love.graphics.newFont("fonts/arabic.ttf", 10)
+        instructionFont = love.graphics.newFont("fonts/arabic.ttf", 24)
     end
 end
 languageSetup()
@@ -386,6 +389,28 @@ end
 -----------------------------------------------------------------------------------------------------
 
 
+local function updateInventoryButtonDimensions()
+    inventoryButtonData.width, inventoryButtonData.height = inventoryButtonData.image:getPixelDimensions()
+    inventoryButtonData.width = inventoryButtonData.width * inventoryButtonData.scale
+    inventoryButtonData.height = inventoryButtonData.height * inventoryButtonData.scale
+end
+
+local function createInventoryButton()
+    inventoryButtonData.roomData = {}
+    inventoryButtonData.plinkoData = {}
+
+    inventoryButtonData.image = love.graphics.newImage("custom_assets/openInventoryButton.png")
+
+    inventoryButtonData.roomData.position = {["x"] = 710, ["y"] = 10}
+    inventoryButtonData.position = {}
+
+    inventoryButtonData.roomData.scale = 0.1
+    inventoryButtonData.plinkoData.scale = 0.05
+    inventoryButtonData.scale = inventoryButtonData.roomData.scale
+
+    updateInventoryButtonDimensions()
+end
+
 local function createPlinkoScene1()
     local plinkoScene = { 
         nonSimulatedObjects = {
@@ -693,6 +718,8 @@ function love.load()
     gameInventory:addItem(gameInventory.obstaclePrototypes["Cone"])
     gameInventory:addItem(gameInventory.obstaclePrototypes["Ramp"])
 
+    createInventoryButton()
+
     loadScenes()
 end
 
@@ -710,7 +737,6 @@ local function isInPlinkoScene()
     return false
 end
 
-local resetScene = false
 -- Clicking for when the inventory is up
 function love.mousepressed(x, y, button, istouch, presses)
     if button == 1 then
@@ -718,8 +744,16 @@ function love.mousepressed(x, y, button, istouch, presses)
         if wonGame or lostGame then
             if x >= playAgainButton.x and x <= playAgainButton.x + playAgainButton.width and
                y >= playAgainButton.y and y <= playAgainButton.y + playAgainButton.height then
-                -- Reset game state later in draw so load text can be setup
-                resetScene = true
+                -- Reset game state
+                wonGame = false
+                lostGame = false
+                simulatedObjects = {}
+                ballAmmo = maxBallAmmo
+                currentScene = 1
+                timer = timerCooldown
+
+                sceneObjects = {}
+                loadScenes()
                 return
             end
             
@@ -818,6 +852,20 @@ function love.mousepressed(x, y, button, istouch, presses)
         end
     end
 
+local function isInPlinkoScene()
+    for i = 1, #plinkoLevels do
+        if currentScene == plinkoLevels[i] then return true end
+    end
+    return false
+end
+
+local function isInSearchRoom()
+    for i = 1, #searchRooms do
+        if currentScene == searchRooms[i] then return true end
+    end
+    return false
+end
+
 local function pointIsBetweenBounds(pointX, pointY, boundPosX, boundPosY, boundWidth, boundHeight)
     local pointWithinX = pointX < boundPosX + boundWidth and pointX > boundPosX
     local pointWithinY = pointY < boundPosY + boundHeight and pointY > boundPosY
@@ -906,6 +954,18 @@ function love.mousereleased(x, y, button)
                 end
             end
         end
+
+        if isInPlinkoScene() or isInSearchRoom() then
+            if pointIsBetweenBounds(
+                x, y,
+                inventoryButtonData.position.x,
+                inventoryButtonData.position.y,
+                inventoryButtonData.width,
+                inventoryButtonData.height
+            ) then
+                gameInventory:toggle()
+            end
+        end
     end
 end
 
@@ -986,11 +1046,11 @@ function love.update(dt)
     -- g3d.camera.firstPersonMovement(dt)
     if love.keyboard.isDown("escape") then love.event.push("quit") end
 
-    if currentScene >= searchRoom1 then
+    if isInSearchRoom() then
         timer = timer - dt
         if timer <= 0 then
             currentScene = plinkoLevel1
-            timer = timerConstant
+            timer = timerCooldown
         end
     end
 
@@ -1068,9 +1128,37 @@ function love.draw()
             love.graphics.circle("fill", startX, startY + (i - 1) * (ballSize + spacing), ballSize / 2)
         end
 
-    elseif currentScene >= searchRoom1 then
+        inventoryButtonData.position.x = startX - (inventoryButtonData.width/2)
+        inventoryButtonData.position.y = startY + (maxBallAmmo * (ballSize + spacing))
+        inventoryButtonData.scale = inventoryButtonData.plinkoData.scale
+        updateInventoryButtonDimensions()
+
+        love.graphics.draw(
+            inventoryButtonData.image,
+            inventoryButtonData.position.x,
+            inventoryButtonData.position.y,
+            0,
+            inventoryButtonData.scale,
+            inventoryButtonData.scale
+        )
+
+    elseif isInSearchRoom() then
         if font then love.graphics.setFont(font) end
         love.graphics.print(languageJson[language].timer .. math.ceil(timer))
+
+        inventoryButtonData.position.x = inventoryButtonData.roomData.position.x
+        inventoryButtonData.position.y = inventoryButtonData.roomData.position.y
+        inventoryButtonData.scale = inventoryButtonData.roomData.scale
+        updateInventoryButtonDimensions()
+
+        love.graphics.draw(
+            inventoryButtonData.image,
+            inventoryButtonData.position.x,
+            inventoryButtonData.position.y,
+            0,
+            inventoryButtonData.scale,
+            inventoryButtonData.scale
+        )
     end
 
     for i = 1, #simulatedObjects do
@@ -1128,30 +1216,15 @@ function love.draw()
 
     -- Only show inventory instructions if not on title screen
     if currentScene ~= titleScreen then
-        local openInvText = languageJson[language].openInv
-        local openInvTextWidth = instructionFont:getWidth(openInvText)
-
-        love.graphics.print(openInvText, screenWidth / 2 - openInvTextWidth - 150, textY)
-
         if not gameInventory.isVisible and not currentPlacementItem then
-            local pickupText = languageJson[language].pickup
-            local pickupTextWidth = instructionFont:getWidth(pickupText)
+            local bottomText
+            if isInPlinkoScene() then bottomText = languageJson[language].pickup
+            else bottomText = languageJson[language].search end
+            local pickupTextWidth = instructionFont:getWidth(bottomText)
 
-            love.graphics.print(pickupText, screenWidth / 2 + 150, textY)
+            love.graphics.print(bottomText, (screenWidth / 2) - (pickupTextWidth / 2), textY)
         end
     end
 
-    if resetScene then
-        wonGame = false
-        lostGame = false
-        simulatedObjects = {}
-        ballAmmo = 5
-        currentScene = 1
-        timer = timerConstant
-
-        sceneObjects = {}
-        loadScenes()
-        resetScene = false
-    end
     gameInventory:draw()
 end
