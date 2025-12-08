@@ -44,7 +44,7 @@ local searchRoom2 = 5
 local plinkoLevels = {plinkoLevel1, plinkoLevel2}
 local searchRooms = {searchRoom1, searchRoom2}
 
-local currentScene = titleScreen
+local currentScene = searchRoom2
 
 -- Ball ammo counter
 local maxBallAmmo = 5
@@ -715,8 +715,8 @@ function love.load()
 
     gameInventory = Inventory:new()
 
-    gameInventory:addItem(gameInventory.obstaclePrototypes["Cone"])
-    gameInventory:addItem(gameInventory.obstaclePrototypes["Ramp"])
+    -- gameInventory:addItem(gameInventory.obstaclePrototypes["Cone"])
+    -- gameInventory:addItem(gameInventory.obstaclePrototypes["Ramp"])
 
     createInventoryButton()
 
