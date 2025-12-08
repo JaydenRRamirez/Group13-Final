@@ -7,42 +7,6 @@ local uiWidth = 300
 local uiHeight = 200
 local slotsRow = 4
 
--- -- Obstacle Items
--- local obstaclePrototypes = {}
-
--- local cone = Object:new({
---     name = "Cone",
---     type = "Obstacle",
---     modelPath = "custom_assets/Cone.obj",
---     iconPath = "custom_assets/cone-metal.png" 
--- })
-
--- local halfPipe = Object:new({
---     name = "Half Pipe",
---     type = "Obstacle",
---     modelPath = "custom_assets/halfpipe.obj",
---     iconPath = "custom_assets/half-pipe.png"
--- })
-
--- local ramp = Object:new({
---     name = "Ramp",
---     type = "Obstacle",
---     modelPath = "custom_assets/ramp.obj",
---     iconPath = "custom_assets/ramp-steampunk.png"
--- })
-
--- local star = Object:new({
---     name = "Star",
---     type = "Obstacle",
---     modelPath = "custom_assets/star.obj",
---     iconPath = "custom_assets/star-steampunk.png"
--- })
-
--- -- Store the items for quick lookup for returns
--- obstaclePrototypes[cone.name] = cone
--- obstaclePrototypes[halfPipe.name] = halfPipe
--- obstaclePrototypes[ramp.name] = ramp
--- obstaclePrototypes[star.name] = star
 
 function Inventory:new()
     local inv = {
@@ -86,22 +50,6 @@ function Inventory:new()
 end
 
 --- Item Management
-
---function Inventory:addItem(item)
-  --  if item and item.type == "Obstacle" then
-    --    local itemName = item.name
-        
-      --  if self.items[itemName] then
-        --    self.items[itemName].count = self.items[itemName].count + 1
-        --else
-          --  self.items[itemName] = {
-            --    prototype = item,
-              --  count = 1
-            --}
-        --end
-        --print("Added" .. itemName .. " to inventory. count: " .. self.items[itemName].count)
-    --end
---end
 
 -- Adding through a prototype if it doesn't exist, or increment
 function Inventory:addItem(item)
@@ -212,6 +160,7 @@ function Inventory:draw()
     -- Inventory Background
     love.graphics.setColor(0.1, 0.1, 0.1, 0.9)
     love.graphics.rectangle("fill", self.x, self.y, uiWidth, uiHeight)
+    love.graphics.setColor(1, 1, 1, 1)
 
     -- Inventory Slots
     for i, stack in ipairs(stacks) do
