@@ -44,7 +44,7 @@ local searchRoom2 = 5
 local plinkoLevels = {plinkoLevel1, plinkoLevel2}
 local searchRooms = {searchRoom1, searchRoom2}
 
-local currentScene = searchRoom1
+local currentScene = titleScreen
 
 -- Ball ammo counter
 local ballAmmo = 5
@@ -670,6 +670,8 @@ local screenWidth = love.graphics.getWidth()
 local screenHeight = love.graphics.getHeight()
 local continueText = languageJson[language].continue
 local continueTextWidth = instructionFont:getWidth(continueText)
+local loadingText = languageJson[language].loading
+local loadingTextWidth = instructionFont:getWidth(loadingText)
 local textY = screenHeight - 40
 
 local prevCurrentScene = currentScene
@@ -708,6 +710,7 @@ local function isInPlinkoScene()
     return false
 end
 
+local resetScene = false
 -- Clicking for when the inventory is up
 function love.mousepressed(x, y, button, istouch, presses)
     if button == 1 then
@@ -715,16 +718,8 @@ function love.mousepressed(x, y, button, istouch, presses)
         if wonGame or lostGame then
             if x >= playAgainButton.x and x <= playAgainButton.x + playAgainButton.width and
                y >= playAgainButton.y and y <= playAgainButton.y + playAgainButton.height then
-                -- Reset game state
-                wonGame = false
-                lostGame = false
-                simulatedObjects = {}
-                ballAmmo = 5
-                currentScene = 1
-                timer = timerConstant
-
-                sceneObjects = {}
-                loadScenes()
+                -- Reset game state later in draw so load text can be setup
+                resetScene = true
                 return
             end
             
@@ -1144,6 +1139,19 @@ function love.draw()
 
             love.graphics.print(pickupText, screenWidth / 2 + 150, textY)
         end
+    end
+
+    if resetScene then
+        wonGame = false
+        lostGame = false
+        simulatedObjects = {}
+        ballAmmo = 5
+        currentScene = 1
+        timer = timerConstant
+
+        sceneObjects = {}
+        loadScenes()
+        resetScene = false
     end
     gameInventory:draw()
 end

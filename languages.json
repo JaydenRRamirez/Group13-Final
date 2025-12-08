@@ -5,7 +5,8 @@
         "timer": "Time left: ",
         "openInv": "Press **I** to open the inventory.",
         "continue": "Press any key or tap the screen to continue.",
-        "pickup": "Click on placed obstacles to return them to inventory."
+        "pickup": "Click on placed obstacles to return them to inventory.",
+        "loading": "Loading..."
     },
     "chinese": {
         "win": "你赢了！",
@@ -13,7 +14,8 @@
         "timer": "剩余时间：",
         "openInv": "按下**I**键打开物品栏。",
         "continue": "按任意键或点击屏幕继续。",
-        "pickup": "点击已放置的障碍物即可将其放回库存。"
+        "pickup": "点击已放置的障碍物即可将其放回库存。",
+        "loading": "加载中..."
     },
     "arabic": {
         "win": "لقد فزت!",
@@ -21,6 +23,7 @@
         "timer": "الوقت المتبقي: ",
         "openInv": "اضغط على حرف **I** لفتح قائمة المخزون.",
         "continue": "اضغط على أي مفتاح أو انقر على الشاشة للمتابعة.",
-        "pickup": "انقر على العوائق الموضوعة لإعادتها إلى المخزون."
+        "pickup": "انقر على العوائق الموضوعة لإعادتها إلى المخزون.",
+        "loading": "تحميل..."
     }
 }
