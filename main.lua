@@ -783,9 +783,6 @@ function love.load()
 
     gameInventory = Inventory:new()
 
-    -- gameInventory:addItem(gameInventory.obstaclePrototypes["Cone"])
-    -- gameInventory:addItem(gameInventory.obstaclePrototypes["Ramp"])
-
     createInventoryButton()
 
     loadScenes()
@@ -908,7 +905,7 @@ function love.mousepressed(x, y, button, istouch, presses)
                                 end
                             end
                         end
-                        print("Returned obstacle: " .. obstacle.name .. " to inventory.")
+
                         return
                     end
                 end
@@ -957,7 +954,6 @@ function love.mousereleased(x, y, button)
             else
                 currentSceneObj.bounds = {newObstacle}
             end
-            print("Placed obstacle: " .. currentPlacementItem.name)
             -- Reset placement state
             currentPlacementItem = nil
             gameInventory:stopDragging()
@@ -980,7 +976,6 @@ function love.mousereleased(x, y, button)
                 )
                 table.insert(simulatedObjects, physBall)
                 ballAmmo = ballAmmo - 1
-                print("Balls remaining: " .. ballAmmo)
             end
 
         else
@@ -1015,32 +1010,18 @@ function love.mousereleased(x, y, button)
     end
 end
 
--- Press I to bring up inventory and P to pause
-local isPaused = false
+-- transition from title screen to searching room on any input
 function love.keypressed(key)
     -- Transition from title screen to searching room on any key press
     if currentScene == titleScreen then
         currentScene = searchRoom1
         return
     end
-
-    if key == "p" then
-        isPaused = not isPaused
-    end
-
-    -- DElETE THIS ONCE GAME IS DONE ------------------ for testing, changes scene on number keys
-    local sceneNumber = tonumber(key)
-    if sceneNumber and sceneNumber >= 1 and sceneNumber <= #sceneObjects then
-        currentScene = sceneNumber
-        print("Switched to scene " .. sceneNumber)
-    end
 end
 
 function love.mousemoved(x,y, dx,dy)
     local mWorldPosX, mWorldPosY, mWorldPosZ = getClickWorldPosition(x, y)
     
-    -- g3d.camera.firstPersonLook(dx,dy)
-
     if currentPlacementItem then -- Check if an item is being dragged
         placementPosition = {mWorldPosX, mWorldPosY, mWorldPosZ}
         -- Create or update the ghost model
@@ -1075,18 +1056,13 @@ end
 
 
 function love.update(dt)
-    if wonGame or lostGame or isPaused then
+    if wonGame or lostGame then
         return
     end
     if prevCurrentScene ~= currentScene then
         simulatedObjects = {}
         prevCurrentScene = currentScene
     end
-    -- Make camera orthographic
-    -- g3d.camera.updateOrthographicMatrix()
-
-    -- g3d.camera.firstPersonMovement(dt)
-    if love.keyboard.isDown("escape") then love.event.push("quit") end
 
     if isInSearchRoom() then
         timer = timer - dt
@@ -1124,7 +1100,6 @@ function love.update(dt)
                 local wonThisFrame = sceneObjects[currentScene].winBoxes[winBoxInd].model:isPointInAABB(simulatedObjects[i].position)
                 if wonThisFrame then
                     wonGame = true
-                    print("win")
                     table.remove(simulatedObjects, i)
                     return
                 end
@@ -1137,7 +1112,6 @@ function love.update(dt)
                 local lostThisFrame = sceneObjects[currentScene].loseBoxes[loseBoxInd].model:isPointInAABB(simulatedObjects[i].position)
                 if lostThisFrame then
                     lostGame = true
-                    print("lose")
                     table.remove(simulatedObjects, i)
                     return
                 end
