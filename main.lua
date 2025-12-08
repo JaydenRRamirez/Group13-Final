@@ -59,7 +59,7 @@ local maxBallAmmo = 5
 local ballAmmo = maxBallAmmo
 
 -- seconds before transitioning to plinko level (counts down to zero)
-local timerCooldown = 60
+local timerCooldown = 5
 local timer = timerCooldown
 
 -- text
@@ -778,6 +778,7 @@ local function loadScenes()
 end
 
 function love.load()
+    math.randomseed(os.time())
     calculateTransformPerScreenPixel()
 
     gameInventory = Inventory:new()
@@ -810,7 +811,7 @@ function love.mousepressed(x, y, button, istouch, presses)
                 lostGame = false
                 simulatedObjects = {}
                 ballAmmo = maxBallAmmo
-                currentScene = 1
+                currentScene = titleScreen
                 timer = timerCooldown
 
                 sceneObjects = {}
@@ -877,44 +878,44 @@ function love.mousepressed(x, y, button, istouch, presses)
 
         -- Check to return them to Inventory
         local worldx, worldy, worldz = getClickWorldPosition(x, y)
-            -- Check the new list of player obstacles for clicks
-            local currentSceneObj = sceneObjects[currentScene]
-            local currentObstacles = sceneObjects[currentScene].playerObstacles
-            local currentBounds = currentSceneObj.bounds
-            if currentObstacles then
-                for i = 1, #currentObstacles do
-                    local obstacle = currentObstacles[i]
+        -- Check the new list of player obstacles for clicks
+        local currentSceneObj = sceneObjects[currentScene]
+        local currentObstacles = sceneObjects[currentScene].playerObstacles
+        local currentBounds = currentSceneObj.bounds
+        if currentObstacles then
+            for i = 1, #currentObstacles do
+                local obstacle = currentObstacles[i]
 
-                    if obstacle.name then
-                        local isClicked = false
+                if obstacle.name then
+                    local isClicked = false
 
-                        -- Use default AABB for simpler objects
-                        if obstacle.model then
-                            isClicked = obstacle.model:isPointInAABB({worldx, worldy, worldz})
-                        else
-                            isClicked = obstacle:isPointInAABB({worldx, worldy, worldz})
-                        end
+                    -- Use default AABB for simpler objects
+                    if obstacle.model then
+                        isClicked = obstacle.model:isPointInAABB({worldx, worldy, worldz})
+                    else
+                        isClicked = obstacle:isPointInAABB({worldx, worldy, worldz})
+                    end
 
-                        if isClicked then
-                            gameInventory:returnItem(obstacle.name)
-                            table.remove(currentObstacles, i)
-                            -- Remove scene's collision bounds
-                            if currentBounds then
-                                for j = #currentBounds, 1, -1 do
-                                    if currentBounds[j] == obstacle then
-                                        table.remove(currentBounds, j)
-                                        break
-                                    end
+                    if isClicked then
+                        gameInventory:returnItem(obstacle.name)
+                        table.remove(currentObstacles, i)
+                        -- Remove scene's collision bounds
+                        if currentBounds then
+                            for j = #currentBounds, 1, -1 do
+                                if currentBounds[j] == obstacle then
+                                    table.remove(currentBounds, j)
+                                    break
                                 end
                             end
-                            print("Returned obstacle: " .. obstacle.name .. " to inventory.")
-                            return
                         end
+                        print("Returned obstacle: " .. obstacle.name .. " to inventory.")
+                        return
                     end
                 end
             end
         end
     end
+end
 
 local defaultScale = {1, 1, 1}
 local defaultTexture = "kenney_prototype_textures/purple/texture_03.png"
@@ -1090,7 +1091,7 @@ function love.update(dt)
     if isInSearchRoom() then
         timer = timer - dt
         if timer <= 0 then
-            currentScene = plinkoLevel1
+            currentScene = plinkoLevels[math.random(#plinkoLevels)]
             timer = timerCooldown
         end
     end
