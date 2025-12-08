@@ -22,6 +22,8 @@ local lostGame = false
 local playAgainButton = {x = 0, y = 0, width = 200, height = 60}
 local quitButton = {x = 0, y = 0, width = 200, height = 60}
 
+local languageOptionImage = love.graphics.newImage("custom_assets/darkYellowSquare.png")
+
 local leftArrowImage = love.graphics.newImage("custom_assets/arrowLeft.png")
 local rightArrowImage = love.graphics.newImage("custom_assets/arrowRight.png")
 local upArrowImage = love.graphics.newImage("custom_assets/arrowUp.png")
@@ -34,6 +36,9 @@ local clickPlane = g3d.newModel("g3dAssets/cube.obj", "kenney_prototype_textures
 
 -- keep track of all rigid bodies that need to have movement physics simulated
 local simulatedObjects = {}
+
+local mainMenuButtonsData = {}
+local inventoryButtonData = {}
 
 local titleScreen = 1
 local plinkoLevel1 = 2
@@ -56,30 +61,29 @@ local timer = timerCooldown
 
 -- text
 local font
-local instructionFont
 local languageJson
 local language = "english"
-
-local inventoryButtonData = {}
+local englishFont = love.graphics.newFont(24)
+local chineseFont = love.graphics.newFont("fonts/chinese.ttf", 24)
+local arabicFont = love.graphics.newFont("fonts/arabic.ttf", 24)
 
 -- 2D, sceneObjects[1][2] gives second object in first scene
 local sceneObjects = {}
 
+local function getFont(lang)
+    if lang == "english" then return englishFont end
+    if lang == "chinese" then return chineseFont end
+    if lang == "arabic" then return arabicFont end
+end
+
+local function updateLanguage()
+    font = getFont(language)
+end
+
 local function languageSetup()
     local jsonString = love.filesystem.read("languages.json")
     languageJson = json.decode(jsonString)
-    if language == "english" then
-        font = love.graphics.newFont(24)
-        instructionFont = love.graphics.newFont(24)
-
-    elseif language == "chinese" then
-        font = love.graphics.newFont("fonts/chinese.ttf", 24)
-        instructionFont = love.graphics.newFont("fonts/chinese.ttf", 24)
-
-    elseif language == "arabic" then
-        love.graphics.newFont("fonts/arabic.ttf", 24)
-        instructionFont = love.graphics.newFont("fonts/arabic.ttf", 24)
-    end
+    updateLanguage()
 end
 languageSetup()
 
@@ -90,6 +94,44 @@ languageSetup()
 ---
 -------------------------------------------------------------------------------------------------------
 
+
+local function updateButtonDimensions(buttonData)
+    buttonData.width, buttonData.height = buttonData.image:getPixelDimensions()
+    buttonData.width = buttonData.width * buttonData.scale
+    buttonData.height = buttonData.height * buttonData.scale
+end
+
+local function createLanguageButtons()
+    local tempLang = language
+    for i = 1, #languageJson.supportedLanguages do
+        local newButtonData = {}
+        newButtonData.textData = {}
+        newButtonData.imageData = {}
+
+        newButtonData.textData.language = languageJson.supportedLanguages[i].localized
+        newButtonData.textData.font = getFont(newButtonData.textData.language)
+
+        newButtonData.textData.text = languageJson.supportedLanguages[i].native
+        newButtonData.textData.width = newButtonData.textData.font:getWidth(newButtonData.textData.text)
+        newButtonData.textData.height = newButtonData.textData.font:getHeight(newButtonData.textData.text)
+
+        newButtonData.imageData.image = languageOptionImage
+        newButtonData.imageData.scale = 1
+        updateButtonDimensions(newButtonData.imageData)
+
+        newButtonData.imageData.scale = {
+            ["x"] = (newButtonData.textData.width / newButtonData.imageData.width) * 1.5,
+            ["y"] = (newButtonData.textData.height / newButtonData.imageData.height) * 1.35
+        }
+        newButtonData.imageData.width = newButtonData.imageData.width * newButtonData.imageData.scale.x
+        newButtonData.imageData.height = newButtonData.imageData.height * newButtonData.imageData.scale.y
+
+        table.insert(mainMenuButtonsData, newButtonData)
+
+        language = tempLang
+        updateLanguage()
+    end
+end
 
 -- Function for creating the title scene with cube-formed-letters
 local function createTitleScene()
@@ -182,7 +224,7 @@ local function createTitleScene()
     -- Starting position for the title (centered, slightly left)
     local startX = 16
     local startY = -totalWidth / 2 + 0.3
-    local startZ = 1
+    local startZ = 5
     
     -- Create each letter
     for letterIndex, letter in ipairs(letters) do
@@ -209,6 +251,8 @@ local function createTitleScene()
             end
         end
     end
+
+    createLanguageButtons()
     
     table.insert(sceneObjects, 1, scene)  -- Insert at beginning to make it scene 1
 end
@@ -220,7 +264,7 @@ local function drawWinScreen()
 
     -- Win text
     love.graphics.setColor(0, 0, 0, 1)
-    love.graphics.print(languageJson[language].win, love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 10, nil, 4, 4)
+    love.graphics.print(languageJson.text[language].win, love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 10, nil, 4, 4)
     
     -- Play Again button
     playAgainButton.x = love.graphics.getWidth() / 2 - playAgainButton.width / 2
@@ -257,7 +301,7 @@ local function drawLoseScreen()
 
     -- Lose text
     love.graphics.setColor(255, 255, 255, 1)
-    love.graphics.print(languageJson[language].lose, love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 10, nil, 4, 4)
+    love.graphics.print(languageJson.text[language].lose, love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 10, nil, 4, 4)
     
     -- Play Again button
     playAgainButton.x = love.graphics.getWidth() / 2 - playAgainButton.width / 2
@@ -381,6 +425,26 @@ local function getClickWorldPosition(mouseX, mouseY)
     return worldX, worldY, worldZ
 end
 
+local function isInPlinkoScene()
+    for i = 1, #plinkoLevels do
+        if currentScene == plinkoLevels[i] then return true end
+    end
+    return false
+end
+
+local function isInSearchRoom()
+    for i = 1, #searchRooms do
+        if currentScene == searchRooms[i] then return true end
+    end
+    return false
+end
+
+local function pointIsBetweenBounds(pointX, pointY, boundPosX, boundPosY, boundWidth, boundHeight)
+    local pointWithinX = pointX < boundPosX + boundWidth and pointX > boundPosX
+    local pointWithinY = pointY < boundPosY + boundHeight and pointY > boundPosY
+    return pointWithinX and pointWithinY
+end
+
 
 -----------------------------------------------------------------------------------------------------
 ---
@@ -388,12 +452,6 @@ end
 ---
 -----------------------------------------------------------------------------------------------------
 
-
-local function updateInventoryButtonDimensions()
-    inventoryButtonData.width, inventoryButtonData.height = inventoryButtonData.image:getPixelDimensions()
-    inventoryButtonData.width = inventoryButtonData.width * inventoryButtonData.scale
-    inventoryButtonData.height = inventoryButtonData.height * inventoryButtonData.scale
-end
 
 local function createInventoryButton()
     inventoryButtonData.roomData = {}
@@ -408,7 +466,7 @@ local function createInventoryButton()
     inventoryButtonData.plinkoData.scale = 0.05
     inventoryButtonData.scale = inventoryButtonData.roomData.scale
 
-    updateInventoryButtonDimensions()
+    updateButtonDimensions(inventoryButtonData)
 end
 
 local function createPlinkoScene1()
@@ -693,10 +751,10 @@ end
 
 local screenWidth = love.graphics.getWidth()
 local screenHeight = love.graphics.getHeight()
-local continueText = languageJson[language].continue
-local continueTextWidth = instructionFont:getWidth(continueText)
+local continueText = languageJson.text[language].continue
+local continueTextWidth = font:getWidth(continueText)
 local loadingText = languageJson[language].loading
-local loadingTextWidth = instructionFont:getWidth(loadingText)
+local loadingTextWidth = font:getWidth(loadingText)
 local textY = screenHeight - 40
 
 local prevCurrentScene = currentScene
@@ -767,8 +825,27 @@ function love.mousepressed(x, y, button, istouch, presses)
         
         -- Transition from title screen on tap/click
         if currentScene == titleScreen then
-            currentScene = searchRoom1
-            return
+            local buttonPressed = false
+            for i = 1, #mainMenuButtonsData do
+                local buttonData = mainMenuButtonsData[i].imageData
+                if pointIsBetweenBounds(
+                    x,
+                    y,
+                    buttonData.position.x,
+                    buttonData.position.y,
+                    buttonData.width,
+                    buttonData.height
+                ) then
+                    buttonPressed = true
+                    language = mainMenuButtonsData[i].textData.language
+                    updateLanguage()
+                end
+            end
+
+            if not buttonPressed then
+                currentScene = searchRoom1
+                return
+            end
         end
         
         local clickedItem = gameInventory:checkClick(x, y)
@@ -796,23 +873,6 @@ function love.mousepressed(x, y, button, istouch, presses)
 
         -- Check to return them to Inventory
         local worldx, worldy, worldz = getClickWorldPosition(x, y)
-        --for i = #sceneObjects[currentScene], 1, -1 do
-          --  local obstacle = sceneObjects[currentScene][i]
-                
-            --if obstacle.name then
-              --  local isClicked = false
-                    
-                -- Use default AABB for simpler objects
-                --isClicked = obstacle.model:isPointInAABB({worldx, worldy, worldz})
-                    
-                --if isClicked then
-                    --gameInventory:returnItem(obstacle.name)
-                    --table.remove(sceneObjects[currentScene], i)
-                    --print("Returned obstacle: " .. obstacle.name .. " to inventory.")
-                    --return
-                --end
-            --end
-
             -- Check the new list of player obstacles for clicks
             local currentSceneObj = sceneObjects[currentScene]
             local currentObstacles = sceneObjects[currentScene].playerObstacles
@@ -851,26 +911,6 @@ function love.mousepressed(x, y, button, istouch, presses)
             end
         end
     end
-
-local function isInPlinkoScene()
-    for i = 1, #plinkoLevels do
-        if currentScene == plinkoLevels[i] then return true end
-    end
-    return false
-end
-
-local function isInSearchRoom()
-    for i = 1, #searchRooms do
-        if currentScene == searchRooms[i] then return true end
-    end
-    return false
-end
-
-local function pointIsBetweenBounds(pointX, pointY, boundPosX, boundPosY, boundWidth, boundHeight)
-    local pointWithinX = pointX < boundPosX + boundWidth and pointX > boundPosX
-    local pointWithinY = pointY < boundPosY + boundHeight and pointY > boundPosY
-    return pointWithinX and pointWithinY
-end
 
 local defaultScale = {1, 1, 1}
 local defaultTexture = "kenney_prototype_textures/purple/texture_03.png"
@@ -1131,7 +1171,7 @@ function love.draw()
         inventoryButtonData.position.x = startX - (inventoryButtonData.width/2)
         inventoryButtonData.position.y = startY + (maxBallAmmo * (ballSize + spacing))
         inventoryButtonData.scale = inventoryButtonData.plinkoData.scale
-        updateInventoryButtonDimensions()
+        updateButtonDimensions(inventoryButtonData)
 
         love.graphics.draw(
             inventoryButtonData.image,
@@ -1144,12 +1184,12 @@ function love.draw()
 
     elseif isInSearchRoom() then
         if font then love.graphics.setFont(font) end
-        love.graphics.print(languageJson[language].timer .. math.ceil(timer))
+        love.graphics.print(languageJson.text[language].timer .. math.ceil(timer))
 
         inventoryButtonData.position.x = inventoryButtonData.roomData.position.x
         inventoryButtonData.position.y = inventoryButtonData.roomData.position.y
         inventoryButtonData.scale = inventoryButtonData.roomData.scale
-        updateInventoryButtonDimensions()
+        updateButtonDimensions(inventoryButtonData)
 
         love.graphics.draw(
             inventoryButtonData.image,
@@ -1198,29 +1238,57 @@ function love.draw()
         drawLoseScreen()
     end
 
-    love.graphics.setFont(instructionFont)
+    love.graphics.setFont(font)
     love.graphics.setColor(1, 1, 1, 1)
 
     local screenWidth = love.graphics.getWidth()
     local screenHeight = love.graphics.getHeight()
-    local textY = screenHeight - 40
 
     -- Display "Press any key to continue" on title screen
     if currentScene == titleScreen then
-        if font then love.graphics.setFont(font) end
-        local continueText = languageJson[language].continue
-        local continueTextWidth = (font or instructionFont):getWidth(continueText)
-        love.graphics.print(continueText, screenWidth / 2 - continueTextWidth / 2, 40)
-        love.graphics.setFont(instructionFont)
+        local continueText = languageJson.text[language].continue
+        local continueTextWidth = font:getWidth(continueText)
+        local continueTextY = 40
+        love.graphics.print(continueText, screenWidth / 2 - continueTextWidth / 2, continueTextY)
+        love.graphics.setFont(font)
+
+        -- Language Buttons
+        local tempLang = language
+
+        local buttonY = 350
+        for i = 1, #mainMenuButtonsData do
+            local imageData = mainMenuButtonsData[i].imageData
+            local textData = mainMenuButtonsData[i].textData
+            imageData.position = {
+                ["x"] = screenWidth / 2 - imageData.width / 2,
+                ["y"] = buttonY
+            }
+            love.graphics.draw(
+                imageData.image,
+                imageData.position.x,
+                imageData.position.y,
+                0,
+                imageData.scale.x,
+                imageData.scale.y
+            )
+
+            love.graphics.setFont(textData.font)
+            love.graphics.print(textData.text, screenWidth / 2 - textData.width / 2, buttonY + 7)
+
+            buttonY = buttonY + (imageData.height * imageData.scale.y) + 60
+        end
+        language = tempLang
+        updateLanguage()
     end
 
     -- Only show inventory instructions if not on title screen
     if currentScene ~= titleScreen then
         if not gameInventory.isVisible and not currentPlacementItem then
+            local textY = screenHeight - 40
             local bottomText
-            if isInPlinkoScene() then bottomText = languageJson[language].pickup
-            else bottomText = languageJson[language].search end
-            local pickupTextWidth = instructionFont:getWidth(bottomText)
+            if isInPlinkoScene() then bottomText = languageJson.text[language].pickup
+            else bottomText = languageJson.text[language].search end
+            local pickupTextWidth = font:getWidth(bottomText)
 
             love.graphics.print(bottomText, (screenWidth / 2) - (pickupTextWidth / 2), textY)
         end
