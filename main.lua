@@ -24,6 +24,9 @@ local quitButton = {x = 0, y = 0, width = 200, height = 60}
 
 local languageOptionImage = love.graphics.newImage("custom_assets/darkYellowSquare.png")
 
+local openInventoryImage = love.graphics.newImage("custom_assets/openInventoryButton.png")
+local closeInventoryImage = love.graphics.newImage("custom_assets/closeInventoryButton.png")
+
 local leftArrowImage = love.graphics.newImage("custom_assets/arrowLeft.png")
 local rightArrowImage = love.graphics.newImage("custom_assets/arrowRight.png")
 local upArrowImage = love.graphics.newImage("custom_assets/arrowUp.png")
@@ -445,6 +448,12 @@ local function pointIsBetweenBounds(pointX, pointY, boundPosX, boundPosY, boundW
     return pointWithinX and pointWithinY
 end
 
+local function swapInventoryButtonImage()
+    if inventoryButtonData.image == openInventoryImage then
+        inventoryButtonData.image = closeInventoryImage
+    else inventoryButtonData.image = openInventoryImage end
+end
+
 
 -----------------------------------------------------------------------------------------------------
 ---
@@ -457,7 +466,7 @@ local function createInventoryButton()
     inventoryButtonData.roomData = {}
     inventoryButtonData.plinkoData = {}
 
-    inventoryButtonData.image = love.graphics.newImage("custom_assets/openInventoryButton.png")
+    inventoryButtonData.image = openInventoryImage
 
     inventoryButtonData.roomData.position = {["x"] = 710, ["y"] = 10}
     inventoryButtonData.position = {}
@@ -787,13 +796,7 @@ end
 --- Input Handling
 ---
 -------------------------------------------------------------------------------------------------
-
-local function isInPlinkoScene()
-    for i = 1, #plinkoLevels do
-        if currentScene == plinkoLevels[i] then return true end
-    end
-    return false
-end
+---
 
 -- Clicking for when the inventory is up
 function love.mousepressed(x, y, button, istouch, presses)
@@ -854,6 +857,7 @@ function love.mousepressed(x, y, button, istouch, presses)
             if isInPlinkoScene() then
                 currentPlacementItem = clickedItem
                 gameInventory:toggle()
+                swapInventoryButtonImage()
                 return
             else
                 gameInventory:returnItem(clickedItem.name)
@@ -1004,6 +1008,7 @@ function love.mousereleased(x, y, button)
                 inventoryButtonData.height
             ) then
                 gameInventory:toggle()
+                swapInventoryButtonImage()
             end
         end
     end
@@ -1016,10 +1021,6 @@ function love.keypressed(key)
     if currentScene == titleScreen then
         currentScene = searchRoom1
         return
-    end
-    
-    if key == "i" then
-        gameInventory:toggle()
     end
 
     if key == "p" then
