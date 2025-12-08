@@ -465,6 +465,9 @@ local function createInventoryButton()
     inventoryButtonData.roomData.position = {["x"] = 710, ["y"] = 10}
     inventoryButtonData.position = {}
 
+    inventoryButtonData.position.x = inventoryButtonData.roomData.position.x
+    inventoryButtonData.position.y = inventoryButtonData.roomData.position.y
+
     inventoryButtonData.roomData.scale = 0.1
     inventoryButtonData.plinkoData.scale = 0.05
     inventoryButtonData.scale = inventoryButtonData.roomData.scale
