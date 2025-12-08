@@ -373,6 +373,94 @@
                     },
                     "rotation": "rotateGear",
                     "scale": "gearScale"
+                },
+                "gear2": {
+                    "model": "gear",
+                    "texture": "rustedCopper",
+                    "translation": {
+                        "x": "depthBack",
+                        "y": "-horizontalDistance+4",
+                        "z": "ceilingHeight-5"
+                    },
+                    "rotation": "rotateGear",
+                    "scale": "gearScale"
+                },
+                "gear3": {
+                    "model": "gear",
+                    "texture": "rustedCopper",
+                    "translation": {
+                        "x": "depthBack",
+                        "y": "-horizontalDistance+1.5",
+                        "z": "ceilingHeight-6.5"
+                    },
+                    "rotation": "rotateGear",
+                    "scale": "gearScale"
+                },
+                "barrel1": {
+                    "model": "barrel",
+                    "texture": "wood",
+                    "translation": {
+                        "x":"depthBack-1",
+                        "y":"-horizontalDistance",
+                        "z":"ceilingHeight-9"
+                    },
+                    "rotation":"rotate90DegForward",
+                    "scale":"illAnoiScale"
+                },
+                "barrel2": {
+                    "model": "barrel",
+                    "texture": "wood",
+                    "translation": {
+                        "x":"depthBack-2.5",
+                        "y":"-horizontalDistance",
+                        "z":"ceilingHeight-9"
+                    },
+                    "rotation":"rotate90DegForward",
+                    "scale":"illAnoiScale"
+                },
+                "barrel3": {
+                    "model": "barrel",
+                    "texture": "wood",
+                    "translation": {
+                        "x":"depthBack-4",
+                        "y":"-horizontalDistance",
+                        "z":"ceilingHeight-9"
+                    },
+                    "rotation":"rotate90DegForward",
+                    "scale":"illAnoiScale"
+                },
+                "barrel4": {
+                    "model": "barrel",
+                    "texture": "wood",
+                    "translation": {
+                        "x":"depthBack-2",
+                        "y":"-horizontalDistance",
+                        "z":"ceilingHeight-7.5"
+                    },
+                    "rotation":"rotate90DegForward",
+                    "scale":"illAnoiScale"
+                },
+                 "barrel5": {
+                    "model": "barrel",
+                    "texture": "wood",
+                    "translation": {
+                        "x":"depthBack-3.5",
+                        "y":"-horizontalDistance",
+                        "z":"ceilingHeight-7.5"
+                    },
+                    "rotation":"rotate90DegForward",
+                    "scale":"illAnoiScale"
+                },
+                "barrel6": {
+                    "model": "barrel",
+                    "texture": "wood",
+                    "translation": {
+                        "x":"depthBack-2.5",
+                        "y":"-horizontalDistance",
+                        "z":"ceilingHeight-6"
+                    },
+                    "rotation":"rotate90DegForward",
+                    "scale":"illAnoiScale"
                 }
             },
             "arrows": {

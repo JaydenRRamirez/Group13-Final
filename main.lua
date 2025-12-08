@@ -753,6 +753,8 @@ local screenWidth = love.graphics.getWidth()
 local screenHeight = love.graphics.getHeight()
 local continueText = languageJson.text[language].continue
 local continueTextWidth = font:getWidth(continueText)
+local loadingText = languageJson[language].loading
+local loadingTextWidth = font:getWidth(loadingText)
 local textY = screenHeight - 40
 
 local prevCurrentScene = currentScene
@@ -1291,5 +1293,6 @@ function love.draw()
             love.graphics.print(bottomText, (screenWidth / 2) - (pickupTextWidth / 2), textY)
         end
     end
+
     gameInventory:draw()
 end
