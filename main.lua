@@ -267,7 +267,7 @@ local function drawWinScreen()
 
     -- Win text
     love.graphics.setColor(0, 0, 0, 1)
-    love.graphics.print(languageJson.text[language].win, love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 10, nil, 4, 4)
+    love.graphics.print(languageJson.text[language].win, love.graphics.getWidth() / 2 - 200, love.graphics.getHeight() / 2 - 100, nil, 4, 4)
     
     -- Play Again button
     playAgainButton.x = love.graphics.getWidth() / 2 - playAgainButton.width / 2
@@ -301,7 +301,7 @@ local function drawLoseScreen()
 
     -- Lose text
     love.graphics.setColor(255, 255, 255, 1)
-    love.graphics.print(languageJson.text[language].lose, love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 10, nil, 4, 4)
+    love.graphics.print(languageJson.text[language].lose, love.graphics.getWidth() / 2 - 220, love.graphics.getHeight() / 2 - 100, nil, 4, 4)
     
     -- Play Again button
     playAgainButton.x = love.graphics.getWidth() / 2 - playAgainButton.width / 2
