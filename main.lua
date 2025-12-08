@@ -773,8 +773,8 @@ function love.load()
 
     gameInventory = Inventory:new()
 
-    gameInventory:addItem(gameInventory.obstaclePrototypes["Cone"])
-    gameInventory:addItem(gameInventory.obstaclePrototypes["Ramp"])
+    -- gameInventory:addItem(gameInventory.obstaclePrototypes["Cone"])
+    -- gameInventory:addItem(gameInventory.obstaclePrototypes["Ramp"])
 
     createInventoryButton()
 
