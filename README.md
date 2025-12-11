@@ -52,7 +52,7 @@ Much of the team had a preference for a local work environment, and as such, we 
 Generative AI: Tell us about your team's plan for using (or not using) tools based on generative AI, whether they are agentic or not. For example, will you be requiring team members to use or not use specific features of specific tools? Perhaps you plan use the autocomplete features in Github Copilot but not the agent mode. Maybe you will only use the agent mode under specific instructions for it to not make any direct modifications to your code, only giving the developer advice on how to proceed.
 
 
-Our team will not be using generative AI.
+Our team will only be using generative AI in moderation, such as for helping to catch bugs
 
 
 ## Outlook
@@ -82,7 +82,7 @@ The testing phase for this portion mainly boiled down to test cases of what was 
 In terms of testing and automation, the main implementation has been in bootstrap. Bootstrap features: professional IDE integration, automated builds, and everything you need to go from prototype to published game. Alongside that, it allows automation to a wide range of paths, from Itch.io, to Android, to Windows and MacOS, etc.
 	
 ## Reflection
-F1 was a lengthy process in terms of fulfilling the requirements, as love2d required much in terms of finding not only extensions that housed the opportunity to work with 3D-oriented libraries, but also having to learn how such libraries work in order to implement the necessary assets, physics, and logic to build the puzzle. Much of the focus here was on engine work, and while we did maintain mostly our original ideas of g3d, we did have a bit of a moment in working in 3DreamEngine, but in the end, we just utilized its physics property for the project, rather than the whole engine. While we also discussed what automation and test libraries and scripts at the beginning(such as we ensured we had love2d extensions that would give us a running build at the press of a few keys, as said before, we focused on the engine at hand, and once it was at a state that left us satisfied, did we then implement such automation like Bootstrap or something to keep the code tidy like the lua Autoformatter.
+F1 was a lengthy process in terms of fulfilling the requirements, as love2d required much in terms of finding not only extensions that housed the opportunity to work with 3D-oriented libraries, but also having to learn how such libraries work in order to implement the necessary assets, physics, and logic to build the puzzle. Much of the focus here was on engine work, and while we did maintain mostly our original ideas of g3d, we did have a bit of a moment in working in 3DreamEngine, but in the end, we just utilized its physics property for the project, rather than the whole engine. While we also discussed what automation and test libraries and scripts at the beginning (such as we ensured we had love2d extensions that would give us a running build at the press of a few keys), as said before, we focused on the engine at hand, and once it was at a state that left us satisfied, did we then implement such automation like Bootstrap or something to keep the code tidy like the lua Autoformatter.
 
 # Devlog Entry - 12/01/2025
 
@@ -117,4 +117,4 @@ Much like F2 and F1, there were many aspects of this segment that were a challen
 
 ## Important Notes for Running Program:
 
-Must be on main.lua before typing type > launch love
+In order to launch the program, you must type > launch love while on VS code, or via downloading and running the build on the github page.
