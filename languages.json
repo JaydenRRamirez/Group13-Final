@@ -18,7 +18,7 @@
             "win": "You Win!",
             "lose": "You Lose!",
             "timer": "Time left: ",
-            "continue": "Press any key or tap the screen to continue.",
+            "continue": "Click or tap the screen to continue.",
             "pickup": "Click on placed obstacles to return them to your inventory.",
             "search": "Find and click on obstacles to add them to your inventory.",
             "loading": "Loading...",
