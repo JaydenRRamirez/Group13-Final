@@ -806,6 +806,7 @@ function love.mousepressed(x, y, button, istouch, presses)
                 timer = timerCooldown
 
                 sceneObjects = {}
+                mainMenuButtonsData = {}
                 loadScenes()
                 return
             end
